@@ -360,11 +360,24 @@ void CMLDetCNN::Predict(MIL_ID Image, MIL_UNIQUE_CLASS_ID& TrainedDetCtx, DetRes
         //cout << "\nPreprocess_" << m_index << "time is = " << time << "\n" << endl;
     }
     MIL_UNIQUE_CLASS_ID ClassRes = MclassAllocResult(m_MilSystem, M_PREDICT_DET_RESULT, M_DEFAULT, M_UNIQUE_ID);
-    MclassPredict(TrainedDetCtx, ImageReduce, ClassRes, M_DEFAULT);
-    CDatasetViewer(ClassRes);
+    
+    
+    LARGE_INTEGER t1, t2, tc;
+    QueryPerformanceFrequency(&tc);
+    QueryPerformanceCounter(&t1);
+    int CN = 1000;
+    for (int i = 0; i < CN; i++) {
+        MclassPredict(TrainedDetCtx, ImageReduce, ClassRes, M_DEFAULT);
+    }
+    
+    QueryPerformanceCounter(&t2);
+    double time = (double)(t2.QuadPart - t1.QuadPart) / (double)tc.QuadPart/(double)CN;
+    cout << "\nPreprocess_" << "time is = " << time << "\n" << endl;
+
+    //MclassPredict(TrainedDetCtx, ImageReduce, ClassRes, M_DEFAULT);
+    
 
     MbufFree(ImageReduce);
-    //
     MclassGetResult(ClassRes, M_GENERAL, M_NUMBER_OF_INSTANCES + M_TYPE_MIL_INT, &Result.InstanceNum);
     Result.Boxes.resize(Result.InstanceNum);
     Result.ClassIndex.resize(Result.InstanceNum);
@@ -377,7 +390,6 @@ void CMLDetCNN::Predict(MIL_ID Image, MIL_UNIQUE_CLASS_ID& TrainedDetCtx, DetRes
         MclassGetResult(ClassRes, M_INSTANCE_INDEX(i), M_HEIGHT + M_TYPE_MIL_DOUBLE, &Result.Boxes[i].H);
         MclassGetResult(ClassRes, M_INSTANCE_INDEX(i), M_WIDTH + M_TYPE_MIL_DOUBLE, &Result.Boxes[i].W);
         //MclassGetResult(ClassRes, M_ALL_INSTANCES, M_BOX_4_CORNERS + M_TYPE_MIL_DOUBLE, Box);
-
         MclassGetResult(ClassRes, M_INSTANCE_INDEX(i), M_BEST_CLASS_INDEX + M_TYPE_MIL_INT, &Result.ClassIndex[i]);
         MclassGetResult(ClassRes, M_INSTANCE_INDEX(i), M_BEST_CLASS_SCORE + M_TYPE_MIL_DOUBLE, &Result.Score[i]);
         MclassInquire(TrainedDetCtx, M_CLASS_INDEX(Result.ClassIndex[i]), M_CLASS_NAME, Result.ClassName[i]);

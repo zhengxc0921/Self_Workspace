@@ -354,9 +354,9 @@ void MILTest::MILTestGenDetDataset()
 	//const MIL_STRING WorkingDataPath = L"I:/MIL_Detection_Dataset/DSW_/";
 
 	//CASE2:
-	string IconInfo = "I:/MIL_Detection_Dataset/VOC/voc_classes.txt";
-	MIL_STRING IconDir = L"I:/MIL_Detection_Dataset/VOC/Icons/";
-	string ImgDataInfo = "I:/MIL_Detection_Dataset/VOC/2007_train.txt";
+	string IconInfo = "I:/MIL_Detection_Dataset/VOC/raw_data/Classes.txt";
+	MIL_STRING IconDir = L"I:/MIL_Detection_Dataset/VOC/raw_data/ClassesIcon/";
+	string ImgDataInfo = "I:/MIL_Detection_Dataset/VOC/raw_data/ImgBoxes.txt";
 	const MIL_STRING WorkingDataPath = L"I:/MIL_Detection_Dataset/VOC/";
 
 	m_MLDetCNN->ConstructDataset(IconInfo, IconDir,  ImgDataInfo, WorkingDataPath);
@@ -367,7 +367,7 @@ void MILTest::MILTestDetTrain()
 	int ImageSizeX = 512;				//进入模型训练的图片的尺寸宽
 	int ImageSizeY = 512;				//进入模型训练的图片的尺寸高
 	int AugmentationNumPerImage = 0;	//进入模型训练的图片的扩充倍数
-	int MaxNumberOfEpoch = 5;			//模型训练次数
+	int MaxNumberOfEpoch = 10;			//模型训练次数
 	int MiniBatchSize = 4;				//模型训练单次迭代的张数
 	MIL_STRING DetFileName = MIL_TEXT("VOC.mclass");
 	MIL_STRING SrcImgDir = MIL_TEXT("I:/MIL_Detection_Dataset/VOC/");
@@ -419,30 +419,59 @@ void MILTest::MILTestDetTrain()
 
 void MILTest::MILTestDetPredict()
 {
-	string	SrcImgDir = "I:/MIL_Detection_Dataset/DSW_/Images";
-	MIL_STRING TdDetCtxName = MIL_TEXT("I:/MIL_Detection_Dataset/DSW_/PreparedData/DSW_.mclass");
+	string	SrcImgDir = "I:/MIL_Detection_Dataset/VOC/Images";
+	MIL_STRING TdDetCtxName = MIL_TEXT("I:/MIL_Detection_Dataset/VOC/PreparedData/VOC.mclass");
 	//string	SrcImgDir = "I:/MIL_Detection_Dataset/VOC/Images";
 	//MIL_STRING TdDetCtxName = MIL_TEXT("I:/MIL_Detection_Dataset/VOC/PreparedData/VOC.mclass");
 	LARGE_INTEGER t1, t2, tc;
 	QueryPerformanceFrequency(&tc);
 	QueryPerformanceCounter(&t1);
-
-
 	MIL_UNIQUE_CLASS_ID TestCtx = MclassRestore(TdDetCtxName, m_MilSystem, M_DEFAULT, M_UNIQUE_ID);
-
 
 	MclassInquire(TestCtx, M_DEFAULT_SOURCE_LAYER, M_SIZE_X + M_TYPE_MIL_INT, &m_InputSizeX);
 	MclassInquire(TestCtx, M_DEFAULT_SOURCE_LAYER, M_SIZE_Y + M_TYPE_MIL_INT, &m_InputSizeY);
 	MclassInquire(TestCtx, M_CONTEXT, M_NUMBER_OF_CLASSES + M_TYPE_MIL_INT, &m_ClassesNum);
 
 	//设置ENGINE
-	//MIL_STRING Description;
-	//MclassInquire(TestCtx, M_PREDICT_ENGINE_INDEX(0), M_PREDICT_ENGINE_DESCRIPTION, Description);
-	//MosPrintf(MIL_TEXT("\nM_PREDICT_ENGINE_DESCRIPTION: %s \n"), Description.c_str());
+	MIL_INT engine_index = 0;
+	MIL_STRING Description;
+	MclassControl(TestCtx, M_DEFAULT, M_PREDICT_ENGINE, engine_index);
+	MclassInquire(TestCtx, M_PREDICT_ENGINE_INDEX(engine_index), M_PREDICT_ENGINE_DESCRIPTION, Description);
+	MosPrintf(MIL_TEXT("\nM_PREDICT_ENGINE_DESCRIPTION: %s \n"), Description.c_str());
 
 	m_MLDetCNN->m_AIParse->getFilesInFolder(SrcImgDir, "jpg", m_FilesInFolder);
 	int nFileNum = m_FilesInFolder.size();
 	vector<DetResult> vecDetResults;
 	m_MLDetCNN->FolderImgsPredict(m_FilesInFolder, TestCtx, vecDetResults);
+}
+
+void MILTest::MILTestONNXPredict()
+{
+	MIL_STRING TdONNXCtxName = MIL_TEXT("I:/MIL_AI/testMILAI/Dsw_random.onnx");
+
+	MIL_UNIQUE_CLASS_ID TestONNXCtx = MclassAlloc(m_MilSystem,M_CLASSIFIER_ONNX, M_DEFAULT, M_UNIQUE_ID);
+	MclassImport(TdONNXCtxName,M_ONNX_FILE, TestONNXCtx, M_DEFAULT, M_DEFAULT, M_DEFAULT);
+	MclassInquire(TestONNXCtx, M_DEFAULT_SOURCE_LAYER, M_SIZE_X + M_TYPE_MIL_INT, &m_InputSizeX);
+	MclassInquire(TestONNXCtx, M_DEFAULT_SOURCE_LAYER, M_SIZE_Y + M_TYPE_MIL_INT, &m_InputSizeY);
+	MclassInquire(TestONNXCtx, M_CONTEXT, M_NUMBER_OF_CLASSES + M_TYPE_MIL_INT, &m_ClassesNum);
+	
+	MIL_STRING ImagepATH = MIL_TEXT("I:/MIL_Detection_Dataset/DSW_random/raw_data/img/block_A_defect_A_cellcol_0.bmp");
+	MIL_ID Image = MbufRestore(ImagepATH, m_MilSystem, M_NULL);
+	MIL_INT m_ImageSizeX = MbufInquire(Image, M_SIZE_X, M_NULL);
+	MIL_INT m_ImageSizeY = MbufInquire(Image, M_SIZE_Y, M_NULL);
+
+	MIL_ID ImageReduce = MbufAllocColor(m_MilSystem, 3, m_InputSizeX, m_InputSizeY, 8 + M_UNSIGNED, M_IMAGE + M_PROC, M_NULL);
+	MimResize(Image, ImageReduce, M_FILL_DESTINATION, M_FILL_DESTINATION, M_DEFAULT);
+
+	MIL_UNIQUE_CLASS_ID ClassRes = MclassAllocResult(m_MilSystem, M_PREDICT_ONNX_RESULT, M_DEFAULT, M_UNIQUE_ID);
+
+	MclassControl(TestONNXCtx, M_DEFAULT, M_TARGET_IMAGE_SIZE_X, m_InputSizeX);
+	MclassControl(TestONNXCtx, M_DEFAULT, M_TARGET_IMAGE_SIZE_Y, m_InputSizeY);
+	MclassControl(TestONNXCtx, M_DEFAULT, M_TARGET_IMAGE_SIZE_BAND, 3);
+
+	MclassPreprocess(TestONNXCtx, M_DEFAULT);
+	MclassPredict(TestONNXCtx, ImageReduce, ClassRes, M_DEFAULT);
+	MIL_INT INStangs = 0;
+	MclassGetResult(ClassRes, M_GENERAL, M_NUMBER_OF_INSTANCES + M_TYPE_MIL_INT, &INStangs);
 }
 

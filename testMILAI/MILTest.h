@@ -44,6 +44,8 @@ public:
 
 	//void MILTestPredictShareMem(string strShareMame, string index, size_t filesize);
 
+	void MILTestONNXPredict();
+
 
 
 

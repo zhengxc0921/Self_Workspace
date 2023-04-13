@@ -18,10 +18,12 @@ int main() {
 	//m_MILTestPtr->MILTestPredictEngine();
 	
 	//Detection CNN test
-		
-	//m_MILTestPtr->MILTestGenDetDataset();
+	m_MILTestPtr->MILTestGenDetDataset();
 	m_MILTestPtr->MILTestDetTrain();
 	m_MILTestPtr->MILTestDetPredict();
+
+	//ONNX test
+	m_MILTestPtr->MILTestONNXPredict();
 
 #if 0
 	//╤Ю╫ЬЁл╡Бйт
