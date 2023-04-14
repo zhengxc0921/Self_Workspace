@@ -369,7 +369,7 @@ void MILTest::MILTestDetTrain()
 	int AugmentationNumPerImage = 0;	//进入模型训练的图片的扩充倍数
 	int MaxNumberOfEpoch = 50;			//模型训练次数
 	int MiniBatchSize = 4;				//模型训练单次迭代的张数
-	MIL_STRING DetFileName = MIL_TEXT("VOC.mclass");
+	MIL_STRING DetFileName = MIL_TEXT("VOC_update.mclass");
 	MIL_STRING SrcImgDir = MIL_TEXT("I:/MIL_Detection_Dataset/VOC/");
 
 	////*******************************必须参数*******************************//
@@ -409,7 +409,10 @@ void MILTest::MILTestDetTrain()
 	m_MLDetCNN->ConstructTrainCtx(DtParas, TrainCtx);
 
 	MIL_UNIQUE_CLASS_ID TrainedDetCtx;
-	MIL_UNIQUE_CLASS_ID PreDetCtx;
+
+	MIL_STRING PreDetCtxName = MIL_TEXT("I:/MIL_Detection_Dataset/VOC/PreparedData/VOC.mclass");
+	MIL_UNIQUE_CLASS_ID PreDetCtx = MclassRestore(PreDetCtxName, m_MilSystem, M_DEFAULT, M_UNIQUE_ID);
+
 	MIL_STRING DetDumpFile = SrcImgDir + MIL_TEXT("PreparedData\\") + DetFileName;
 	m_MLDetCNN->TrainClassifier(PreparedDataset, DataContext, TrainCtx, PreDetCtx, TrainedDetCtx, DetDumpFile);
 	return;
@@ -451,24 +454,14 @@ void MILTest::MILTestDetPredict()
 	//将结果保存到txt文件
 	ofstream ODNetResult;
 	ODNetResult.open(SrcDir+"ODNetResult.txt", ios::out);
-
-	
-	
 	for (int i = 0; i < nFileNum; i++) {
 		string ImgInfo;
 		ImgInfo = FilesInFolder[i];
 		//写入图片路径、box、conf、classname
-		//ODNetResult << FilesInFolder[i];  
 		DetResult R_i = vecDetResults[i];
 		for (int j = 0; j < R_i.Boxes.size(); j++) {
 			string strClassName;
 			m_MLDetCNN->m_AIParse->MIL_STRING2string(R_i.ClassName[j], strClassName);
-
-			//写入box、conf、classname 
-			//ODNetResult<<"\n" << R_i.Boxes[j].CX << "\n"
-			//	<< R_i.Boxes[j].CY << "\n" << R_i.Boxes[j].W << "\n" << R_i.Boxes[j].H
-			//	<< "\n" << R_i.Score[j] <<"\n" << strClassName;
-
 			ImgInfo = ImgInfo + " " + to_string(R_i.Boxes[j].CX)
 				+ " " + to_string(R_i.Boxes[j].CY)
 				+ " " + to_string(R_i.Boxes[j].W)

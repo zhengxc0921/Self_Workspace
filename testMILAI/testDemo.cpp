@@ -3,6 +3,7 @@
 
 
 int main() {
+
 	MIL_UNIQUE_APP_ID MilApplication = MappAlloc(M_NULL, M_DEFAULT, M_UNIQUE_ID);
 	MIL_UNIQUE_SYS_ID MilSystem = MsysAlloc(M_DEFAULT, M_SYSTEM_HOST, M_DEFAULT, M_DEFAULT, M_UNIQUE_ID);
 	MIL_UNIQUE_DISP_ID MilDisplay = MdispAlloc(MilSystem, M_DEFAULT, MIL_TEXT("M_DEFAULT"), M_DEFAULT, M_UNIQUE_ID);
@@ -18,9 +19,9 @@ int main() {
 	//m_MILTestPtr->MILTestPredictEngine();
 	
 	//Detection CNN test
-	//m_MILTestPtr->MILTestGenDetDataset();
-	//m_MILTestPtr->MILTestDetTrain();
-	m_MILTestPtr->MILTestDetPredict();
+	m_MILTestPtr->MILTestGenDetDataset();
+	m_MILTestPtr->MILTestDetTrain();
+	//m_MILTestPtr->MILTestDetPredict();
 
 	//ONNX test
 	//m_MILTestPtr->MILTestONNXPredict();

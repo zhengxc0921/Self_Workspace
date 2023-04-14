@@ -707,6 +707,17 @@ MIL_INT MFTYPE DetHookFuncEpoch(MIL_INT, MIL_ID EventId, void* UserData)
 
     pHookData->DetDashboardPtr->AddEpochData(DevLoss, CurEpochIndex, EpochBenchMean);
 
+    
+    if (CurEpochIndex % pHookData->SaveModelPEpoch == 0) {
+        MIL_ID TrainRes;
+        MclassGetHookInfo(EventId, M_RESULT_ID + M_TYPE_MIL_ID, &TrainRes);
+        MIL_UNIQUE_CLASS_ID TrainedDetCtx = MclassAlloc(pHookData->MilSystem, M_CLASSIFIER_DET_PREDEFINED, M_DEFAULT, M_UNIQUE_ID);
+        MclassCopyResult(TrainRes, M_DEFAULT, TrainedDetCtx, M_DEFAULT, M_TRAINED_CLASSIFIER, M_DEFAULT);
+        MclassSave(pHookData->ClassifierDumpFile, TrainedDetCtx, M_DEFAULT);
+    }
+
+
+
     return M_NULL;
 }
 

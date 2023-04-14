@@ -321,7 +321,6 @@ void CMLDetCNN::TrainClassifier(MIL_UNIQUE_CLASS_ID& Dataset,
     {
         TrainedDetCtx = MclassAlloc(m_MilSystem, M_CLASSIFIER_DET_PREDEFINED, M_DEFAULT, M_UNIQUE_ID);
         MclassCopyResult(TrainRes, M_DEFAULT, TrainedDetCtx, M_DEFAULT, M_TRAINED_CLASSIFIER, M_DEFAULT);
-        //const MIL_STRING SaveCtxName = MIL_TEXT("PlywoodODNet.mclass");
         MclassSave(ClassifierDumpFile, TrainedDetCtx, M_DEFAULT);
     }
 }
