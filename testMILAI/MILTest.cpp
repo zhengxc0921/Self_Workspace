@@ -367,7 +367,7 @@ void MILTest::MILTestDetTrain()
 	int ImageSizeX = 512;				//进入模型训练的图片的尺寸宽
 	int ImageSizeY = 512;				//进入模型训练的图片的尺寸高
 	int AugmentationNumPerImage = 0;	//进入模型训练的图片的扩充倍数
-	int MaxNumberOfEpoch = 10;			//模型训练次数
+	int MaxNumberOfEpoch = 50;			//模型训练次数
 	int MiniBatchSize = 4;				//模型训练单次迭代的张数
 	MIL_STRING DetFileName = MIL_TEXT("VOC.mclass");
 	MIL_STRING SrcImgDir = MIL_TEXT("I:/MIL_Detection_Dataset/VOC/");
@@ -419,7 +419,8 @@ void MILTest::MILTestDetTrain()
 
 void MILTest::MILTestDetPredict()
 {
-	string	SrcImgDir = "I:/MIL_Detection_Dataset/VOC/Images";
+	string	SrcDir = "I:/MIL_Detection_Dataset/VOC/";
+	string	SrcImgDir = SrcDir+ "TImages/";
 	MIL_STRING TdDetCtxName = MIL_TEXT("I:/MIL_Detection_Dataset/VOC/PreparedData/VOC.mclass");
 	//string	SrcImgDir = "I:/MIL_Detection_Dataset/VOC/Images";
 	//MIL_STRING TdDetCtxName = MIL_TEXT("I:/MIL_Detection_Dataset/VOC/PreparedData/VOC.mclass");
@@ -439,10 +440,47 @@ void MILTest::MILTestDetPredict()
 	MclassInquire(TestCtx, M_PREDICT_ENGINE_INDEX(engine_index), M_PREDICT_ENGINE_DESCRIPTION, Description);
 	MosPrintf(MIL_TEXT("\nM_PREDICT_ENGINE_DESCRIPTION: %s \n"), Description.c_str());
 
+	vector<string>FilesInFolder;
 	m_MLDetCNN->m_AIParse->getFilesInFolder(SrcImgDir, "jpg", m_FilesInFolder);
+	m_MLDetCNN->m_AIParse->getFilesInFolder(SrcImgDir, "jpg", FilesInFolder);
+
 	int nFileNum = m_FilesInFolder.size();
 	vector<DetResult> vecDetResults;
 	m_MLDetCNN->FolderImgsPredict(m_FilesInFolder, TestCtx, vecDetResults);
+
+	//将结果保存到txt文件
+	ofstream ODNetResult;
+	ODNetResult.open(SrcDir+"ODNetResult.txt", ios::out);
+
+	
+	
+	for (int i = 0; i < nFileNum; i++) {
+		string ImgInfo;
+		ImgInfo = FilesInFolder[i];
+		//写入图片路径、box、conf、classname
+		//ODNetResult << FilesInFolder[i];  
+		DetResult R_i = vecDetResults[i];
+		for (int j = 0; j < R_i.Boxes.size(); j++) {
+			string strClassName;
+			m_MLDetCNN->m_AIParse->MIL_STRING2string(R_i.ClassName[j], strClassName);
+
+			//写入box、conf、classname 
+			//ODNetResult<<"\n" << R_i.Boxes[j].CX << "\n"
+			//	<< R_i.Boxes[j].CY << "\n" << R_i.Boxes[j].W << "\n" << R_i.Boxes[j].H
+			//	<< "\n" << R_i.Score[j] <<"\n" << strClassName;
+
+			ImgInfo = ImgInfo + " " + to_string(R_i.Boxes[j].CX)
+				+ " " + to_string(R_i.Boxes[j].CY)
+				+ " " + to_string(R_i.Boxes[j].W)
+				+ " " + to_string(R_i.Boxes[j].H)
+				+ " " + to_string(R_i.Score[j])
+				+ " " + strClassName
+				;
+		}
+		ODNetResult << ImgInfo<<endl;
+	}
+
+	ODNetResult.close();
 }
 
 void MILTest::MILTestONNXPredict()

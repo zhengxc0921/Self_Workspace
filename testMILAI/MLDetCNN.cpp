@@ -2,8 +2,6 @@
 
 
 
-
-
 CMLDetCNN::CMLDetCNN(MIL_ID MilSystem, MIL_ID MilDisplay):
 	m_MilSystem(MilSystem),
 	m_MilDisplay(MilDisplay)
@@ -351,32 +349,20 @@ void CMLDetCNN::Predict(MIL_ID Image, MIL_UNIQUE_CLASS_ID& TrainedDetCtx, DetRes
     MclassInquire(TrainedDetCtx, M_DEFAULT, M_PREPROCESSED + M_TYPE_MIL_INT, &Status);
     if (M_FALSE == Status)
     {
-        //LARGE_INTEGER t1, t2, tc;
-        //QueryPerformanceFrequency(&tc);
-        //QueryPerformanceCounter(&t1);
         MclassPreprocess(TrainedDetCtx, M_DEFAULT);
-        //QueryPerformanceCounter(&t2);
-        //double time = (double)(t2.QuadPart - t1.QuadPart) / (double)tc.QuadPart;
-        //cout << "\nPreprocess_" << m_index << "time is = " << time << "\n" << endl;
     }
     MIL_UNIQUE_CLASS_ID ClassRes = MclassAllocResult(m_MilSystem, M_PREDICT_DET_RESULT, M_DEFAULT, M_UNIQUE_ID);
-    
     
     LARGE_INTEGER t1, t2, tc;
     QueryPerformanceFrequency(&tc);
     QueryPerformanceCounter(&t1);
-    int CN = 1000;
+    int CN = 1;
     for (int i = 0; i < CN; i++) {
         MclassPredict(TrainedDetCtx, ImageReduce, ClassRes, M_DEFAULT);
     }
-    
     QueryPerformanceCounter(&t2);
     double time = (double)(t2.QuadPart - t1.QuadPart) / (double)tc.QuadPart/(double)CN;
-    cout << "\nPreprocess_" << "time is = " << time << "\n" << endl;
-
-    //MclassPredict(TrainedDetCtx, ImageReduce, ClassRes, M_DEFAULT);
-    
-
+    //cout << "\nPreprocess_" << "time is = " << time << "\n" << endl;
     MbufFree(ImageReduce);
     MclassGetResult(ClassRes, M_GENERAL, M_NUMBER_OF_INSTANCES + M_TYPE_MIL_INT, &Result.InstanceNum);
     Result.Boxes.resize(Result.InstanceNum);
