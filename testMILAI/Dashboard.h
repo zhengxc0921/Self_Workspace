@@ -246,7 +246,7 @@ struct DetHookDataStruct
     MIL_INT TrainModel = 0;            //TrainModel:0 CNN ; 1:DET
     char ControlType = 'N';
     DetDashboardPtr DetDashboardPtr;     //dashboard
-   int SaveModelPEpoch = 4;
+   int SaveModelPEpoch = 8;
 };
 
 MIL_INT MFTYPE DetHookFuncDatasetsPrepared(MIL_INT /*HookType*/, MIL_ID  EventId, void* UserData);

@@ -366,10 +366,11 @@ void MILTest::MILTestDetTrain()
 {
 	int ImageSizeX = 512;				//进入模型训练的图片的尺寸宽
 	int ImageSizeY = 512;				//进入模型训练的图片的尺寸高
+
 	int AugmentationNumPerImage = 0;	//进入模型训练的图片的扩充倍数
-	int MaxNumberOfEpoch = 50;			//模型训练次数
-	int MiniBatchSize = 4;				//模型训练单次迭代的张数
-	MIL_STRING DetFileName = MIL_TEXT("VOC_update.mclass");
+	int MaxNumberOfEpoch = 10;			//模型训练次数
+	int MiniBatchSize = 8;				//模型训练单次迭代的张数
+	MIL_STRING DetFileName = MIL_TEXT("VOC.mclass");
 	MIL_STRING SrcImgDir = MIL_TEXT("I:/MIL_Detection_Dataset/VOC/");
 
 	////*******************************必须参数*******************************//
@@ -381,13 +382,20 @@ void MILTest::MILTestDetTrain()
 	DataCtxParas.DstFolderMode = 1;
 	DataCtxParas.PreparedDataFolder = SrcImgDir + MIL_TEXT("PreparedData\\");
 	memset(&DataCtxParas.AugParas, 0, sizeof(AugmentationParasStruct));
-	DataCtxParas.AugParas.AugmentationNumPerImage = AugmentationNumPerImage;
-	DataCtxParas.AugParas.InMulValue = 1.1;
-	DataCtxParas.AugParas.InMulDelta = 0.2;
+	//DataCtxParas.AugParas.AugmentationNumPerImage = AugmentationNumPerImage;
+	//DataCtxParas.AugParas.InMulValue = 1.1;
+	//DataCtxParas.AugParas.InMulDelta = 0.2;
+	//DataCtxParas.AugParas.InMulDelta = 0.2;
+
+	//DataCtxParas.AugParas.TranslationXMax = 5;         //max translate x, default:10
+	//DataCtxParas.AugParas.TranslationYMax = 5;         //max translate y, default:10
+	//DataCtxParas.AugParas.ScaleFactorMin = 0.8;          //min scale factor, default:0.5
+	//DataCtxParas.AugParas.ScaleFactorMax = 1.2;          //max scale factor, default:2.0
+	//DataCtxParas.AugParas.RotateAngleDelta = 20;        //rotate angle, default:360.0
 
 	m_MLDetCNN->ConstructDataContext(DataCtxParas, DataContext);
 
-	MIL_STRING WorkingDataPath = SrcImgDir + MIL_TEXT("DataSet.mclassd");				//原始数据根文件下的 存放中间数据的文件夹
+	MIL_STRING WorkingDataPath = SrcImgDir + MIL_TEXT("Dataset.mclassd");				//原始数据根文件下的 存放中间数据的文件夹
 	MIL_UNIQUE_CLASS_ID WorkingDataset = MclassRestore(WorkingDataPath, m_MilSystem, M_DEFAULT, M_UNIQUE_ID);
 	MIL_UNIQUE_CLASS_ID PreparedDataset = MclassAlloc(m_MilSystem, M_DATASET_IMAGES, M_DEFAULT, M_UNIQUE_ID);
 
@@ -402,17 +410,18 @@ void MILTest::MILTestDetTrain()
 	DtParas.MaxNumberOfEpoch = MaxNumberOfEpoch;
 	DtParas.MiniBatchSize = MiniBatchSize;
 	DtParas.SchedulerType = 0;
-	DtParas.LearningRate = 0.0001;
-	DtParas.LearningRateDecay = 0;
-	DtParas.SplitPercent = 90.0;
+	DtParas.LearningRate = 0.001;
+	DtParas.LearningRateDecay = 0.1;
+
+	DtParas.SplitPercent = 80.0;
 	DtParas.TrainDstFolder = SrcImgDir + MIL_TEXT("PreparedData\\");
 	m_MLDetCNN->ConstructTrainCtx(DtParas, TrainCtx);
 
 	MIL_UNIQUE_CLASS_ID TrainedDetCtx;
 
-	MIL_STRING PreDetCtxName = MIL_TEXT("I:/MIL_Detection_Dataset/VOC/PreparedData/VOC.mclass");
-	MIL_UNIQUE_CLASS_ID PreDetCtx = MclassRestore(PreDetCtxName, m_MilSystem, M_DEFAULT, M_UNIQUE_ID);
-
+	//MIL_STRING PreDetCtxName = MIL_TEXT("I:/MIL_Detection_Dataset/VOC/PreparedData/VOC.mclass");
+	//MIL_UNIQUE_CLASS_ID PreDetCtx = MclassRestore(PreDetCtxName, m_MilSystem, M_DEFAULT, M_UNIQUE_ID);
+	MIL_UNIQUE_CLASS_ID PreDetCtx;
 	MIL_STRING DetDumpFile = SrcImgDir + MIL_TEXT("PreparedData\\") + DetFileName;
 	m_MLDetCNN->TrainClassifier(PreparedDataset, DataContext, TrainCtx, PreDetCtx, TrainedDetCtx, DetDumpFile);
 	return;
@@ -425,6 +434,7 @@ void MILTest::MILTestDetPredict()
 	string	SrcDir = "I:/MIL_Detection_Dataset/VOC/";
 	string	SrcImgDir = SrcDir+ "TImages/";
 	MIL_STRING TdDetCtxName = MIL_TEXT("I:/MIL_Detection_Dataset/VOC/PreparedData/VOC.mclass");
+	string ImgType = "jpg";
 	//string	SrcImgDir = "I:/MIL_Detection_Dataset/VOC/Images";
 	//MIL_STRING TdDetCtxName = MIL_TEXT("I:/MIL_Detection_Dataset/VOC/PreparedData/VOC.mclass");
 	LARGE_INTEGER t1, t2, tc;
@@ -444,8 +454,8 @@ void MILTest::MILTestDetPredict()
 	MosPrintf(MIL_TEXT("\nM_PREDICT_ENGINE_DESCRIPTION: %s \n"), Description.c_str());
 
 	vector<string>FilesInFolder;
-	m_MLDetCNN->m_AIParse->getFilesInFolder(SrcImgDir, "jpg", m_FilesInFolder);
-	m_MLDetCNN->m_AIParse->getFilesInFolder(SrcImgDir, "jpg", FilesInFolder);
+	m_MLDetCNN->m_AIParse->getFilesInFolder(SrcImgDir, ImgType, m_FilesInFolder);
+	m_MLDetCNN->m_AIParse->getFilesInFolder(SrcImgDir, ImgType, FilesInFolder);
 
 	int nFileNum = m_FilesInFolder.size();
 	vector<DetResult> vecDetResults;
@@ -478,7 +488,7 @@ void MILTest::MILTestDetPredict()
 
 void MILTest::MILTestONNXPredict()
 {
-	MIL_STRING TdONNXCtxName = MIL_TEXT("I:/MIL_AI/testMILAI/Dsw_random.onnx");
+	MIL_STRING TdONNXCtxName = MIL_TEXT("I:/MIL_AI/testMILAI/yolov4_weights_LMK.onnx");
 
 	MIL_UNIQUE_CLASS_ID TestONNXCtx = MclassAlloc(m_MilSystem,M_CLASSIFIER_ONNX, M_DEFAULT, M_UNIQUE_ID);
 	MclassImport(TdONNXCtxName,M_ONNX_FILE, TestONNXCtx, M_DEFAULT, M_DEFAULT, M_DEFAULT);
@@ -486,12 +496,12 @@ void MILTest::MILTestONNXPredict()
 	MclassInquire(TestONNXCtx, M_DEFAULT_SOURCE_LAYER, M_SIZE_Y + M_TYPE_MIL_INT, &m_InputSizeY);
 	MclassInquire(TestONNXCtx, M_CONTEXT, M_NUMBER_OF_CLASSES + M_TYPE_MIL_INT, &m_ClassesNum);
 	
-	MIL_STRING ImagepATH = MIL_TEXT("I:/MIL_Detection_Dataset/DSW_random/raw_data/img/block_A_defect_A_cellcol_0.bmp");
+	MIL_STRING ImagepATH = MIL_TEXT("I:/MIL_AI/testMILAI/127shift_4.bmp");
 	MIL_ID Image = MbufRestore(ImagepATH, m_MilSystem, M_NULL);
 	MIL_INT m_ImageSizeX = MbufInquire(Image, M_SIZE_X, M_NULL);
 	MIL_INT m_ImageSizeY = MbufInquire(Image, M_SIZE_Y, M_NULL);
 
-	MIL_ID ImageReduce = MbufAllocColor(m_MilSystem, 3, m_InputSizeX, m_InputSizeY, 8 + M_UNSIGNED, M_IMAGE + M_PROC, M_NULL);
+	MIL_ID ImageReduce = MbufAllocColor(m_MilSystem, 3, m_InputSizeX, m_InputSizeY, M_FLOAT + 32, M_IMAGE + M_PROC, M_NULL);
 	MimResize(Image, ImageReduce, M_FILL_DESTINATION, M_FILL_DESTINATION, M_DEFAULT);
 
 	MIL_UNIQUE_CLASS_ID ClassRes = MclassAllocResult(m_MilSystem, M_PREDICT_ONNX_RESULT, M_DEFAULT, M_UNIQUE_ID);
@@ -502,7 +512,18 @@ void MILTest::MILTestONNXPredict()
 
 	MclassPreprocess(TestONNXCtx, M_DEFAULT);
 	MclassPredict(TestONNXCtx, ImageReduce, ClassRes, M_DEFAULT);
-	MIL_INT INStangs = 0;
-	MclassGetResult(ClassRes, M_GENERAL, M_NUMBER_OF_INSTANCES + M_TYPE_MIL_INT, &INStangs);
+
+	MIL_INT NO = 0;
+	MclassGetResult(ClassRes, M_GENERAL, M_NUMBER_OF_OUTPUTS+ M_TYPE_MIL_INT, &NO);
+
+	vector<MIL_UINT8>ROut;
+	vector<MIL_DOUBLE>Out;
+	vector<MIL_INT>OutSp;
+	for (int i = 0; i < NO; i++) {
+		MclassGetResult(ClassRes, M_OUTPUT_INDEX(i), M_OUTPUT_RAW+ M_NB_ELEMENTS, ROut);
+		MclassGetResult(ClassRes, M_OUTPUT_INDEX(i), M_OUTPUT_SHAPE, OutSp);
+		MclassGetResult(ClassRes, M_OUTPUT_INDEX(i), M_OUTPUT_DATA, Out);
+	}
+
 }
 

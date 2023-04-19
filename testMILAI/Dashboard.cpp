@@ -713,6 +713,8 @@ MIL_INT MFTYPE DetHookFuncEpoch(MIL_INT, MIL_ID EventId, void* UserData)
         MclassGetHookInfo(EventId, M_RESULT_ID + M_TYPE_MIL_ID, &TrainRes);
         MIL_UNIQUE_CLASS_ID TrainedDetCtx = MclassAlloc(pHookData->MilSystem, M_CLASSIFIER_DET_PREDEFINED, M_DEFAULT, M_UNIQUE_ID);
         MclassCopyResult(TrainRes, M_DEFAULT, TrainedDetCtx, M_DEFAULT, M_TRAINED_CLASSIFIER, M_DEFAULT);
+        //MIL_TEXT_CHAR tmpCfDumpFile[512];
+        //MosSprintf(tmpCfDumpFile, 512, MIL_TEXT("%s%d"), pHookData->ClassifierDumpFile, CurEpochIndex);
         MclassSave(pHookData->ClassifierDumpFile, TrainedDetCtx, M_DEFAULT);
     }
 
@@ -721,6 +723,7 @@ MIL_INT MFTYPE DetHookFuncEpoch(MIL_INT, MIL_ID EventId, void* UserData)
     return M_NULL;
 }
 
+//==============================================================================
 MIL_INT MFTYPE DetHookFuncMiniBatch(MIL_INT HookType, MIL_ID EventId, void* UserData)
 {
     auto pHookData = (DetHookDataStruct*)UserData;
@@ -771,6 +774,80 @@ MIL_INT MFTYPE DetHookFuncMiniBatch(MIL_INT HookType, MIL_ID EventId, void* User
     }
 
     return(M_NULL);
+}
+
+//==============================================================================
+MIL_STRING ConvertPrepareDataStatusToStr(MIL_INT Status)
+{
+    switch (Status)
+    {
+    case M_COMPLETE:
+        return MIL_TEXT("M_COMPLETE");
+    case M_INVALID_AUG_OP_FOR_1_BAND_BUFFER:
+        return MIL_TEXT("M_INVALID_AUG_OP_FOR_1_BAND_BUFFER");
+    case M_INVALID_AUG_OP_FOR_1_BIT_BUFFER:
+        return MIL_TEXT("M_INVALID_AUG_OP_FOR_1_BIT_BUFFER");
+    case M_SOURCE_TOO_SMALL_FOR_DERICHE_OP:
+        return MIL_TEXT("M_SOURCE_TOO_SMALL_FOR_DERICHE_OP");
+    case M_FLOAT_IMAGE_NOT_NORMALIZED:
+        return MIL_TEXT("M_FLOAT_IMAGE_NOT_NORMALIZED");
+    case M_FAILED_TO_SAVE_IMAGE:
+        return MIL_TEXT("M_FAILED_TO_SAVE_IMAGE");
+    case M_IMAGE_FILE_NOT_FOUND:
+        return MIL_TEXT("M_IMAGE_FILE_NOT_FOUND");
+    case M_INVALID_BUFFER_SIGN_FOR_AUG:
+        return MIL_TEXT("M_INVALID_BUFFER_SIGN_FOR_AUG");
+    case M_INVALID_CENTER:
+        return MIL_TEXT("M_INVALID_CENTER");
+    case M_MASK_FILE_NOT_FOUND:
+        return MIL_TEXT("M_MASK_FILE_NOT_FOUND");
+    case M_RESIZED_IMAGE_TOO_SMALL:
+        return MIL_TEXT("M_RESIZED_IMAGE_TOO_SMALL");
+    default:
+    case M_INTERNAL_ERROR:
+        return MIL_TEXT("M_INTERNAL_ERROR");
+    }
+}
+
+//==============================================================================
+MIL_INT MFTYPE DetHookNumPreparedEntriesFunc(MIL_INT, MIL_ID EventId, void* pUserData)
+{
+    bool* pIsDevDataset = reinterpret_cast<bool*>(pUserData);
+
+    MIL_ID SrcDataset{ M_NULL };
+    MclassGetHookInfo(EventId, M_SRC_DATASET_ID + M_TYPE_MIL_ID, &SrcDataset);
+
+    MIL_INT NumPrpEntries{ 0 };
+    MclassGetHookInfo(EventId, M_NUMBER_OF_PREPARED_SRC_ENTRIES + M_TYPE_MIL_INT, &NumPrpEntries);
+
+    const MIL_INT NumEntries = MclassInquire(SrcDataset, M_DEFAULT, M_NUMBER_OF_ENTRIES, M_NULL);
+
+    if (NumPrpEntries == 1)
+    {
+        *pIsDevDataset ? MosPrintf(MIL_TEXT("Preparing the dev dataset...\n")) :
+            MosPrintf(MIL_TEXT("Augmenting the train dataset...\n"));
+    }
+
+    MIL_INT Status{ -1 };
+    MclassGetHookInfo(EventId, M_STATUS + M_TYPE_MIL_INT, &Status);
+
+    const MIL_STRING StatusStr = ConvertPrepareDataStatusToStr(Status);
+
+    MIL_TEXT_CHAR EndOfLine = '\r';
+    if (Status != M_COMPLETE)
+    {
+        EndOfLine = '\n';
+    }
+
+    MosPrintf(MIL_TEXT("Entry %d of %d completed with status: %s.%c"), NumPrpEntries, NumEntries, StatusStr.c_str(), EndOfLine);
+
+    if (NumPrpEntries == NumEntries)
+    {
+        EndOfLine == '\r' ? MosPrintf(MIL_TEXT("\n\n")) : MosPrintf(MIL_TEXT("\n"));
+        *pIsDevDataset = true;
+    }
+
+    return M_NULL;
 }
 
 

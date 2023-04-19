@@ -9,6 +9,11 @@ int main() {
 	MIL_UNIQUE_DISP_ID MilDisplay = MdispAlloc(MilSystem, M_DEFAULT, MIL_TEXT("M_DEFAULT"), M_DEFAULT, M_UNIQUE_ID);
 	MILTestPtr m_MILTestPtr = MILTestPtr(new MILTest(MilSystem, MilDisplay));
 
+	MIL_INT C = 5;
+	MIL_TEXT_CHAR LossText[512];
+	MosSprintf(LossText, 512, MIL_TEXT("Current dev loss value: %d"), C);
+
+	
 	//Classifier CNN test
 	//m_MILTestPtr->CropImgs();
 
@@ -19,12 +24,12 @@ int main() {
 	//m_MILTestPtr->MILTestPredictEngine();
 	
 	//Detection CNN test
-	m_MILTestPtr->MILTestGenDetDataset();
-	m_MILTestPtr->MILTestDetTrain();
+	//m_MILTestPtr->MILTestGenDetDataset();
+	//m_MILTestPtr->MILTestDetTrain();
 	//m_MILTestPtr->MILTestDetPredict();
 
 	//ONNX test
-	//m_MILTestPtr->MILTestONNXPredict();
+	m_MILTestPtr->MILTestONNXPredict();
 
 #if 0
 	//╤Ю╫ЬЁл╡Бйт
