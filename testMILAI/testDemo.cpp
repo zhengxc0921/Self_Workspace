@@ -1,7 +1,7 @@
 #pragma once
+
+#if 1
 #include "MILTest.h"
-
-
 int main() {
 
 	MIL_UNIQUE_APP_ID MilApplication = MappAlloc(M_NULL, M_DEFAULT, M_UNIQUE_ID);
@@ -17,8 +17,8 @@ int main() {
 	//Classifier CNN test
 	//m_MILTestPtr->CropImgs();
 
-	//m_MILTestPtr->MILTestGenDataset();
-	//m_MILTestPtr->MILTestTrain();
+	m_MILTestPtr->MILTestGenDataset();
+	m_MILTestPtr->MILTestTrain();
 	//m_MILTestPtr->MILTestPredict();
 	//m_MILTestPtr->MILTestPredictWithBlob();
 	//m_MILTestPtr->MILTestPredictEngine();
@@ -29,7 +29,7 @@ int main() {
 	//m_MILTestPtr->MILTestDetPredict();
 
 	//ONNX test
-	m_MILTestPtr->MILTestONNXPredict();
+	//m_MILTestPtr->MILTestONNXPredict();
 
 #if 0
 	//¶à½ø³Ì²âÊÔ
@@ -47,3 +47,4 @@ int main() {
 	return 1;
 }
 
+#endif

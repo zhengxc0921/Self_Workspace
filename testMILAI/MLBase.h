@@ -26,6 +26,13 @@ struct AugmentationParasStruct
     MIL_DOUBLE SmoothnessMax;           //max smoothness, default:100.0
     MIL_DOUBLE GaussNoiseDelta;         //gauss noise mean, default:25.0
     MIL_DOUBLE GaussNoiseStdev;         //gauss noise stdev, default:25.0
+
+    MIL_DOUBLE DirIntyMax;
+    MIL_DOUBLE DirIntyMin;
+    MIL_DOUBLE IntyDeltaAdd;     //add a value;value = random{[Inty-IntyDeltaAdd,Inty+IntyDeltaAdd]}
+    MIL_DOUBLE GaussNoiseStd;
+
+
     MIL_DOUBLE GammaValue;
     MIL_DOUBLE GammaDelta;
     MIL_DOUBLE InAddValue;
@@ -40,6 +47,7 @@ struct DataContextParasStruct
     int ImageSizeX;                     //image size x
     int ImageSizeY;                     //image size y
     int DstFolderMode;                  //0:write, 1:overwrite
+    int ResizeModel;
     MIL_STRING PreparedDataFolder;      //prepared data folder
     AugmentationParasStruct AugParas;   //augmentation paraments
 };

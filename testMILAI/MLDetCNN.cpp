@@ -69,17 +69,24 @@ void CMLDetCNN::ConstructDataset(string ClassesInfo,
 }
 
 void CMLDetCNN::ConstructDataset(string ClassesInfo,
-    MIL_STRING IconDir, 
+    string IconDir,
     string ImgDataInfo,
-    const MIL_STRING& WorkingDataPath)
+    string WorkingDataPath)
 {
+
+    MIL_STRING MStrIconDir = m_AIParse->string2MIL_STRING(IconDir);
+    MIL_STRING MStrWorkingDataPath = m_AIParse->string2MIL_STRING(WorkingDataPath);;
+    //m_AIParse->MIL_STRING2string(MStrIconDir, IconDir);
+    //m_AIParse->MIL_STRING2string(MStrWorkingDataPath, WorkingDataPath);
+
+
     MIL_UNIQUE_CLASS_ID  Dataset = MclassAlloc(m_MilSystem, M_DATASET_IMAGES, M_DEFAULT, M_UNIQUE_ID);
     MclassControl(Dataset, M_DEFAULT, M_AUTHOR_ADD, MIL_TEXT("ZXC"));
     //step1:txt-->IconDataInfo
     vector<MIL_STRING>vecClasses;
     m_AIParse->readClasses2Vector(ClassesInfo, vecClasses);
     for (int i = 0; i < vecClasses.size(); i++) {
-        MIL_STRING ClassIcon = IconDir + vecClasses[i] + L".bmp";
+        MIL_STRING ClassIcon = MStrIconDir + vecClasses[i] + L".bmp";
         MclassControl(Dataset, M_DEFAULT, M_CLASS_ADD, vecClasses[i]);
         MIL_UNIQUE_BUF_ID IconImageId = MbufRestore(ClassIcon, m_MilSystem, M_UNIQUE_ID);
         MclassControl(Dataset, M_CLASS_INDEX(i), M_CLASS_ICON_ID, IconImageId);
@@ -109,15 +116,36 @@ void CMLDetCNN::ConstructDataset(string ClassesInfo,
     }
 
 
-    CreateFolder(WorkingDataPath);
-    MclassControl(Dataset, M_CONTEXT, M_CONSOLIDATE_ENTRIES_INTO_FOLDER, WorkingDataPath);
-    MIL_STRING WorkDatasetPath = WorkingDataPath + MIL_TEXT("DataSet.mclassd");
+    CreateFolder(MStrWorkingDataPath);
+    MclassControl(Dataset, M_CONTEXT, M_CONSOLIDATE_ENTRIES_INTO_FOLDER, MStrWorkingDataPath);
+    MIL_STRING WorkDatasetPath = MStrWorkingDataPath + MIL_TEXT("DataSet.mclassd");
     MclassSave(WorkDatasetPath, Dataset, M_DEFAULT);
 }
 
 
 void CMLDetCNN::ConstructDataContext(DataContextParasStruct DataCtxParas, MIL_UNIQUE_CLASS_ID& PrepareDataCtx)
-{
+{    
+
+    if (DataCtxParas.ImageSizeX > 0 && DataCtxParas.ImageSizeY > 0)
+    {
+        MclassControl(PrepareDataCtx, M_CONTEXT, M_SIZE_MODE, M_USER_DEFINED);
+        MclassControl(PrepareDataCtx, M_CONTEXT, M_SIZE_X, DataCtxParas.ImageSizeX);
+        MclassControl(PrepareDataCtx, M_CONTEXT, M_SIZE_Y, DataCtxParas.ImageSizeY);
+        m_ImageSizeX = DataCtxParas.ImageSizeX;
+        m_ImageSizeY = DataCtxParas.ImageSizeY;
+    }
+    //MclassControl(DataContext, M_CONTEXT, M_RESIZE_SCALE_FACTOR, M_FILL_DESTINATION);
+    if (DataCtxParas.DstFolderMode == 1)
+    {
+        MclassControl(PrepareDataCtx, M_CONTEXT, M_DESTINATION_FOLDER_MODE, M_OVERWRITE);
+    }
+    ////数据保存
+    CreateFolder(DataCtxParas.PreparedDataFolder);
+    MclassControl(PrepareDataCtx, M_CONTEXT, M_PREPARED_DATA_FOLDER, DataCtxParas.PreparedDataFolder);
+    // On average, we do two augmentations per image + the original images.
+    MclassControl(PrepareDataCtx, M_CONTEXT, M_AUGMENT_NUMBER_FACTOR, DataCtxParas.AugParas.AugmentationNumPerImage);
+    //// Ensure repeatability with a fixed seed.
+    MclassControl(PrepareDataCtx, M_CONTEXT, M_RESIZE_SCALE_FACTOR, M_FILL_DESTINATION);
 
     //MIL_ID PrepareDataCtx{ M_NULL };
     //MclassInquire(TrainCtx, M_DEFAULT, M_PREPARE_DATA_CONTEXT_ID + M_TYPE_MIL_ID, &PrepareDataCtx);
@@ -126,14 +154,10 @@ void CMLDetCNN::ConstructDataContext(DataContextParasStruct DataCtxParas, MIL_UN
     MclassControl(PrepareDataCtx, M_DEFAULT, M_SEED_MODE, M_USER_DEFINED);
     MclassControl(PrepareDataCtx, M_DEFAULT, M_SEED_VALUE, 16);
 
-    //// Number of augmentations.
-    MclassControl(PrepareDataCtx, M_DEFAULT, M_AUGMENT_NUMBER_MODE, M_FACTOR);
-    MclassControl(PrepareDataCtx, M_DEFAULT, M_AUGMENT_NUMBER_FACTOR, 1);
-    MclassControl(PrepareDataCtx, M_DEFAULT, M_AUGMENT_BALANCING, 0.0);
+
 
     //// Presets.
     MclassControl(PrepareDataCtx, M_DEFAULT, M_PRESET_TRANSLATION, M_ENABLE);
-    MclassControl(PrepareDataCtx, M_DEFAULT, M_PRESET_ROTATION, M_ENABLE);
     MclassControl(PrepareDataCtx, M_DEFAULT, M_PRESET_FLIP, M_ENABLE);
 
     MIL_ID AugmentContext{ M_NULL };
@@ -173,98 +197,6 @@ void CMLDetCNN::ConstructDataContext(DataContextParasStruct DataCtxParas, MIL_UN
     //// Hook to show augmentations' progress.
     bool IsDevDataset = false;
     MclassHookFunction(PrepareDataCtx, M_PREPARE_ENTRY_POST, DetHookNumPreparedEntriesFunc, &IsDevDataset);
-
-
-
-    //if (M_NULL == DataContext)
-    //{
-    //    DataContext = MclassAlloc(m_MilSystem, M_PREPARE_IMAGES_DET, M_DEFAULT, M_UNIQUE_ID);
-    //}
-    //MIL_ID AugmentContext;
-    //MclassInquire(DataContext, M_CONTEXT, M_AUGMENT_CONTEXT_ID + M_TYPE_MIL_ID, &AugmentContext);
-    //if (DataCtxParas.ImageSizeX > 0 && DataCtxParas.ImageSizeY > 0)
-    //{
-    //    MclassControl(DataContext, M_CONTEXT, M_SIZE_MODE, M_USER_DEFINED);
-    //    MclassControl(DataContext, M_CONTEXT, M_SIZE_X, DataCtxParas.ImageSizeX);
-    //    MclassControl(DataContext, M_CONTEXT, M_SIZE_Y, DataCtxParas.ImageSizeY);
-    //    m_ImageSizeX = DataCtxParas.ImageSizeX;
-    //    m_ImageSizeY = DataCtxParas.ImageSizeY;
-    //}
-    //MclassControl(DataContext, M_CONTEXT, M_RESIZE_SCALE_FACTOR, M_FILL_DESTINATION);
-    //if (DataCtxParas.DstFolderMode == 1)
-    //{
-    //    MclassControl(DataContext, M_CONTEXT, M_DESTINATION_FOLDER_MODE, M_OVERWRITE);
-    //}
-    ////数据保存
-    //CreateFolder(DataCtxParas.PreparedDataFolder);
-    //MclassControl(DataContext, M_CONTEXT, M_PREPARED_DATA_FOLDER, DataCtxParas.PreparedDataFolder);
-    //// On average, we do two augmentations per image + the original images.
-    //MclassControl(DataContext, M_CONTEXT, M_AUGMENT_NUMBER_FACTOR, DataCtxParas.AugParas.AugmentationNumPerImage);
-    //// Ensure repeatability with a fixed seed.
-    //if (DataCtxParas.AugParas.SeedValue > 0)
-    //{
-    //    MclassControl(DataContext, M_CONTEXT, M_SEED_MODE, M_USER_DEFINED);
-    //    MclassControl(DataContext, M_CONTEXT, M_SEED_VALUE, DataCtxParas.AugParas.SeedValue);
-    //}
-    //if (DataCtxParas.AugParas.TranslationXMax > 0)
-    //{
-    //    MimControl(AugmentContext, M_AUG_TRANSLATION_X_OP, M_ENABLE);
-    //    MimControl(AugmentContext, M_AUG_TRANSLATION_X_OP_MAX, DataCtxParas.AugParas.TranslationXMax);
-    //}
-    //if (DataCtxParas.AugParas.TranslationYMax > 0)
-    //{
-    //    MimControl(AugmentContext, M_AUG_TRANSLATION_Y_OP, M_ENABLE);
-    //    MimControl(AugmentContext, M_AUG_TRANSLATION_Y_OP_MAX, DataCtxParas.AugParas.TranslationYMax);
-    //}
-    //// Scale augmentation and presets in the prepare data context.
-    //// MclassControl(TrainPrepareDataCtx, M_CONTEXT, M_PRESET_SCALE, M_ENABLE);
-    //if ((DataCtxParas.AugParas.ScaleFactorMin > 0 && DataCtxParas.AugParas.ScaleFactorMin != 1.0)
-    //    || (DataCtxParas.AugParas.ScaleFactorMax > 0 && DataCtxParas.AugParas.ScaleFactorMax != 1.0))
-    //{
-    //    MimControl(AugmentContext, M_AUG_SCALE_OP, M_ENABLE);
-    //    MimControl(AugmentContext, M_AUG_SCALE_OP_FACTOR_MIN, DataCtxParas.AugParas.ScaleFactorMin);
-    //    MimControl(AugmentContext, M_AUG_SCALE_OP_FACTOR_MAX, DataCtxParas.AugParas.ScaleFactorMax);
-    //}
-    //// Rotation augmentation and presets in the prepare data context.
-    //// MclassControl(TrainPrepareDataCtx, M_CONTEXT, M_PRESET_ROTATION, M_ENABLE);
-    //if (DataCtxParas.AugParas.RotateAngleDelta > 0)
-    //{
-    //    MimControl(AugmentContext, M_AUG_ROTATION_OP, M_ENABLE);
-    //    MimControl(AugmentContext, M_AUG_ROTATION_OP_ANGLE_DELTA, DataCtxParas.AugParas.RotateAngleDelta);
-    //}
-    //if (DataCtxParas.AugParas.SmoothnessMin > 0.0 && DataCtxParas.AugParas.SmoothnessMax >= DataCtxParas.AugParas.SmoothnessMin)
-    //{
-    //    MimControl(AugmentContext, M_AUG_SMOOTH_DERICHE_OP, M_ENABLE);
-    //    MimControl(AugmentContext, M_AUG_SMOOTH_DERICHE_OP_FACTOR_MIN, DataCtxParas.AugParas.SmoothnessMin);
-    //    MimControl(AugmentContext, M_AUG_SMOOTH_DERICHE_OP_FACTOR_MAX, DataCtxParas.AugParas.SmoothnessMax);
-    //}
-    //// Noise augmentation and presets in the prepare data context.
-    //if (DataCtxParas.AugParas.GaussNoiseDelta > 0.0 || DataCtxParas.AugParas.GaussNoiseStdev > 0.0)
-    //{
-    //    MimControl(AugmentContext, M_AUG_NOISE_GAUSSIAN_ADDITIVE_OP, M_ENABLE);
-    //    MimControl(AugmentContext, M_AUG_NOISE_GAUSSIAN_ADDITIVE_OP_STDDEV, DataCtxParas.AugParas.GaussNoiseStdev);
-    //    MimControl(AugmentContext, M_AUG_NOISE_GAUSSIAN_ADDITIVE_OP_STDDEV_DELTA, DataCtxParas.AugParas.GaussNoiseDelta);
-    //}
-    //if (DataCtxParas.AugParas.CropEnable == 1)
-    //{
-    //    MimControl(AugmentContext, M_AUG_CROP_OP, M_ENABLE);
-    //}
-    //if (DataCtxParas.AugParas.GammaValue > 0)
-    //{
-    //    MimControl(AugmentContext, M_AUG_GAMMA_OP, M_ENABLE);
-    //    MimControl(AugmentContext, M_AUG_GAMMA_OP_VALUE, DataCtxParas.AugParas.GammaValue);
-    //    MimControl(AugmentContext, M_AUG_GAMMA_OP_DELTA, DataCtxParas.AugParas.GammaDelta);
-    //}
-    //if (DataCtxParas.AugParas.InAddValue > 0) {
-    //    MimControl(AugmentContext, M_AUG_INTENSITY_ADD_OP, M_ENABLE);
-    //    MimControl(AugmentContext, M_AUG_INTENSITY_ADD_OP_VALUE, DataCtxParas.AugParas.InAddValue);
-    //    MimControl(AugmentContext, M_AUG_INTENSITY_ADD_OP_DELTA, DataCtxParas.AugParas.InAddDelta);
-    //}
-    //if (DataCtxParas.AugParas.InMulValue > 0) {
-    //    MimControl(AugmentContext, M_AUG_INTENSITY_MULTIPLY_OP, M_ENABLE);
-    //    MimControl(AugmentContext, M_AUG_INTENSITY_MULTIPLY_OP_VALUE, DataCtxParas.AugParas.InMulValue);
-    //    MimControl(AugmentContext, M_AUG_INTENSITY_MULTIPLY_OP_DELTA, DataCtxParas.AugParas.InMulDelta);
-    //}
 }
 
 void CMLDetCNN::PrepareDataset(MIL_UNIQUE_CLASS_ID& DatasetContext, MIL_UNIQUE_CLASS_ID& PrepareDataset, MIL_UNIQUE_CLASS_ID& PreparedDataset)
@@ -272,9 +204,10 @@ void CMLDetCNN::PrepareDataset(MIL_UNIQUE_CLASS_ID& DatasetContext, MIL_UNIQUE_C
     MclassPreprocess(DatasetContext, M_DEFAULT);
     MclassPrepareData(DatasetContext, PrepareDataset, PreparedDataset, M_NULL, M_DEFAULT);
 
-    MIL_STRING PreparedDatasetPath =  MIL_TEXT("I:/MIL_Detection_Dataset/VOC/PreparedDataSet.mclassd");
+    MIL_STRING PreparedDatasetPath =  MIL_TEXT("I:/MIL_Detection_Dataset/lslm_all/PreparedDataSet.mclassd");
     MclassSave(PreparedDatasetPath, PreparedDataset, M_DEFAULT);
-
+    MclassExport(MIL_TEXT("I:/MIL_Detection_Dataset/lslm_all/TrainDatasetFeatures.csv"), M_FORMAT_CSV, PreparedDataset, M_DEFAULT, M_ENTRIES, M_DEFAULT);
+  
 }
 
 void CMLDetCNN::ConstructTrainCtx(DetParas ClassifierParas, MIL_UNIQUE_CLASS_ID& TrainCtx)
@@ -385,7 +318,7 @@ void CMLDetCNN::TrainClassifier(MIL_UNIQUE_CLASS_ID& Dataset,
     double time = 0;
     MIL_TEXT_CHAR TheString[512];
     //timeStart();
-    MclassTrain(TrainCtx, PrevDetCtx, Dataset, M_NULL, TrainRes, M_DEFAULT);
+    MclassTrain(TrainCtx, M_NULL, Dataset, M_NULL, TrainRes, M_DEFAULT);
     //timeEnd(time);
     if (TrainEngineUsed == M_CPU)
 
@@ -421,7 +354,7 @@ void CMLDetCNN::Predict(MIL_ID Image, MIL_UNIQUE_CLASS_ID& TrainedDetCtx, DetRes
     PredictBegin(TrainedDetCtx, Image);
     //MIL_ID ImageReduce = MbufAlloc2d(m_MilSystem, m_InputSizeX, m_InputSizeY, 24 + M_UNSIGNED, M_IMAGE + M_PROC, M_NULL);
     MIL_ID ImageReduce = MbufAllocColor(m_MilSystem, 3, m_InputSizeX, m_InputSizeY, 8 + M_UNSIGNED, M_IMAGE + M_PROC , M_NULL);
-    MimResize(Image, ImageReduce, M_FILL_DESTINATION, M_FILL_DESTINATION, M_DEFAULT);
+    MimResize(Image, ImageReduce, M_FILL_DESTINATION, M_FILL_DESTINATION, M_BILINEAR);
 
     MIL_INT Status = M_FALSE;
     MclassInquire(TrainedDetCtx, M_DEFAULT, M_PREPROCESSED + M_TYPE_MIL_INT, &Status);

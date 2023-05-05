@@ -264,9 +264,11 @@ void CMLClassCNN::ConstructDataContext(DataContextParasStruct DataCtxParas, MIL_
     {
         DataContext = MclassAlloc(m_MilSystem, M_PREPARE_IMAGES_CNN, M_DEFAULT, M_UNIQUE_ID);
     }
-
-    MIL_ID AugmentContext;
-    MclassInquire(DataContext, M_CONTEXT, M_AUGMENT_CONTEXT_ID + M_TYPE_MIL_ID, &AugmentContext);
+    //数据保存
+    CreateFolder(DataCtxParas.PreparedDataFolder);
+    MclassControl(DataContext, M_CONTEXT, M_PREPARED_DATA_FOLDER, DataCtxParas.PreparedDataFolder);
+    // On average, we do two augmentations per image + the original images.
+    MclassControl(DataContext, M_CONTEXT, M_AUGMENT_NUMBER_FACTOR, DataCtxParas.AugParas.AugmentationNumPerImage);
 
     if (DataCtxParas.ImageSizeX > 0 && DataCtxParas.ImageSizeY > 0)
     {
@@ -277,39 +279,19 @@ void CMLClassCNN::ConstructDataContext(DataContextParasStruct DataCtxParas, MIL_
         m_ImageSizeY = DataCtxParas.ImageSizeY;
     }
 
-    MclassControl(DataContext, M_CONTEXT, M_RESIZE_SCALE_FACTOR, M_FILL_DESTINATION);
+    MIL_ID AugmentContext;
+    MclassInquire(DataContext, M_CONTEXT, M_AUGMENT_CONTEXT_ID + M_TYPE_MIL_ID, &AugmentContext);
+
 
     if (DataCtxParas.DstFolderMode == 1)
     {
         MclassControl(DataContext, M_CONTEXT, M_DESTINATION_FOLDER_MODE, M_OVERWRITE);
     }
 
-    //数据保存
-    CreateFolder(DataCtxParas.PreparedDataFolder);
-    MclassControl(DataContext, M_CONTEXT, M_PREPARED_DATA_FOLDER, DataCtxParas.PreparedDataFolder);
-    // On average, we do two augmentations per image + the original images.
-    MclassControl(DataContext, M_CONTEXT, M_AUGMENT_NUMBER_FACTOR, DataCtxParas.AugParas.AugmentationNumPerImage);
-    // Ensure repeatability with a fixed seed.
-    if (DataCtxParas.AugParas.SeedValue > 0)
-    {
-        MclassControl(DataContext, M_CONTEXT, M_SEED_MODE, M_USER_DEFINED);
-        MclassControl(DataContext, M_CONTEXT, M_SEED_VALUE, DataCtxParas.AugParas.SeedValue);
-    }
-    // Translation augmentation and presets in the prepare data context.
-    // MclassControl(TrainPrepareDataCtx, M_CONTEXT, M_PRESET_TRANSLATION, M_ENABLE);
-    if (DataCtxParas.AugParas.TranslationXMax > 0)
-    {
-        MimControl(AugmentContext, M_AUG_TRANSLATION_X_OP, M_ENABLE);
-        MimControl(AugmentContext, M_AUG_TRANSLATION_X_OP_MAX, DataCtxParas.AugParas.TranslationXMax);
-    }
-    if (DataCtxParas.AugParas.TranslationYMax > 0)
-    {
-        MimControl(AugmentContext, M_AUG_TRANSLATION_Y_OP, M_ENABLE);
-        MimControl(AugmentContext, M_AUG_TRANSLATION_Y_OP_MAX, DataCtxParas.AugParas.TranslationYMax);
+    if (DataCtxParas.ResizeModel == 1) {
+        MclassControl(DataContext, M_CONTEXT, M_RESIZE_SCALE_FACTOR, M_FILL_DESTINATION);
     }
 
-    // Scale augmentation and presets in the prepare data context.
-    // MclassControl(TrainPrepareDataCtx, M_CONTEXT, M_PRESET_SCALE, M_ENABLE);
     if ((DataCtxParas.AugParas.ScaleFactorMin > 0 && DataCtxParas.AugParas.ScaleFactorMin != 1.0)
         || (DataCtxParas.AugParas.ScaleFactorMax > 0 && DataCtxParas.AugParas.ScaleFactorMax != 1.0))
     {
@@ -318,13 +300,13 @@ void CMLClassCNN::ConstructDataContext(DataContextParasStruct DataCtxParas, MIL_
         MimControl(AugmentContext, M_AUG_SCALE_OP_FACTOR_MAX, DataCtxParas.AugParas.ScaleFactorMax);
     }
     // Rotation augmentation and presets in the prepare data context.
-    // MclassControl(TrainPrepareDataCtx, M_CONTEXT, M_PRESET_ROTATION, M_ENABLE);
+     //MclassControl(TrainPrepareDataCtx, M_CONTEXT, M_PRESET_ROTATION, M_ENABLE);
     if (DataCtxParas.AugParas.RotateAngleDelta > 0)
     {
         MimControl(AugmentContext, M_AUG_ROTATION_OP, M_ENABLE);
         MimControl(AugmentContext, M_AUG_ROTATION_OP_ANGLE_DELTA, DataCtxParas.AugParas.RotateAngleDelta);
     }
-    // Smoothness augmentation and presets in the prepare data context.
+    //// Smoothness augmentation and presets in the prepare data context.
     if (DataCtxParas.AugParas.SmoothnessMin > 0.0 && DataCtxParas.AugParas.SmoothnessMax >= DataCtxParas.AugParas.SmoothnessMin)
     {
         MimControl(AugmentContext, M_AUG_SMOOTH_DERICHE_OP, M_ENABLE);
@@ -349,20 +331,26 @@ void CMLClassCNN::ConstructDataContext(DataContextParasStruct DataCtxParas, MIL_
         MimControl(AugmentContext, M_AUG_GAMMA_OP_DELTA, DataCtxParas.AugParas.GammaDelta);
     }
 
-    if (DataCtxParas.AugParas.InAddValue > 0) {
+    //光强相关的增强
+    if (DataCtxParas.AugParas.DirIntyMax > 0) {
+        MimControl(AugmentContext, M_AUG_LIGHTING_DIRECTIONAL_OP, M_ENABLE);
+        MimControl(AugmentContext, M_AUG_LIGHTING_DIRECTIONAL_OP_INTENSITY_MAX, DataCtxParas.AugParas.DirIntyMax);
+        MimControl(AugmentContext, M_AUG_LIGHTING_DIRECTIONAL_OP_INTENSITY_MIN, DataCtxParas.AugParas.DirIntyMin);
+    }
+
+    if (DataCtxParas.AugParas.IntyDeltaAdd>0) {
         MimControl(AugmentContext, M_AUG_INTENSITY_ADD_OP, M_ENABLE);
-        MimControl(AugmentContext, M_AUG_INTENSITY_ADD_OP_VALUE, DataCtxParas.AugParas.InAddValue);
-        MimControl(AugmentContext, M_AUG_INTENSITY_ADD_OP_DELTA, DataCtxParas.AugParas.InAddDelta);
+        MimControl(AugmentContext, M_AUG_INTENSITY_ADD_OP_DELTA, DataCtxParas.AugParas.IntyDeltaAdd);
+        //MimControl(AugmentContext, M_AUG_INTENSITY_ADD_OP_MODE, M_LUMINANCE);
+        //MimControl(AugmentContext, M_AUG_INTENSITY_ADD_OP_VALUE, 10);
     }
-
-    if (DataCtxParas.AugParas.InMulValue > 0) {
-        MimControl(AugmentContext, M_AUG_INTENSITY_MULTIPLY_OP, M_ENABLE);
-        MimControl(AugmentContext, M_AUG_INTENSITY_MULTIPLY_OP_VALUE, DataCtxParas.AugParas.InMulValue);
-       
-        MimControl(AugmentContext, M_AUG_INTENSITY_MULTIPLY_OP_DELTA, DataCtxParas.AugParas.InMulDelta);
+    // 
+    if (DataCtxParas.AugParas.GaussNoiseStd >0) {
+        MimControl(AugmentContext, M_AUG_NOISE_MULTIPLICATIVE_OP, M_ENABLE);
+        MimControl(AugmentContext, M_AUG_NOISE_MULTIPLICATIVE_OP_DISTRIBUTION, M_GAUSSIAN);
+        MimControl(AugmentContext, M_AUG_NOISE_MULTIPLICATIVE_OP_INTENSITY_MIN, 0);
+        MimControl(AugmentContext, M_AUG_NOISE_MULTIPLICATIVE_OP_STDDEV, DataCtxParas.AugParas.GaussNoiseStd);
     }
-
-
 
 }
 
@@ -546,8 +534,25 @@ void CMLClassCNN::Predict(MIL_ID Image,
     ClassificationResultStruct& Result)
 {
     PredictBegin(TrainedClassifierCtx, Image, Class_Weights);
+
+    //中心crop模式
+    //MIL_INT RawImage_X = MbufInquire(Image, M_SIZE_X, M_NULL);
+    //MIL_INT RawImage_Y = MbufInquire(Image, M_SIZE_Y, M_NULL);
+    //MIL_ID ImageReduce = MbufAlloc2d(m_MilSystem, m_InputSizeX, m_InputSizeY, 8 + M_UNSIGNED, M_IMAGE + M_PROC, M_NULL);
+    //MbufClear(ImageReduce, 0);
+    //MIL_INT SrcOffX = max(int((RawImage_X - m_InputSizeX) / 2), 0);
+    //MIL_INT SrcOffY = max(int((RawImage_Y - m_InputSizeY) / 2), 0);
+    //MIL_INT DstOffX = abs(min(int((RawImage_X - m_InputSizeX) / 2), 0));
+    //MIL_INT DstOffY = abs(min(int((RawImage_Y - m_InputSizeY) / 2), 0));
+    //MIL_INT SizeX = min(RawImage_X, m_InputSizeX);
+    //MIL_INT SizeY = min(RawImage_Y, m_InputSizeY);
+    //MbufCopyColor2d(Image, ImageReduce, M_ALL_BANDS, SrcOffX, SrcOffY, M_ALL_BANDS, DstOffX, DstOffY, SizeX, SizeY);
+
+    //resize 模式
     MIL_ID ImageReduce = MbufAlloc2d(m_MilSystem, m_InputSizeX, m_InputSizeY, 8 + M_UNSIGNED, M_IMAGE + M_PROC, M_NULL);
-    MimResize(Image, ImageReduce, M_FILL_DESTINATION, M_FILL_DESTINATION, M_DEFAULT);
+    MimResize(Image, ImageReduce, M_FILL_DESTINATION, M_FILL_DESTINATION, M_BILINEAR);
+
+
 
     MIL_INT Status = M_FALSE;
     MclassInquire(TrainedClassifierCtx, M_DEFAULT, M_PREPROCESSED + M_TYPE_MIL_INT, &Status);

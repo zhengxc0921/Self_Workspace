@@ -24,9 +24,9 @@ public:
         const MIL_STRING& WorkingDataPath);
     
     void ConstructDataset(string ClassesInfo,
-        MIL_STRING IconDir,
+        string IconDir,
         string ImgDataInfo,
-        const MIL_STRING& WorkingDataPath);
+        string WorkingDataPath);
 
 
     void ConstructDataContext(
