@@ -1,33 +1,16 @@
 import numpy as np
 import cv2,os
 
-src_dir = 'I:/MIL_Detection_Dataset/VOC/'
+
+proj = 'DSW'
+input_shape = (896,288)
+src_dir = 'G:/DefectDataCenter/ParseData/Detection/{}/raw_data/'.format(proj)
 dst_dir = src_dir+ "ODNetResult_show/"
 os.makedirs(dst_dir,exist_ok=True)
 
-# cns = ['LargeKnot','SmallKnot']
-# cns = ['bolt','nut']
-# cns = ['0','1']
-cns = ['aeroplane',
-'bicycle',
-'bird',
-'boat',
-'bottle',
-'bus',
-'car',
-'cat',
-'chair',
-'cow',
-'diningtable',
-'dog',
-'horse',
-'motorbike',
-'person',
-'pottedplant',
-'sheep',
-'sofa',
-'train',
-'tvmonitor']
+cns_file_path = src_dir+'Classes.txt'
+with open(cns_file_path,'r')as f:
+    cns = [x.strip() for x in f.readlines()]
 
 
 
@@ -70,7 +53,7 @@ def visualize(image_path, class_names,top_conf, top_boxes):
     ##遍历所有图片
     for i in range(len(image_path)):
         img = cv2.imdecode(np.fromfile(image_path[i], dtype=np.uint8), 1)
-        img = cv2.resize(img,(512,512))
+        img = cv2.resize(img,input_shape)
         cn = class_names[i]
         score = top_conf[i]
         bbox = top_boxes[i]

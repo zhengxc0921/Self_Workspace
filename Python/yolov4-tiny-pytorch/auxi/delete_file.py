@@ -29,10 +29,10 @@ if __name__ == '__main__':
     # for i in range(9,11):
     #     path = r'G:\DefectDataCenter\wangrixuan\wuxi_WSD300\defect\prepare{}'.format(i)
     #     shutil.rmtree(path)
-    #
-    path = r'G:\classification_data_lib\Train_data'
-    shutil.rmtree(path)
 
-    # src_dir = r'G:\classification_data_lib\Train_data\Mg_grain_v2'
-    # dst_dir =r'G:\DefectDataCenter\ParseData\Classifier\Mg_grain_v2'
-    # file_move(src_dir, dst_dir)
+    # path = r'G:\classification_data_lib\Train_data'
+    # shutil.rmtree(path)
+
+    src_dir = r'G:\DefectDataCenter\DSW'
+    dst_dir =r'G:\DefectDataCenter\原始_现场分类数据\DSW'
+    file_move(src_dir, dst_dir)

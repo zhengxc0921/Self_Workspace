@@ -5,7 +5,6 @@ import os
 
 # import torchvision.transforms as transforms
 
-
 # 功能：从Array(0.48)上切割出适用于目标检测的小区，以及defect的box
 
 class DefectPrepare:
@@ -14,8 +13,8 @@ class DefectPrepare:
         self.DETECTION = DETECTION
         # 模板图路径
         self.project = project
-        self.src_img_path = r'G:\DefectDataCenter\DSW\Array(0.48).bmp'
-        self.dst_prefix = r'I:\MIL_Detection_Dataset\{}\raw_data'.format(project)
+        self.src_img_path = r'G:\DefectDataCenter\原始_现场分类数据\DSW\Array(0.48).bmp'
+        self.dst_prefix = r'G:\DefectDataCenter\ParseData\Detection\{}\raw_data'.format(project)
         self.dst_img_dir = self.dst_prefix + r'\img'
         self.dst_defect_dir = self.dst_prefix + r'\ClassesIcon'
 
@@ -23,7 +22,7 @@ class DefectPrepare:
         # self.template_path = self.dst_prefix + r'\template\template.bmp'
 
         # self.config_dir = self.dst_prefix + r'\config'
-        self.config_label_path = self.dst_prefix + r'\ImgBoxes.txt'
+        self.config_label_path = self.dst_prefix + r'\ImgBoxes_train.txt'
         self.config_classes_path = self.dst_prefix + r'\Classes.txt'
 
         self.cell_size = [48, 89]
@@ -171,6 +170,9 @@ class DefectPrepare:
                     dst_defect_path_tmp = os.path.join(self.dst_defect_dir, self.defect_type)
                     dst_defect_path = os.path.join(dst_defect_path_tmp, defect_name)
                     cv2.imwrite(dst_defect_path, defect_img)
+                    dst_Icon_path = dst_defect_path_tmp+'.bmp'
+                    cv2.imwrite(dst_Icon_path, defect_img)
+
                     ##保存模板圖
                     # img_copy = np.zeros_like(self.img_cut)
                     # img_copy[defect_box[1]:defect_box[1] + self.defect_szie[1],

@@ -71,11 +71,13 @@ void CMLDetCNN::ConstructDataset(string ClassesInfo,
 void CMLDetCNN::ConstructDataset(string ClassesInfo,
     string IconDir,
     string ImgDataInfo,
-    string WorkingDataPath)
+    string WorkingDataPath,
+    string DataSetName)
 {
 
     MIL_STRING MStrIconDir = m_AIParse->string2MIL_STRING(IconDir);
-    MIL_STRING MStrWorkingDataPath = m_AIParse->string2MIL_STRING(WorkingDataPath);;
+    MIL_STRING MStrWorkingDataPath = m_AIParse->string2MIL_STRING(WorkingDataPath);
+    MIL_STRING MStrDataSetName = m_AIParse->string2MIL_STRING(DataSetName);
     //m_AIParse->MIL_STRING2string(MStrIconDir, IconDir);
     //m_AIParse->MIL_STRING2string(MStrWorkingDataPath, WorkingDataPath);
 
@@ -118,7 +120,7 @@ void CMLDetCNN::ConstructDataset(string ClassesInfo,
 
     CreateFolder(MStrWorkingDataPath);
     MclassControl(Dataset, M_CONTEXT, M_CONSOLIDATE_ENTRIES_INTO_FOLDER, MStrWorkingDataPath);
-    MIL_STRING WorkDatasetPath = MStrWorkingDataPath + MIL_TEXT("DataSet.mclassd");
+    MIL_STRING WorkDatasetPath = MStrWorkingDataPath + MStrDataSetName;
     MclassSave(WorkDatasetPath, Dataset, M_DEFAULT);
 }
 
@@ -271,8 +273,7 @@ void CMLDetCNN::ConstructTrainCtx(DetParas ClassifierParas, MIL_UNIQUE_CLASS_ID&
 
 void CMLDetCNN::TrainClassifier(MIL_UNIQUE_CLASS_ID& Dataset, 
     MIL_UNIQUE_CLASS_ID& DatasetContext,
-    MIL_UNIQUE_CLASS_ID& TrainCtx, 
-    MIL_UNIQUE_CLASS_ID& PrevDetCtx,
+    MIL_UNIQUE_CLASS_ID& TrainCtx,
     MIL_UNIQUE_CLASS_ID& TrainedDetCtx,
     MIL_STRING& ClassifierDumpFile)
 {
@@ -352,8 +353,10 @@ void CMLDetCNN::PredictBegin(MIL_UNIQUE_CLASS_ID& TrainedCCtx, MIL_ID Image)
 void CMLDetCNN::Predict(MIL_ID Image, MIL_UNIQUE_CLASS_ID& TrainedDetCtx, DetResult& Result)
 {
     PredictBegin(TrainedDetCtx, Image);
-    //MIL_ID ImageReduce = MbufAlloc2d(m_MilSystem, m_InputSizeX, m_InputSizeY, 24 + M_UNSIGNED, M_IMAGE + M_PROC, M_NULL);
-    MIL_ID ImageReduce = MbufAllocColor(m_MilSystem, 3, m_InputSizeX, m_InputSizeY, 8 + M_UNSIGNED, M_IMAGE + M_PROC , M_NULL);
+   
+    //MIL_ID ImageReduce = MbufAllocColor(m_MilSystem, 3, m_InputSizeX, m_InputSizeY, 8 + M_UNSIGNED, M_IMAGE + M_PROC , M_NULL);
+    MIL_ID ImageReduce = MbufAlloc2d(m_MilSystem, m_InputSizeX, m_InputSizeY, 8 + M_UNSIGNED, M_IMAGE + M_PROC, M_NULL);
+
     MimResize(Image, ImageReduce, M_FILL_DESTINATION, M_FILL_DESTINATION, M_BILINEAR);
 
     MIL_INT Status = M_FALSE;
@@ -373,7 +376,7 @@ void CMLDetCNN::Predict(MIL_ID Image, MIL_UNIQUE_CLASS_ID& TrainedDetCtx, DetRes
     }
     QueryPerformanceCounter(&t2);
     double time = (double)(t2.QuadPart - t1.QuadPart) / (double)tc.QuadPart/(double)CN;
-    //cout << "\nPreprocess_" << "time is = " << time << "\n" << endl;
+    cout << "\nMclassPredict_" << "time is = " << time  << endl;
     MbufFree(ImageReduce);
     MclassGetResult(ClassRes, M_GENERAL, M_NUMBER_OF_INSTANCES + M_TYPE_MIL_INT, &Result.InstanceNum);
     Result.Boxes.resize(Result.InstanceNum);
@@ -386,7 +389,7 @@ void CMLDetCNN::Predict(MIL_ID Image, MIL_UNIQUE_CLASS_ID& TrainedDetCtx, DetRes
         MclassGetResult(ClassRes, M_INSTANCE_INDEX(i), M_CENTER_Y + M_TYPE_MIL_DOUBLE, &Result.Boxes[i].CY);
         MclassGetResult(ClassRes, M_INSTANCE_INDEX(i), M_HEIGHT + M_TYPE_MIL_DOUBLE, &Result.Boxes[i].H);
         MclassGetResult(ClassRes, M_INSTANCE_INDEX(i), M_WIDTH + M_TYPE_MIL_DOUBLE, &Result.Boxes[i].W);
-        //MclassGetResult(ClassRes, M_ALL_INSTANCES, M_BOX_4_CORNERS + M_TYPE_MIL_DOUBLE, Box);
+       
         MclassGetResult(ClassRes, M_INSTANCE_INDEX(i), M_BEST_CLASS_INDEX + M_TYPE_MIL_INT, &Result.ClassIndex[i]);
         MclassGetResult(ClassRes, M_INSTANCE_INDEX(i), M_BEST_CLASS_SCORE + M_TYPE_MIL_DOUBLE, &Result.Score[i]);
         MclassInquire(TrainedDetCtx, M_CLASS_INDEX(Result.ClassIndex[i]), M_CLASS_NAME, Result.ClassName[i]);

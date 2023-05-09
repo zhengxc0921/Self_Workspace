@@ -26,7 +26,8 @@ public:
     void ConstructDataset(string ClassesInfo,
         string IconDir,
         string ImgDataInfo,
-        string WorkingDataPath);
+        string WorkingDataPath,
+        string DataSetName);
 
 
     void ConstructDataContext(
@@ -46,7 +47,7 @@ public:
         MIL_UNIQUE_CLASS_ID& Dataset,
         MIL_UNIQUE_CLASS_ID& DatasetContext,
         MIL_UNIQUE_CLASS_ID& TrainCtx,
-        MIL_UNIQUE_CLASS_ID& PrevDetCtx,
+       
         MIL_UNIQUE_CLASS_ID& TrainedDetCtx,
         MIL_STRING& DetDumpFile);
 

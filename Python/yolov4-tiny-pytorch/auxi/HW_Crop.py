@@ -8,12 +8,12 @@ class HWCroper:
         self.ClassName = "A"
         self.dft_size = [15,15]
 
-        self.src_img_dir = r'G:\DefectDataCenter\华为数据\检测数据'
-        self.dst_dir = r'I:\MIL_Detection_Dataset\{}\raw_data'.format(project)
+        self.src_img_dir = r'G:\DefectDataCenter\原始_现场分类数据\HuaWei'
+        self.dst_dir = r'G:\DefectDataCenter\ParseData\Detection\{}\raw_data'.format(project)
         # self.dst_config_dir = os.path.join(self.dst_dir,r'config')
         # self.dst_img_dir = os.path.join(self.dst_dir,'Img')
         self.dst_defect_dir = os.path.join(self.dst_dir,'ClassesIcon')
-        self.dst_ImgBoxes_path =  os.path.join(self.dst_dir,'ImgBoxes.txt')
+        self.dst_ImgBoxes_path =  os.path.join(self.dst_dir,'ImgBoxes_train.txt')
         self.dst_Classes_path = os.path.join(self.dst_dir, 'Classes.txt')
         self.folder_initial()
 

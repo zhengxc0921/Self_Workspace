@@ -281,17 +281,13 @@ void CMLClassCNN::ConstructDataContext(DataContextParasStruct DataCtxParas, MIL_
 
     MIL_ID AugmentContext;
     MclassInquire(DataContext, M_CONTEXT, M_AUGMENT_CONTEXT_ID + M_TYPE_MIL_ID, &AugmentContext);
-
-
     if (DataCtxParas.DstFolderMode == 1)
     {
         MclassControl(DataContext, M_CONTEXT, M_DESTINATION_FOLDER_MODE, M_OVERWRITE);
     }
-
     if (DataCtxParas.ResizeModel == 1) {
         MclassControl(DataContext, M_CONTEXT, M_RESIZE_SCALE_FACTOR, M_FILL_DESTINATION);
     }
-
     if ((DataCtxParas.AugParas.ScaleFactorMin > 0 && DataCtxParas.AugParas.ScaleFactorMin != 1.0)
         || (DataCtxParas.AugParas.ScaleFactorMax > 0 && DataCtxParas.AugParas.ScaleFactorMax != 1.0))
     {
@@ -299,8 +295,6 @@ void CMLClassCNN::ConstructDataContext(DataContextParasStruct DataCtxParas, MIL_
         MimControl(AugmentContext, M_AUG_SCALE_OP_FACTOR_MIN, DataCtxParas.AugParas.ScaleFactorMin);
         MimControl(AugmentContext, M_AUG_SCALE_OP_FACTOR_MAX, DataCtxParas.AugParas.ScaleFactorMax);
     }
-    // Rotation augmentation and presets in the prepare data context.
-     //MclassControl(TrainPrepareDataCtx, M_CONTEXT, M_PRESET_ROTATION, M_ENABLE);
     if (DataCtxParas.AugParas.RotateAngleDelta > 0)
     {
         MimControl(AugmentContext, M_AUG_ROTATION_OP, M_ENABLE);
@@ -320,10 +314,7 @@ void CMLClassCNN::ConstructDataContext(DataContextParasStruct DataCtxParas, MIL_
         MimControl(AugmentContext, M_AUG_NOISE_GAUSSIAN_ADDITIVE_OP_STDDEV, DataCtxParas.AugParas.GaussNoiseStdev);
         MimControl(AugmentContext, M_AUG_NOISE_GAUSSIAN_ADDITIVE_OP_STDDEV_DELTA, DataCtxParas.AugParas.GaussNoiseDelta);
     }
-    if (DataCtxParas.AugParas.CropEnable == 1)
-    {
-        MimControl(AugmentContext, M_AUG_CROP_OP, M_ENABLE);
-    }
+
     if (DataCtxParas.AugParas.GammaValue > 0)
     {
         MimControl(AugmentContext, M_AUG_GAMMA_OP, M_ENABLE);
@@ -341,24 +332,18 @@ void CMLClassCNN::ConstructDataContext(DataContextParasStruct DataCtxParas, MIL_
     if (DataCtxParas.AugParas.IntyDeltaAdd>0) {
         MimControl(AugmentContext, M_AUG_INTENSITY_ADD_OP, M_ENABLE);
         MimControl(AugmentContext, M_AUG_INTENSITY_ADD_OP_DELTA, DataCtxParas.AugParas.IntyDeltaAdd);
-        //MimControl(AugmentContext, M_AUG_INTENSITY_ADD_OP_MODE, M_LUMINANCE);
-        //MimControl(AugmentContext, M_AUG_INTENSITY_ADD_OP_VALUE, 10);
     }
-    // 
-    if (DataCtxParas.AugParas.GaussNoiseStd >0) {
-        MimControl(AugmentContext, M_AUG_NOISE_MULTIPLICATIVE_OP, M_ENABLE);
-        MimControl(AugmentContext, M_AUG_NOISE_MULTIPLICATIVE_OP_DISTRIBUTION, M_GAUSSIAN);
-        MimControl(AugmentContext, M_AUG_NOISE_MULTIPLICATIVE_OP_INTENSITY_MIN, 0);
-        MimControl(AugmentContext, M_AUG_NOISE_MULTIPLICATIVE_OP_STDDEV, DataCtxParas.AugParas.GaussNoiseStd);
-    }
-
 }
 
-void CMLClassCNN::PrepareDataset(MIL_UNIQUE_CLASS_ID& DatasetContext, MIL_UNIQUE_CLASS_ID& PrepareDataset, MIL_UNIQUE_CLASS_ID& PreparedDataset)
+void CMLClassCNN::PrepareDataset(MIL_UNIQUE_CLASS_ID& DatasetContext, 
+    MIL_UNIQUE_CLASS_ID& PrepareDataset, MIL_UNIQUE_CLASS_ID& PreparedDataset,
+    MIL_STRING PreparedDatasetPath)
 {
     MclassPreprocess(DatasetContext, M_DEFAULT);
     MclassPrepareData(DatasetContext, PrepareDataset, PreparedDataset, M_NULL, M_DEFAULT);
+    
 
+    MclassSave(PreparedDatasetPath, PreparedDataset, M_DEFAULT);
 }
 
 void CMLClassCNN::ConstructTrainCtx(ClassifierParasStruct ClassifierParas, MIL_UNIQUE_CLASS_ID& TrainCtx)
@@ -420,7 +405,9 @@ void CMLClassCNN::ConstructTrainCtx(ClassifierParasStruct ClassifierParas, MIL_U
 
 }
 
-void CMLClassCNN::TrainClassifier(MIL_UNIQUE_CLASS_ID& Dataset, MIL_UNIQUE_CLASS_ID& DatasetContext, MIL_UNIQUE_CLASS_ID& TrainCtx, MIL_UNIQUE_CLASS_ID& PrevClassifierCtx, MIL_UNIQUE_CLASS_ID& TrainedClassifierCtx, MIL_STRING& ClassifierDumpFile)
+void CMLClassCNN::TrainClassifier(MIL_UNIQUE_CLASS_ID& Dataset, 
+    MIL_UNIQUE_CLASS_ID& DatasetContext,
+    MIL_UNIQUE_CLASS_ID& TrainCtx, MIL_UNIQUE_CLASS_ID& PrevClassifierCtx, MIL_UNIQUE_CLASS_ID& TrainedClassifierCtx, MIL_STRING& ClassifierDumpFile)
 {
     MIL_INT MaxEpoch = 0;
     MIL_INT MinibatchSize = 0;

@@ -14,11 +14,11 @@ class DefectPrepare:
         self.DETECTION = DETECTION
         # 模板图路径
         self.project = project
-        self.src_img_path = r'G:\DefectDataCenter\DSW\Random(0.36).bmp'
-        self.dst_prefix = r'I:\MIL_Detection_Dataset\{}\raw_data'.format(project)
+        self.src_img_path = r'G:\DefectDataCenter\原始_现场分类数据\DSW\Random(0.36).bmp'
+        self.dst_prefix = r'G:\DefectDataCenter\ParseData\Detection\{}\raw_data'.format(project)
         self.dst_img_dir = self.dst_prefix + r'\img'
         self.dst_defect_dir = self.dst_prefix + r'\ClassesIcon'
-        self.config_label_path = self.dst_prefix + r'\ImgBoxes.txt'
+        self.config_label_path = self.dst_prefix + r'\ImgBoxes_train.txt'
         self.config_classes_path = self.dst_prefix + r'\Classes.txt'
 
         # self.cell_size = [48, 89]
@@ -142,7 +142,9 @@ class DefectPrepare:
                                   f'_cellrow_{cell_index_y}_col{col_index}.bmp'
                     dst_defect_path_tmp = os.path.join(self.dst_defect_dir, self.defect_type)
                     dst_defect_path = os.path.join(dst_defect_path_tmp, defect_name)
+                    dst_Icon_path = dst_defect_path_tmp+'.bmp'
                     cv2.imwrite(dst_defect_path, defect_img)
+                    cv2.imwrite(dst_Icon_path, defect_img)
         return defect_box_list[1:]
 
     def crop_all_block_(self):
@@ -156,7 +158,6 @@ class DefectPrepare:
                 self.block_name = block_name
                 # print(self.block_start_y)
                 self.crop_img(block_index, f)
-
             f.close()
 
 

@@ -51,7 +51,8 @@ public:
     void PrepareDataset(
         MIL_UNIQUE_CLASS_ID& DatasetContext,
         MIL_UNIQUE_CLASS_ID& PrepareDataset,
-        MIL_UNIQUE_CLASS_ID& PreparedDataset);
+        MIL_UNIQUE_CLASS_ID& PreparedDataset,
+        MIL_STRING PreparedDatasetPath);
 
     void ConstructTrainCtx(
         ClassifierParasStruct ClassifierParas,
