@@ -15,31 +15,17 @@ struct AugmentationParasStruct
 {
     MIL_INT    AugmentationNumPerImage; //augmentation number per raw image
     MIL_INT    SeedValue;               //random seed value
-    MIL_INT    GammaEnable;             //gamma correction, 0 disable, 1 enable
-    MIL_INT    CropEnable;              //crop operation, 0 disable, 1 enable
-    MIL_INT    TranslationXMax;         //max translate x, default:10
-    MIL_INT    TranslationYMax;         //max translate y, default:10
+
+    MIL_DOUBLE RotateAngleDelta;        //rotate angle, default:360.0
     MIL_DOUBLE ScaleFactorMin;          //min scale factor, default:0.5
     MIL_DOUBLE ScaleFactorMax;          //max scale factor, default:2.0
-    MIL_DOUBLE RotateAngleDelta;        //rotate angle, default:360.0
-    MIL_DOUBLE SmoothnessMin;           //min smoothness, default:0.0
-    MIL_DOUBLE SmoothnessMax;           //max smoothness, default:100.0
-
-
-
-    MIL_DOUBLE DirIntyMax;
-    MIL_DOUBLE DirIntyMin;
-    MIL_DOUBLE IntyDeltaAdd;     //add a value;value = random{[Inty-IntyDeltaAdd,Inty+IntyDeltaAdd]}
-
+    MIL_DOUBLE IntyDeltaAdd;            //I = I+ V;V = random{[I-Delta,I+Delta]}
+    MIL_DOUBLE DirIntyMax;              //Max Value of light Intensity Direction ,default:1.2
+    MIL_DOUBLE DirIntyMin;              //Min Value of light Intensity Direction,default:0.8
     MIL_DOUBLE GaussNoiseDelta;         //gauss noise mean, default:25.0
     MIL_DOUBLE GaussNoiseStdev;         //gauss noise stdev, default:25.0
-
-    MIL_DOUBLE GammaValue;
-    MIL_DOUBLE GammaDelta;
-    MIL_DOUBLE InAddValue;
-    MIL_DOUBLE InAddDelta;
-    MIL_DOUBLE InMulValue;
-    MIL_DOUBLE InMulDelta;
+    MIL_DOUBLE SmoothnessMin;           //min smoothness, default:0.0
+    MIL_DOUBLE SmoothnessMax;           //max smoothness, default:100.0
 
 };
 

@@ -15,6 +15,7 @@ int main() {
 
 	
 	//Classifier CNN test
+	//m_MILTestPtr->FillImgs();
 	//m_MILTestPtr->CropImgs();
 
 	//m_MILTestPtr->MILTestGenDataset();
@@ -24,8 +25,8 @@ int main() {
 	//m_MILTestPtr->MILTestPredictEngine();
 	
 	//Detection CNN test
-	m_MILTestPtr->MILTestGenDetDataset();
-	m_MILTestPtr->MILTestDetTrain();
+	//m_MILTestPtr->MILTestGenDetDataset();
+	//m_MILTestPtr->MILTestDetTrain();
 	m_MILTestPtr->MILTestDetPredict();
 
 	//ONNX test

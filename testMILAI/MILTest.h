@@ -24,6 +24,8 @@ public:
 
 	void CropImgs();
 
+	void FillImgs();
+
 	void MILTestGenDataset();
 
 	void MILTestTrain();

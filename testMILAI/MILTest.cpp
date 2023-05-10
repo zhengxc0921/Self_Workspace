@@ -143,6 +143,78 @@ void MILTest::CropImgs()
 	}
 }
 
+void MILTest::FillImgs()
+{
+
+	MIL_ID RawImage = MbufRestore(L"G:/DefectDataCenter/TImg/C.jpg", m_MilSystem, M_NULL);
+	MIL_STRING DstRootPath = L"G:/DefectDataCenter/TImg/C_Crop.jpg";
+	const MIL_INT SizeX = MbufInquire(RawImage, M_SIZE_X, M_NULL);
+	const MIL_INT SizeY = MbufInquire(RawImage, M_SIZE_Y, M_NULL);
+	const MIL_INT SizeBAND = MbufInquire(RawImage, M_SIZE_BAND, M_NULL);
+	MIL_INT SImgW = max(SizeX, SizeY);
+	MIL_INT SImgH = max(SizeX, SizeY);
+	if (SizeBAND == 1) {
+
+		MIL_ID MonoImage = MbufAlloc2d(m_MilSystem, SImgW, SImgH, 8 + M_UNSIGNED, M_IMAGE + M_PROC, M_NULL);
+		MIL_UINT8 Value1 = 0;
+		std::unique_ptr<BYTE[]> ScaledImage = std::make_unique<BYTE[]>(SImgW * SImgH);
+		if (SizeY >= SizeX) {
+			for (int y = 0; y < SImgH; ++y)
+			{
+				MbufGet2d(RawImage, 0, y, 1, 1, &Value1);
+				for (int x = 0; x < SImgW; ++x)
+				{
+					MIL_INT DstIndex = y * SImgW + x;
+					ScaledImage[DstIndex] = Value1;
+				}
+			}
+			MbufPut2d(MonoImage, 0, 0, SImgW, SImgH, ScaledImage.get());
+			MbufCopyColor2d(RawImage, MonoImage, M_ALL_BANDS, 0, 0, M_ALL_BANDS, SizeY - SizeX, 0, SizeX, SizeY);
+		}
+		else {
+			for (int x = 0; x < SImgW; ++x)
+			{
+				MbufGet2d(RawImage, x, 0, 1, 1, &Value1);
+				for (int y = 0; y < SImgH; ++y)
+				{
+					MIL_INT DstIndex = y * SImgW + x;
+					ScaledImage[DstIndex] = Value1;
+				}
+			}
+			MbufPut2d(MonoImage, 0, 0, SImgW, SImgH, ScaledImage.get());
+			MbufCopyColor2d(RawImage, MonoImage, M_ALL_BANDS, 0, 0, M_ALL_BANDS,0 , SizeX - SizeY, SizeX, SizeY);
+		}
+
+		MbufExport(DstRootPath, M_BMP, MonoImage);
+	}
+	else if(SizeBAND == 3) {
+
+		MIL_ID MonoImage = MbufAllocColor(m_MilSystem, SizeBAND, SImgW, SImgH, 8 + M_UNSIGNED, M_IMAGE + M_PROC, M_NULL);
+		MIL_UINT8 Value1 = 0;
+		std::unique_ptr<BYTE[]> ScaledImage = std::make_unique<BYTE[]>(SizeBAND *SImgW * SImgH);
+		for (int b = 0; b < SizeBAND; b++) {
+			for (int y = 0; y < SImgH; ++y)
+			{
+				MbufGetColor2d(RawImage, M_SINGLE_BAND, b, 0, y, 1, 1, &Value1);
+		
+				cout << "SizeBAND:" << SizeBAND << "Value1" << Value1 << endl;
+				for (int x = 0; x < SImgW; ++x)
+				{
+					MIL_INT DstIndex = b * SImgH * SImgW + y * SImgW + x;
+					ScaledImage[DstIndex] = Value1;
+				}
+			}
+		}
+	
+		MbufPutColor2d(MonoImage, M_PACKED + M_BGR24,M_ALL_BANDS, 0,0,SImgW,SImgH,ScaledImage.get());
+		//MbufExport(L"G:/DefectDataCenter/TImg/A1.bmp", M_BMP, MonoImage);
+		MbufCopyColor2d(RawImage, MonoImage, M_ALL_BANDS, 0, 0, M_ALL_BANDS, SizeY - SizeX, 0, SizeX, SizeY);
+		MbufExport(DstRootPath, M_BMP, MonoImage);
+	}
+
+	
+}
+
 void MILTest::MILTestGenDataset()
 {
 	MIL_STRING SrcImgDir = MIL_TEXT("G:/DefectDataCenter/李巨欣/ShenZhen/");  //原始数据根文件
@@ -180,24 +252,18 @@ void MILTest::MILTestTrain()
 	int MaxNumberOfEpoch = 45;			//模型训练次数
 	int MiniBatchSize = 64;				//模型训练单次迭代的张数
 
-
 	MIL_STRING ClassifierFileName = MIL_TEXT("SZ_0428Big.mclass");
 	MIL_STRING SrcImgDir = MIL_TEXT("G:/DefectDataCenter/李巨欣/ShenZhen/");
-
-	//MIL_STRING ClassifierFileName = MIL_TEXT("spa_3800.mclassr");
-	//MIL_STRING SrcImgDir = MIL_TEXT("G:/DefectDataCenter/zhjuzhiqiang_2023/2023/spa/");
-
 
 	////*******************************必须参数*******************************//
 	MIL_UNIQUE_CLASS_ID DataContext = MclassAlloc(m_MilSystem, M_PREPARE_IMAGES_CNN, M_DEFAULT, M_UNIQUE_ID);
 	DataContextParasStruct DataCtxParas;
 	DataCtxParas.ImageSizeX = ImageSizeX;
 	DataCtxParas.ImageSizeY = ImageSizeX;
-	/*DataCtxParas.PreparedDataFolder = SrcImgDir + MIL_TEXT("PreparedData\\");*/
 	DataCtxParas.PreparedDataFolder = SrcImgDir + MIL_TEXT("DataSet\\");
 	memset(&DataCtxParas.AugParas, 0, sizeof(AugmentationParasStruct));
 	DataCtxParas.AugParas.AugmentationNumPerImage = AugmentationNumPerImage;
-	//DataCtxParas.ResizeModel = 1;
+	DataCtxParas.ResizeModel = 1;
 	DataCtxParas.AugParas.ScaleFactorMax = 1.03; //1.03
 	DataCtxParas.AugParas.ScaleFactorMin = 0.97; //0.97
 	DataCtxParas.AugParas.RotateAngleDelta = 20; //10
@@ -206,8 +272,8 @@ void MILTest::MILTestTrain()
 	DataCtxParas.AugParas.DirIntyMin = 0.8; //0.8
 	DataCtxParas.AugParas.SmoothnessMax = 50; //50 {0<x<100}
 	DataCtxParas.AugParas.SmoothnessMin = 0.5; //0.5 {0<x<100}
-	//DataCtxParas.AugParas.GaussNoiseStdev = 25; //25
-	//DataCtxParas.AugParas.GaussNoiseDelta = 25; //25
+	DataCtxParas.AugParas.GaussNoiseStdev = 25; //25
+	DataCtxParas.AugParas.GaussNoiseDelta = 25; //25
 
 
 	m_MLClassCNN->ConstructDataContext(DataCtxParas, DataContext);
@@ -424,7 +490,7 @@ void MILTest::MILTestDetTrain()
 	int ImageSizeX = 896;				//进入模型训练的图片的尺寸宽360*2 ;704
 	int ImageSizeY = 288;				//进入模型训练的图片的尺寸高270*2  ;512
 
-	int AugmentationNumPerImage = 1;	//进入模型训练的图片的扩充倍数
+	int AugmentationNumPerImage = 0;	//进入模型训练的图片的扩充倍数
 	int MaxNumberOfEpoch = 20;			//模型训练次数
 	int MiniBatchSize = 8;				//模型训练单次迭代的张数
 	string strProject = "DSW";
@@ -477,8 +543,12 @@ void MILTest::MILTestDetTrain()
 void MILTest::MILTestDetPredict()
 {
 
-	string ImgType = "bmp";
-	string strProject = "DSW";
+	//string ImgType = "bmp";
+	//string strProject = "DSW";
+
+	string ImgType = "jpg";
+	string strProject = "VOC";
+
 	string	SrcDir = "G:/DefectDataCenter/ParseData/Detection/" + strProject + "/raw_data/";
 	string	SrcImgDir = SrcDir  + "TImg";
 	string strTdDetCtxName = "G:/DefectDataCenter/ParseData/Detection/" +strProject+ "/MIL_Data/PreparedData/" + strProject +".mclass";
@@ -495,7 +565,7 @@ void MILTest::MILTestDetPredict()
 	MclassInquire(TestCtx, M_CONTEXT, M_NUMBER_OF_CLASSES + M_TYPE_MIL_INT, &m_ClassesNum);
 
 	//设置ENGINE
-	MIL_INT engine_index = 0;
+	MIL_INT engine_index = 2;
 	MIL_STRING Description;
 	MclassControl(TestCtx, M_DEFAULT, M_PREDICT_ENGINE, engine_index);
 	MclassInquire(TestCtx, M_PREDICT_ENGINE_INDEX(engine_index), M_PREDICT_ENGINE_DESCRIPTION, Description);

@@ -269,7 +269,6 @@ void CMLClassCNN::ConstructDataContext(DataContextParasStruct DataCtxParas, MIL_
     MclassControl(DataContext, M_CONTEXT, M_PREPARED_DATA_FOLDER, DataCtxParas.PreparedDataFolder);
     // On average, we do two augmentations per image + the original images.
     MclassControl(DataContext, M_CONTEXT, M_AUGMENT_NUMBER_FACTOR, DataCtxParas.AugParas.AugmentationNumPerImage);
-
     if (DataCtxParas.ImageSizeX > 0 && DataCtxParas.ImageSizeY > 0)
     {
         MclassControl(DataContext, M_CONTEXT, M_SIZE_MODE, M_USER_DEFINED);
@@ -278,15 +277,18 @@ void CMLClassCNN::ConstructDataContext(DataContextParasStruct DataCtxParas, MIL_
         m_ImageSizeX = DataCtxParas.ImageSizeX;
         m_ImageSizeY = DataCtxParas.ImageSizeY;
     }
+    MclassControl(DataContext, M_CONTEXT, M_DESTINATION_FOLDER_MODE, M_OVERWRITE);
+    if (DataCtxParas.ResizeModel == 1) {
+        MclassControl(DataContext, M_CONTEXT, M_RESIZE_SCALE_FACTOR, M_FILL_DESTINATION);
+    }
 
     MIL_ID AugmentContext;
     MclassInquire(DataContext, M_CONTEXT, M_AUGMENT_CONTEXT_ID + M_TYPE_MIL_ID, &AugmentContext);
-    if (DataCtxParas.DstFolderMode == 1)
+
+    if (DataCtxParas.AugParas.RotateAngleDelta > 0)
     {
-        MclassControl(DataContext, M_CONTEXT, M_DESTINATION_FOLDER_MODE, M_OVERWRITE);
-    }
-    if (DataCtxParas.ResizeModel == 1) {
-        MclassControl(DataContext, M_CONTEXT, M_RESIZE_SCALE_FACTOR, M_FILL_DESTINATION);
+        MimControl(AugmentContext, M_AUG_ROTATION_OP, M_ENABLE);
+        MimControl(AugmentContext, M_AUG_ROTATION_OP_ANGLE_DELTA, DataCtxParas.AugParas.RotateAngleDelta);
     }
     if ((DataCtxParas.AugParas.ScaleFactorMin > 0 && DataCtxParas.AugParas.ScaleFactorMin != 1.0)
         || (DataCtxParas.AugParas.ScaleFactorMax > 0 && DataCtxParas.AugParas.ScaleFactorMax != 1.0))
@@ -295,17 +297,18 @@ void CMLClassCNN::ConstructDataContext(DataContextParasStruct DataCtxParas, MIL_
         MimControl(AugmentContext, M_AUG_SCALE_OP_FACTOR_MIN, DataCtxParas.AugParas.ScaleFactorMin);
         MimControl(AugmentContext, M_AUG_SCALE_OP_FACTOR_MAX, DataCtxParas.AugParas.ScaleFactorMax);
     }
-    if (DataCtxParas.AugParas.RotateAngleDelta > 0)
-    {
-        MimControl(AugmentContext, M_AUG_ROTATION_OP, M_ENABLE);
-        MimControl(AugmentContext, M_AUG_ROTATION_OP_ANGLE_DELTA, DataCtxParas.AugParas.RotateAngleDelta);
+    // Rotation augmentation and presets in the prepare data context.
+// MclassControl(TrainPrepareDataCtx, M_CONTEXT, M_PRESET_ROTATION, M_ENABLE);
+
+    if (DataCtxParas.AugParas.IntyDeltaAdd > 0) {
+        MimControl(AugmentContext, M_AUG_INTENSITY_ADD_OP, M_ENABLE);
+        MimControl(AugmentContext, M_AUG_INTENSITY_ADD_OP_DELTA, DataCtxParas.AugParas.IntyDeltaAdd);
     }
-    //// Smoothness augmentation and presets in the prepare data context.
-    if (DataCtxParas.AugParas.SmoothnessMin > 0.0 && DataCtxParas.AugParas.SmoothnessMax >= DataCtxParas.AugParas.SmoothnessMin)
-    {
-        MimControl(AugmentContext, M_AUG_SMOOTH_DERICHE_OP, M_ENABLE);
-        MimControl(AugmentContext, M_AUG_SMOOTH_DERICHE_OP_FACTOR_MIN, DataCtxParas.AugParas.SmoothnessMin);
-        MimControl(AugmentContext, M_AUG_SMOOTH_DERICHE_OP_FACTOR_MAX, DataCtxParas.AugParas.SmoothnessMax);
+
+    if (DataCtxParas.AugParas.DirIntyMax > 0) {
+        MimControl(AugmentContext, M_AUG_LIGHTING_DIRECTIONAL_OP, M_ENABLE);
+        MimControl(AugmentContext, M_AUG_LIGHTING_DIRECTIONAL_OP_INTENSITY_MAX, DataCtxParas.AugParas.DirIntyMax);
+        MimControl(AugmentContext, M_AUG_LIGHTING_DIRECTIONAL_OP_INTENSITY_MIN, DataCtxParas.AugParas.DirIntyMin);
     }
     // Noise augmentation and presets in the prepare data context.
     if (DataCtxParas.AugParas.GaussNoiseDelta > 0.0 || DataCtxParas.AugParas.GaussNoiseStdev > 0.0)
@@ -314,25 +317,35 @@ void CMLClassCNN::ConstructDataContext(DataContextParasStruct DataCtxParas, MIL_
         MimControl(AugmentContext, M_AUG_NOISE_GAUSSIAN_ADDITIVE_OP_STDDEV, DataCtxParas.AugParas.GaussNoiseStdev);
         MimControl(AugmentContext, M_AUG_NOISE_GAUSSIAN_ADDITIVE_OP_STDDEV_DELTA, DataCtxParas.AugParas.GaussNoiseDelta);
     }
-
-    if (DataCtxParas.AugParas.GammaValue > 0)
+    //// Smoothness augmentation and presets in the prepare data context.
+    if (DataCtxParas.AugParas.SmoothnessMin > 0.0 && DataCtxParas.AugParas.SmoothnessMax >= DataCtxParas.AugParas.SmoothnessMin)
     {
-        MimControl(AugmentContext, M_AUG_GAMMA_OP, M_ENABLE);
-        MimControl(AugmentContext, M_AUG_GAMMA_OP_VALUE, DataCtxParas.AugParas.GammaValue);
-        MimControl(AugmentContext, M_AUG_GAMMA_OP_DELTA, DataCtxParas.AugParas.GammaDelta);
+        MimControl(AugmentContext, M_AUG_SMOOTH_DERICHE_OP, M_ENABLE);
+        MimControl(AugmentContext, M_AUG_SMOOTH_DERICHE_OP_FACTOR_MIN, DataCtxParas.AugParas.SmoothnessMin);
+        MimControl(AugmentContext, M_AUG_SMOOTH_DERICHE_OP_FACTOR_MAX, DataCtxParas.AugParas.SmoothnessMax);
     }
 
-    //光强相关的增强
-    if (DataCtxParas.AugParas.DirIntyMax > 0) {
-        MimControl(AugmentContext, M_AUG_LIGHTING_DIRECTIONAL_OP, M_ENABLE);
-        MimControl(AugmentContext, M_AUG_LIGHTING_DIRECTIONAL_OP_INTENSITY_MAX, DataCtxParas.AugParas.DirIntyMax);
-        MimControl(AugmentContext, M_AUG_LIGHTING_DIRECTIONAL_OP_INTENSITY_MIN, DataCtxParas.AugParas.DirIntyMin);
-    }
+    //if (DataCtxParas.AugParas.GammaValue > 0)
+    //{
+    //    MimControl(AugmentContext, M_AUG_GAMMA_OP, M_ENABLE);
+    //    MimControl(AugmentContext, M_AUG_GAMMA_OP_VALUE, DataCtxParas.AugParas.GammaValue);
+    //    MimControl(AugmentContext, M_AUG_GAMMA_OP_DELTA, DataCtxParas.AugParas.GammaDelta);
+    //}
+        // Translation augmentation and presets in the prepare data context.
+    // MclassControl(TrainPrepareDataCtx, M_CONTEXT, M_PRESET_TRANSLATION, M_ENABLE);
+    //if (DataCtxParas.AugParas.TranslationXMax > 0)
+    //{
+    //    MimControl(AugmentContext, M_AUG_TRANSLATION_X_OP, M_ENABLE);
+    //    MimControl(AugmentContext, M_AUG_TRANSLATION_X_OP_MAX, DataCtxParas.AugParas.TranslationXMax);
+    //}
+    //if (DataCtxParas.AugParas.TranslationYMax > 0)
+    //{
+    //    MimControl(AugmentContext, M_AUG_TRANSLATION_Y_OP, M_ENABLE);
+    //    MimControl(AugmentContext, M_AUG_TRANSLATION_Y_OP_MAX, DataCtxParas.AugParas.TranslationYMax);
+    //}
 
-    if (DataCtxParas.AugParas.IntyDeltaAdd>0) {
-        MimControl(AugmentContext, M_AUG_INTENSITY_ADD_OP, M_ENABLE);
-        MimControl(AugmentContext, M_AUG_INTENSITY_ADD_OP_DELTA, DataCtxParas.AugParas.IntyDeltaAdd);
-    }
+    // Scale augmentation and presets in the prepare data context.
+    // MclassControl(TrainPrepareDataCtx, M_CONTEXT, M_PRESET_SCALE, M_ENABLE);
 }
 
 void CMLClassCNN::PrepareDataset(MIL_UNIQUE_CLASS_ID& DatasetContext, 

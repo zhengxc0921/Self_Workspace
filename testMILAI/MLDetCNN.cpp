@@ -206,9 +206,9 @@ void CMLDetCNN::PrepareDataset(MIL_UNIQUE_CLASS_ID& DatasetContext, MIL_UNIQUE_C
     MclassPreprocess(DatasetContext, M_DEFAULT);
     MclassPrepareData(DatasetContext, PrepareDataset, PreparedDataset, M_NULL, M_DEFAULT);
 
-    MIL_STRING PreparedDatasetPath =  MIL_TEXT("I:/MIL_Detection_Dataset/lslm_all/PreparedDataSet.mclassd");
-    MclassSave(PreparedDatasetPath, PreparedDataset, M_DEFAULT);
-    MclassExport(MIL_TEXT("I:/MIL_Detection_Dataset/lslm_all/TrainDatasetFeatures.csv"), M_FORMAT_CSV, PreparedDataset, M_DEFAULT, M_ENTRIES, M_DEFAULT);
+    //MIL_STRING PreparedDatasetPath =  MIL_TEXT("I:/MIL_Detection_Dataset/lslm_all/PreparedDataSet.mclassd");
+    //MclassSave(PreparedDatasetPath, PreparedDataset, M_DEFAULT);
+    //MclassExport(MIL_TEXT("I:/MIL_Detection_Dataset/lslm_all/TrainDatasetFeatures.csv"), M_FORMAT_CSV, PreparedDataset, M_DEFAULT, M_ENTRIES, M_DEFAULT);
   
 }
 
@@ -370,7 +370,7 @@ void CMLDetCNN::Predict(MIL_ID Image, MIL_UNIQUE_CLASS_ID& TrainedDetCtx, DetRes
     LARGE_INTEGER t1, t2, tc;
     QueryPerformanceFrequency(&tc);
     QueryPerformanceCounter(&t1);
-    int CN = 1;
+    int CN = 100;
     for (int i = 0; i < CN; i++) {
         MclassPredict(TrainedDetCtx, ImageReduce, ClassRes, M_DEFAULT);
     }
