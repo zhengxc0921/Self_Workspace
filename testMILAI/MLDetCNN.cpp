@@ -214,6 +214,15 @@ void CMLDetCNN::PrepareDataset(MIL_UNIQUE_CLASS_ID& DatasetContext, MIL_UNIQUE_C
 
 void CMLDetCNN::ConstructTrainCtx(DetParas ClassifierParas, MIL_UNIQUE_CLASS_ID& TrainCtx)
 {
+    MIL_DOUBLE MPF;
+    //MclassInquire(TrainCtx, M_GENERAL, M_PREDICT_ENGINE_PRECISION, MPF);
+
+    //MIL_STRING MPF2;
+    //MclassInquire(TrainCtx, M_GENERAL, M_PREDICT_ENGINE_PRECISION, MPF2);
+
+
+
+
     if (M_NULL == TrainCtx)
     {
         TrainCtx = MclassAlloc(m_MilSystem, M_TRAIN_DET, M_DEFAULT, M_UNIQUE_ID);
@@ -268,6 +277,8 @@ void CMLDetCNN::ConstructTrainCtx(DetParas ClassifierParas, MIL_UNIQUE_CLASS_ID&
         MclassControl(TrainCtx, M_CONTEXT, M_TRAIN_ENGINE, M_CPU);
     }
     MclassPreprocess(TrainCtx, M_DEFAULT);
+
+   
 
 }
 
@@ -333,7 +344,9 @@ void CMLDetCNN::TrainClassifier(MIL_UNIQUE_CLASS_ID& Dataset,
     if (Status == M_COMPLETE)
     {
         TrainedDetCtx = MclassAlloc(m_MilSystem, M_CLASSIFIER_DET_PREDEFINED, M_DEFAULT, M_UNIQUE_ID);
+
         MclassCopyResult(TrainRes, M_DEFAULT, TrainedDetCtx, M_DEFAULT, M_TRAINED_CLASSIFIER, M_DEFAULT);
+
         MclassSave(ClassifierDumpFile, TrainedDetCtx, M_DEFAULT);
     }
 }
@@ -345,6 +358,8 @@ void CMLDetCNN::PredictBegin(MIL_UNIQUE_CLASS_ID& TrainedCCtx, MIL_ID Image)
     MclassInquire(TrainedCCtx, M_DEFAULT_SOURCE_LAYER, M_SIZE_X + M_TYPE_MIL_INT, &m_InputSizeX);
     MclassInquire(TrainedCCtx, M_DEFAULT_SOURCE_LAYER, M_SIZE_Y + M_TYPE_MIL_INT, &m_InputSizeY);
     MclassInquire(TrainedCCtx, M_CONTEXT, M_NUMBER_OF_CLASSES + M_TYPE_MIL_INT, &m_ClassesNum);
+    MclassInquire(TrainedCCtx, M_DEFAULT_SOURCE_LAYER, M_SIZE_BAND + M_TYPE_MIL_INT, &m_InputSizeBand);
+    
     MIL_INT m_ImageSizeX = MbufInquire(Image, M_SIZE_X, M_NULL);
     MIL_INT m_ImageSizeY = MbufInquire(Image, M_SIZE_Y, M_NULL);
 
@@ -353,9 +368,16 @@ void CMLDetCNN::PredictBegin(MIL_UNIQUE_CLASS_ID& TrainedCCtx, MIL_ID Image)
 void CMLDetCNN::Predict(MIL_ID Image, MIL_UNIQUE_CLASS_ID& TrainedDetCtx, DetResult& Result)
 {
     PredictBegin(TrainedDetCtx, Image);
+    MIL_ID ImageReduce;
+
+    if (m_InputSizeBand == 3) {
+        ImageReduce = MbufAllocColor(m_MilSystem, 3, m_InputSizeX, m_InputSizeY, 8 + M_UNSIGNED, M_IMAGE + M_PROC , M_NULL);
+   }
+    else {
+        ImageReduce = MbufAlloc2d(m_MilSystem, m_InputSizeX, m_InputSizeY, 8 + M_UNSIGNED, M_IMAGE + M_PROC, M_NULL);
+    }
+    
    
-    //MIL_ID ImageReduce = MbufAllocColor(m_MilSystem, 3, m_InputSizeX, m_InputSizeY, 8 + M_UNSIGNED, M_IMAGE + M_PROC , M_NULL);
-    MIL_ID ImageReduce = MbufAlloc2d(m_MilSystem, m_InputSizeX, m_InputSizeY, 8 + M_UNSIGNED, M_IMAGE + M_PROC, M_NULL);
 
     MimResize(Image, ImageReduce, M_FILL_DESTINATION, M_FILL_DESTINATION, M_BILINEAR);
 
@@ -370,13 +392,12 @@ void CMLDetCNN::Predict(MIL_ID Image, MIL_UNIQUE_CLASS_ID& TrainedDetCtx, DetRes
     LARGE_INTEGER t1, t2, tc;
     QueryPerformanceFrequency(&tc);
     QueryPerformanceCounter(&t1);
-    int CN = 100;
-    for (int i = 0; i < CN; i++) {
-        MclassPredict(TrainedDetCtx, ImageReduce, ClassRes, M_DEFAULT);
-    }
+    MclassPredict(TrainedDetCtx, ImageReduce, ClassRes, M_DEFAULT);
     QueryPerformanceCounter(&t2);
-    double time = (double)(t2.QuadPart - t1.QuadPart) / (double)tc.QuadPart/(double)CN;
-    cout << "\nMclassPredict_" << "time is = " << time  << endl;
+    double time = (double)(t2.QuadPart - t1.QuadPart) / (double)tc.QuadPart ;
+    cout << "MclassPredict_time: " << time << endl;
+    
+
     MbufFree(ImageReduce);
     MclassGetResult(ClassRes, M_GENERAL, M_NUMBER_OF_INSTANCES + M_TYPE_MIL_INT, &Result.InstanceNum);
     Result.Boxes.resize(Result.InstanceNum);
@@ -396,18 +417,18 @@ void CMLDetCNN::Predict(MIL_ID Image, MIL_UNIQUE_CLASS_ID& TrainedDetCtx, DetRes
     }
 }
 
-void CMLDetCNN::FolderImgsPredict(vector<MIL_STRING> FilesInFolder,
+void CMLDetCNN::FolderImgsPredict(vector<MIL_ID>& RawImageS,
     MIL_UNIQUE_CLASS_ID& TrainedDetCtx,
     vector<DetResult>& Result)
 {
-    int nFileNum = FilesInFolder.size();
+    int nFileNum = RawImageS.size();
     DetResult Result_i;
     for (int i = 0; i < nFileNum; i++) {
         memset(&Result_i, 0, sizeof(Result_i));
-        MIL_ID RawImage = MbufRestore(FilesInFolder[i], m_MilSystem, M_NULL);
-        Predict(RawImage, TrainedDetCtx, Result_i);
+       /* MIL_ID RawImage = MbufRestore(FilesInFolder[i], m_MilSystem, M_NULL);*/
+        Predict(RawImageS[i], TrainedDetCtx, Result_i);
         Result.emplace_back(Result_i);
-        MbufFree(RawImage);
+        //MbufFree(RawImage);
     }
 }
 

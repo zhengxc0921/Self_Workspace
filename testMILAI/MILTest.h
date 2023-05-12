@@ -42,9 +42,21 @@ public:
 
 	void MILTestDetPredict();
 
-	//void MILTestPredictCore(string	SrcImgDir, MIL_UNIQUE_CLASS_ID& testClassifierCtx, double& calc_time);
+	//多进程测试使用
+	void MILTestDetPredictMutiProcessSingle();
 
-	//void MILTestPredictShareMem(string strShareMame, string index, size_t filesize);
+	void MILTestDetPredictMutiProcess(string strShareMame,
+		size_t ShareMameSize,
+		string Index,
+		string ImgType,
+		string strProject);
+	void MILTestDetPredictCore(MIL_UNIQUE_CLASS_ID& TestCtx,
+		string SrcDir,
+		string DstRst,
+		double& calc_time);
+
+
+	void MILTestPredictShareMem(string strShareMame, string index, size_t filesize);
 
 	void MILTestONNXPredict();
 

@@ -59,7 +59,7 @@ public:
         DetResult& Result);
 
     void FolderImgsPredict(
-        vector<MIL_STRING> FilesInFolder,
+        vector<MIL_ID>& RawImageS,
         MIL_UNIQUE_CLASS_ID& TrainedDetCtx,
         vector<DetResult>& Result);
 
@@ -79,9 +79,13 @@ public:
 
     MIL_INT m_InputSizeX;
     MIL_INT m_InputSizeY;
+    MIL_INT m_InputSizeBand;
     MIL_INT m_ClassesNum;
 
     const MIL_INT Y_MARGIN{ 15 };
     const MIL_INT TEXT_HEIGHT{ 20 };
     const MIL_INT TEXT_MARGIN{ 20 };
+    
+    //控制中间测试时间的输出次数
+    int m_ON = 0;
 };

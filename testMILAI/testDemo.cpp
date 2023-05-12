@@ -2,16 +2,12 @@
 
 #if 1
 #include "MILTest.h"
-int main() {
+int main(int argc, char* argv[]) {
 
 	MIL_UNIQUE_APP_ID MilApplication = MappAlloc(M_NULL, M_DEFAULT, M_UNIQUE_ID);
 	MIL_UNIQUE_SYS_ID MilSystem = MsysAlloc(M_DEFAULT, M_SYSTEM_HOST, M_DEFAULT, M_DEFAULT, M_UNIQUE_ID);
 	MIL_UNIQUE_DISP_ID MilDisplay = MdispAlloc(MilSystem, M_DEFAULT, MIL_TEXT("M_DEFAULT"), M_DEFAULT, M_UNIQUE_ID);
 	MILTestPtr m_MILTestPtr = MILTestPtr(new MILTest(MilSystem, MilDisplay));
-
-	MIL_INT C = 5;
-	MIL_TEXT_CHAR LossText[512];
-	MosSprintf(LossText, 512, MIL_TEXT("Current dev loss value: %d"), C);
 
 	
 	//Classifier CNN test
@@ -28,21 +24,25 @@ int main() {
 	//m_MILTestPtr->MILTestGenDetDataset();
 	//m_MILTestPtr->MILTestDetTrain();
 	m_MILTestPtr->MILTestDetPredict();
-
 	//ONNX test
 	//m_MILTestPtr->MILTestONNXPredict();
 
+	//多进程测试前的预备测试
+	//m_MILTestPtr->MILTestDetPredictMutiProcessSingle();
 #if 0
 	//多进程测试
 	string strShareMame = argv[0];
 	string strfilesize = argv[1];
-	string index = argv[2];
+	string Index = argv[2];
+	string ImgType = argv[3];
+	string strProject = argv[4];
 	auto m_hMap = ::OpenFileMappingA(FILE_MAP_READ, FALSE, strShareMame.c_str());
-	int filesize = 0;
+	int ShareMameSize = 0;
 	std::istringstream ss(strfilesize);
-	ss >> filesize;
+	ss >> ShareMameSize;
+	
+	m_MILTestPtr->MILTestDetPredictMutiProcess(strShareMame, ShareMameSize, Index, ImgType, strProject);
 
-	m_MILTestPtr->MILTestPredictShareMem(strShareMame, index, filesize);
 #endif
 
 	return 1;
