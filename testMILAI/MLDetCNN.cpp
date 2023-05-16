@@ -360,8 +360,8 @@ void CMLDetCNN::PredictBegin(MIL_UNIQUE_CLASS_ID& TrainedCCtx, MIL_ID Image)
     MclassInquire(TrainedCCtx, M_CONTEXT, M_NUMBER_OF_CLASSES + M_TYPE_MIL_INT, &m_ClassesNum);
     MclassInquire(TrainedCCtx, M_DEFAULT_SOURCE_LAYER, M_SIZE_BAND + M_TYPE_MIL_INT, &m_InputSizeBand);
     
-    MIL_INT m_ImageSizeX = MbufInquire(Image, M_SIZE_X, M_NULL);
-    MIL_INT m_ImageSizeY = MbufInquire(Image, M_SIZE_Y, M_NULL);
+    m_ImageSizeX = MbufInquire(Image, M_SIZE_X, M_NULL);
+    m_ImageSizeY = MbufInquire(Image, M_SIZE_Y, M_NULL);
 
 }
 
@@ -395,7 +395,7 @@ void CMLDetCNN::Predict(MIL_ID Image, MIL_UNIQUE_CLASS_ID& TrainedDetCtx, DetRes
     MclassPredict(TrainedDetCtx, ImageReduce, ClassRes, M_DEFAULT);
     QueryPerformanceCounter(&t2);
     double time = (double)(t2.QuadPart - t1.QuadPart) / (double)tc.QuadPart ;
-    cout << "MclassPredict_time: " << time << endl;
+    //cout << "MclassPredict_time: " << time << endl;
     
 
     MbufFree(ImageReduce);

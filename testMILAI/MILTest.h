@@ -1,15 +1,17 @@
 #pragma once
 #include <direct.h>
-
+#include<map>
+//#include<boost/weak_ptr.hpp>
+//#include<thread>
 #include "MLClassCNN.h"
 #include "MLDetCNN.h"
-
+#include <thread>
 
 class MILTest;
 typedef boost::shared_ptr<MILTest>MILTestPtr;
 class MILTest {
 public:
-	MILTest(MIL_ID MilSystem, MIL_ID MilDisplay);
+	MILTest(MIL_ID MilSystem, MIL_ID MilDisplay,string strProject);
 	~MILTest();
 
 	void getIcon(vector<MIL_STRING> OriginalDataPath,
@@ -19,6 +21,8 @@ public:
 	void getModelInfo(MIL_UNIQUE_CLASS_ID& Model);
 
 	void savePredictedImg();
+
+	void predictBegin();
 
 	void InitClassWeights();
 
@@ -58,6 +62,14 @@ public:
 
 	void MILTestPredictShareMem(string strShareMame, string index, size_t filesize);
 
+	//多线程测试使用
+	void mutiThreadPrepare();
+	void MILTestDetPredictMutiThreadCore();
+	void MILTestDetPredictMutiThread();
+
+
+
+	//onnx例子
 	void MILTestONNXPredict();
 
 
@@ -76,8 +88,13 @@ public:
 	MIL_INT m_InputSizeY = 0;
 
 	//测试参数
+	string m_strProject;
 	vector<MIL_STRING> m_FilesInFolder;
 	vector < ClassificationResultStruct> m_vecResults;
 	bool m_SavePredictedImg = TRUE;
 	MIL_STRING m_DstImgDir;
+	MIL_UNIQUE_CLASS_ID m_TrainedCtx;
+	map<string,MIL_ID >m_PathRawImageMap;
+	vector<DetResult> m_vecDetResults;
+
 };

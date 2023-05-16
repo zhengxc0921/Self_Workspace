@@ -80,6 +80,7 @@ struct DetParas{
 struct DetResult {
 
     MIL_INT InstanceNum;
+    string ImgPath; //src Img path for predict
     vector<MIL_STRING> ClassName;
     vector<MIL_INT> ClassIndex;               //predict class
     vector<MIL_DOUBLE> Score;            //predict score

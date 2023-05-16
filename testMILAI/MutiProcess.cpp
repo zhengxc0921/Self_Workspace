@@ -170,8 +170,7 @@ size_t getFileSize1(const char* fileName) {
     return filesize;
 }
 
-
-int main()
+int mainA()
 {
     //MILÎÄ¼þ
     MIL_UNIQUE_APP_ID MilApplication = MappAlloc(M_NULL, M_DEFAULT, M_UNIQUE_ID);
