@@ -448,7 +448,6 @@ class YOLO(object):
     #     f.close()
     #     return
 
-
 class YOLOScript(nn.Module):
 
     def __init__(self,cfg):
@@ -478,21 +477,82 @@ class YOLOScript(nn.Module):
     # ---------------------------------------------------#
     def forward(self, images):
         image_shape = images.size()[2:]
-        outputs = self.net(images)
-        outputs = self.bbox_util.decode_box(outputs[0],outputs[1])
-        # return torch.cat((outputs[0].squeeze(),outputs[1].squeeze()),dim=0)
-        # ---------------------------------------------------------#
-        #   将预测框进行堆叠，然后进行非极大抑制
-        # ---------------------------------------------------------#
-        num_classes = torch.tensor(self.num_classes)
-        input_shape = torch.tensor(self.input_shape)
-        image_shape = torch.tensor(image_shape)
-        confidence =  torch.tensor(self.confidence)
-        nms_iou = torch.tensor(self.nms_iou)
-        results = self.bbox_util.non_max_suppression(torch.cat(outputs, 1), num_classes, input_shape,
-                                                     image_shape, conf_thres=confidence,
-                                                     nms_thres=nms_iou)
+        with torch.no_grad():
+            # ---------------------------------------------------------#
+            #   将图像输入网络当中进行预测！
+            # ---------------------------------------------------------#
+            features = self.net(images)
+        #可以正常输出
+            output_1 = self.bbox_util.decode_box(features[0])
+            output_2 = self.bbox_util.decode_box(features[1])
+            outputs = torch.cat((output_1,output_2),dim=1)
+
+        results = self.bbox_util.non_max_suppression(outputs, self.num_classes,
+                                                         self.input_shape,image_shape,
+                                                         conf_thres=0.5,nms_thres=0.3)
 
 
+        # outputs = self.net(images)
+        # outputs = self.bbox_util.decode_box(outputs)
+        # # return torch.cat((outputs[0].squeeze(),outputs[1].squeeze()),dim=0)
+        # # ---------------------------------------------------------#
+        # #   将预测框进行堆叠，然后进行非极大抑制
+        # # ---------------------------------------------------------#
+        # num_classes = torch.tensor(self.num_classes)
+        # input_shape = torch.tensor(self.input_shape)
+        # image_shape = torch.tensor(image_shape)
+        # confidence =  torch.tensor(self.confidence)
+        # nms_iou = torch.tensor(self.nms_iou)
+        # results = self.bbox_util.non_max_suppression(torch.cat(outputs, 1), num_classes, input_shape,
+        #                                              image_shape, conf_thres=confidence,
+        #                                              nms_thres=nms_iou)
         return results
+# class YOLOScript(nn.Module):
+#
+#     def __init__(self,cfg):
+#         super(YOLOScript, self).__init__()
+#         # anchors_mask, num_classes, model_src
+#         self.anchors_mask = cfg.anchors_mask
+#         self.num_classes = cfg.num_classes
+#         # self.model_src = cfg.model_path
+#         self.nms_iou = cfg.nms_iou
+#         self.confidence = cfg.confidence
+#         # self.letterbox_image = False
+#         # self.num_classes = 1
+#         # self.anchors_mask =cfg.anchors_mask
+#         self.input_shape = cfg.input_shape
+#         # self.anchors = torch.Tensor([[10,14], [23, 27], [37, 58], [81, 82], [164, 164], [264, 164]])
+#         self.anchors= cfg.anchors
+#         self.net = YoloBodyS(self.anchors_mask, self.num_classes)
+#         self.net.load_state_dict(torch.load(cfg.model_path))
+#         self.net.eval()
+#
+#         self.bbox_util = DecodeBoxScript(self.anchors, self.num_classes, (self.input_shape[0], self.input_shape[1]),
+#                                        self.anchors_mask)
+#
+#     # ---------------------------------------------------#
+#     #   检测图片
+#     # ---------------------------------------------------#
+#     def forward(self, images):
+#         image_shape = images.size()[2:]
+#         outputs = self.net(images)
+#
+#         # return outputs
+#
+#         outputs = self.bbox_util.decode_box(outputs[0],outputs[1])
+#
+#
+#         # return torch.cat((outputs[0].squeeze(),outputs[1].squeeze()),dim=0)
+#         # ---------------------------------------------------------#
+#         #   将预测框进行堆叠，然后进行非极大抑制
+#         # ---------------------------------------------------------#
+#         num_classes = torch.tensor(self.num_classes)
+#         input_shape = torch.tensor(self.input_shape)
+#         image_shape = torch.tensor(image_shape)
+#         confidence =  torch.tensor(self.confidence)
+#         nms_iou = torch.tensor(self.nms_iou)
+#         results = self.bbox_util.non_max_suppression(torch.cat(outputs, 1), num_classes, input_shape,
+#                                                      image_shape, conf_thres=confidence,
+#                                                      nms_thres=nms_iou)
+#         return results
 

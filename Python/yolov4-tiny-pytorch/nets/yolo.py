@@ -133,9 +133,7 @@ class YoloBodyS(nn.Module):
         # P4 = torch.cat((P5_Upsample,feat1),axis=1)
         P4 = torch.cat((P5_Upsample, feat1), dim=1)
         #debug
-
         # 26,26,384 -> 26,26,256 -> 26,26,255
         out1 = self.yolo_headP4(P4)
-
         return (out0,out1)
 

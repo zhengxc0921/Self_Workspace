@@ -16,7 +16,7 @@ def get_anchors(anchors_path):
         anchors = f.readline()
     anchors = [float(x) for x in anchors.split(',')]
     anchors = np.array(anchors).reshape(-1, 2)
-    anchors = torch.tensor(anchors)
+    anchors = torch.tensor(anchors,dtype=torch.float32)
     return anchors, len(anchors)
 
 #---------------------------------------------------#
@@ -56,8 +56,8 @@ class Config:
 
         self.anchors_mask = [[3, 4, 5], [0,1,2]]  ##?  为啥是self.anchors_mask = [[3, 4, 5], [1, 2, 3]]
         self.phi = 0                                #  phi = 0为不使用注意力机制,1为SE，2为CBAM，3为ECA
-        self.fepoch = 50
-        self.all_epoch = 100
+        self.fepoch = 25
+        self.all_epoch = 50
         self.lr = [1e-3,1e-4]
         self.batch_size = 8
         self.num_workers = 4
