@@ -17,7 +17,7 @@ if __name__ == "__main__":
     #------------------------------------------------------#
     #   创建yolo模型
     #------------------------------------------------------#
-    project = "lslm"  ## LMK, HW,VOC,DSW_random
+    project = "DSW_random"  ## LMK, HW,VOC,DSW_random
     cfg = Config(project)
     yolo_loss    = YOLOLoss(cfg.anchors, cfg.num_classes, cfg.input_shape, cfg.calc_device, cfg.anchors_mask).to(cfg.calc_device)
     loss_history = LossHistory("logs/")

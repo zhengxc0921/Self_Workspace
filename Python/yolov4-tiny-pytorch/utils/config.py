@@ -3,6 +3,8 @@ import torch
 import os
 import torch.backends.cudnn as cudnn
 from nets.yolo import YoloBody
+import pandas as pd
+import random
 # ---------------------------------------------------#
 #   获得先验框
 # ---------------------------------------------------#
@@ -48,6 +50,7 @@ class Config:
         self.unique_para_initial(project)
         self.calc_device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         # self.calc_device =  "cuda"
+        self.USE_MIL_Data=True
         #当前路径由train.py决定
         self.anchors_path = 'model_data/yolo_anchors.txt'
         self.model_path = r'model_data/yolov4_tiny_weights_{}.pth'.format(project)
@@ -61,14 +64,31 @@ class Config:
         self.lr = [1e-3,1e-4]
         self.batch_size = 8
         self.num_workers = 4
+        self.split_ratio = 0.8
 
-        #   获得图片路径和标签
-        self.classes_path = r'{}{}/raw_data/Classes.txt'.format(Detection_Dataset_Dir, project)
-        self.train_at_p = r'{}{}/raw_data/ImgBoxes_train.txt'.format(Detection_Dataset_Dir,project)
-        self.val_at_p =  r'{}{}/raw_data/ImgBoxes_val.txt'.format(Detection_Dataset_Dir,project)
-        self.class_names, self.num_classes = get_classes(self.classes_path)
+
+
+        if self.USE_MIL_Data:
+            # 解析mil数据
+            self.work_space = r'G:\DefectDataCenter\ParseData\Detection\DSW_random\MIL_Data\PreparedData'
+            self.parse_class_definitions()
+            self.parse_boxes()
+
+            # self.classes_path = r'{}{}/raw_data/Classes.txt'.format(Detection_Dataset_Dir, project)
+            # self.train_at_p = r'{}{}/raw_data/ImgBoxes_train.txt'.format(Detection_Dataset_Dir, project)
+            # self.val_at_p = r'{}{}/raw_data/ImgBoxes_val.txt'.format(Detection_Dataset_Dir, project)
+            # # self.class_names, self.num_classes = get_classes(self.classes_path)
+            # self.train_lines, self.val_lines = read_annotation_path(self.train_at_p, self.val_at_p)
+        else:
+            # 解析pytorch数据
+            self.classes_path = r'{}{}/raw_data/Classes.txt'.format(Detection_Dataset_Dir, project)
+            self.train_at_p = r'{}{}/raw_data/ImgBoxes_train.txt'.format(Detection_Dataset_Dir, project)
+            self.val_at_p = r'{}{}/raw_data/ImgBoxes_val.txt'.format(Detection_Dataset_Dir, project)
+            self.class_names, self.num_classes = get_classes(self.classes_path)
+            self.train_lines, self.val_lines = read_annotation_path(self.train_at_p, self.val_at_p)
+
+
         self.anchors, self.num_anchors = get_anchors(self.anchors_path)
-        self.train_lines,self.val_lines = read_annotation_path(self.train_at_p, self.val_at_p)
         self.epoch_step      = len(self.train_lines) // self.batch_size
         self.epoch_step_val  = max(len(self.val_lines) // self.batch_size,1)
         self.model = YoloBody(self.anchors_mask, self.num_classes, phi=self.phi)
@@ -88,6 +108,36 @@ class Config:
         self.dst_dir = r'data/{}/rst_img'.format(project)
         if not os.path.exists(self.dst_dir):
             os.makedirs(self.dst_dir)
+
+    def parse_class_definitions(self):
+        cls_def_n = os.path.join(self.work_space, 'class_definitions.csv')
+        data = pd.read_csv(cls_def_n, sep=',', header='infer', usecols=[1])
+        self.class_names =  list(data.loc[:].Name)
+        self.num_classes = len(self.class_names)
+        return
+
+    def parse_boxes(self):
+        cls_def_n = os.path.join(self.work_space, 'descriptor_boxes.csv')
+        file_paths = pd.read_csv(cls_def_n, sep=',', header='infer', usecols=[1]).FilePath
+        gts = pd.read_csv(cls_def_n, sep=',', header='infer', usecols=[3]).ClassIdxGroundTruth
+        box_coords = pd.read_csv(cls_def_n, sep=',', header='infer', usecols=[5]).BoxCoords
+
+        self.img_box_map={}
+        for path,gt,box  in zip(file_paths,gts,box_coords):
+            box_gt = " "+box.replace(" ",'')+','+str(gt)
+            if path in self.img_box_map.keys():
+                self.img_box_map[path] = self.img_box_map[path]+box_gt
+            else:
+                self.img_box_map[path] = os.path.join(self.work_space,path+box_gt)
+
+        self.name2path = list(self.img_box_map.values())
+        random.shuffle(self.name2path)
+        select_n = int(self.split_ratio * len(self.name2path))
+        self.train_lines = self.name2path [:select_n]
+        self.val_lines =  self.name2path [select_n:]
+
+        return
+
     def unique_para_initial(self,project):
         if project=="LMK":
             self.input_shape = [352, 416]  # 对原始图片进行缩放，大小是32的倍数  HW
@@ -100,3 +150,6 @@ class Config:
         elif project == "lslm":
             self.input_shape = [512, 704]  # 对原始图片进行缩放，大小是32的倍数
 
+if __name__ == '__main__':
+    project = 'DSW_random'
+    A = Config(project)

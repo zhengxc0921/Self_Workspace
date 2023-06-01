@@ -1,12 +1,6 @@
-from random import sample, shuffle
-
 import cv2
 import numpy as np
-from PIL import Image
 from torch.utils.data.dataset import Dataset
-
-from utils.utils import cvtColor, preprocess_input
-
 
 class YoloDataset(Dataset):
     def __init__(self, annotation_lines, input_shape, num_classes, train):
@@ -30,11 +24,9 @@ class YoloDataset(Dataset):
         image, box      = self.get_random_data(self.annotation_lines[index], self.input_shape, random = self.train)
         image = np.transpose(image / 255.0, (2, 0, 1))
         box         = np.array(box, dtype=np.float32)
-
         if len(box) != 0:
             box[:, [0, 2]] = box[:, [0, 2]] / self.input_shape[1]
             box[:, [1, 3]] = box[:, [1, 3]] / self.input_shape[0]
-
             box[:, 2:4] = box[:, 2:4] - box[:, 0:2]
             box[:, 0:2] = box[:, 0:2] + box[:, 2:4] / 2
         return image, box
