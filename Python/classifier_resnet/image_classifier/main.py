@@ -13,17 +13,16 @@ class Classifier:
         self.net_operate.model_train()
 
     def test(self):
-        # 模型测试:使用有标签数据对模型训练的结果进行准确度测试
+        # 模型测试:
         self.net_operate.model_load(self.img_argu.best_model_path)
         self.net_operate.model_evaluate(self.img_argu.val_loader)
 
     def update(self):
-        # 模型更新:使用新的有标签数据在当前模型的基础上更新模型参数
+        # 模型更新
         self.net_operate.model_load(self.img_argu.best_model_path)
         self.net_operate.model_train()
 
     def predict_initial(self):
-        # dst_dir init
         self.dst_dir = os.path.join(self.img_argu.dst_root,self.img_argu.damage_fold)
         for k, v in self.img_argu.name2label.items():
             p_dir = os.path.join(self.dst_dir, str(k))
