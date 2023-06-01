@@ -36,7 +36,7 @@ class ToScript:
         traced_script_module.save(self.argu.pt_m_dst)
 
     def example_img_initial(self):
-        self.ep_img_p = os.path.join(self.argu.src_dir,self.argu.label2class[0])
+        self.ep_img_p = os.path.join(self.argu.src_dir,str(self.argu.label2class[0]))
         self.ep_im_ns= os.listdir(self.ep_img_p)
         img_path = os.path.join(self.ep_img_p,self.ep_im_ns[0])
         self.ep_img = self.cv_read_(img_path)
