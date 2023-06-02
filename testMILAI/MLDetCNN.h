@@ -26,8 +26,9 @@ public:
     void ConstructDataset(string ClassesInfo,
         string IconDir,
         string ImgDataInfo,
-        string WorkingDataPath,
-        string DataSetName);
+        MIL_STRING MStrWorkingDataPath,
+        string DataSetName,
+        MIL_UNIQUE_CLASS_ID& Dataset);
 
 
     void ConstructDataContext(
@@ -37,7 +38,9 @@ public:
     void PrepareDataset(
         MIL_UNIQUE_CLASS_ID& DatasetContext,
         MIL_UNIQUE_CLASS_ID& PrepareDataset,
-        MIL_UNIQUE_CLASS_ID& PreparedDataset);
+        MIL_UNIQUE_CLASS_ID& PreparedDataset,
+        MIL_STRING WorkingDataPath,
+        MIL_DOUBLE TestDatasetPercentage);
 
     void ConstructTrainCtx(
         DetParas DetParas,

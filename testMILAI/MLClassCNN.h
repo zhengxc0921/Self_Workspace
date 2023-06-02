@@ -52,7 +52,8 @@ public:
         MIL_UNIQUE_CLASS_ID& DatasetContext,
         MIL_UNIQUE_CLASS_ID& PrepareDataset,
         MIL_UNIQUE_CLASS_ID& PreparedDataset,
-        MIL_STRING PreparedDatasetPath);
+        MIL_STRING PreparedDatasetPath,
+        MIL_DOUBLE TestDatasetPercentage);
 
     void ConstructTrainCtx(
         ClassifierParasStruct ClassifierParas,

@@ -71,18 +71,19 @@ void CMLDetCNN::ConstructDataset(string ClassesInfo,
 void CMLDetCNN::ConstructDataset(string ClassesInfo,
     string IconDir,
     string ImgDataInfo,
-    string WorkingDataPath,
-    string DataSetName)
+    MIL_STRING MStrWorkingDataPath,
+    string DataSetName,
+    MIL_UNIQUE_CLASS_ID& Dataset)
 {
 
     MIL_STRING MStrIconDir = m_AIParse->string2MIL_STRING(IconDir);
-    MIL_STRING MStrWorkingDataPath = m_AIParse->string2MIL_STRING(WorkingDataPath);
+    //MIL_STRING MStrWorkingDataPath = m_AIParse->string2MIL_STRING(WorkingDataPath);
     MIL_STRING MStrDataSetName = m_AIParse->string2MIL_STRING(DataSetName);
     //m_AIParse->MIL_STRING2string(MStrIconDir, IconDir);
     //m_AIParse->MIL_STRING2string(MStrWorkingDataPath, WorkingDataPath);
 
 
-    MIL_UNIQUE_CLASS_ID  Dataset = MclassAlloc(m_MilSystem, M_DATASET_IMAGES, M_DEFAULT, M_UNIQUE_ID);
+    
     MclassControl(Dataset, M_DEFAULT, M_AUTHOR_ADD, MIL_TEXT("ZXC"));
     //step1:txt-->IconDataInfo
     vector<MIL_STRING>vecClasses;
@@ -110,7 +111,6 @@ void CMLDetCNN::ConstructDataset(string ClassesInfo,
         vector<int> tmplabels = veclabels[i];
         int nTempLen = tmpBoxes.size();
         for (int j = 0; j < nTempLen; j++) {
-
             MIL_UNIQUE_GRA_ID  MilGraphicList = MgraAllocList(m_MilSystem, M_DEFAULT, M_UNIQUE_ID);
             MgraRect(M_DEFAULT, MilGraphicList, tmpBoxes[j].x1, tmpBoxes[j].y1, tmpBoxes[j].x2, tmpBoxes[j].y2);
             MclassEntryAddRegion(Dataset, i, M_DEFAULT_KEY, M_DESCRIPTOR_TYPE_BOX, MilGraphicList, M_NULL, tmplabels[j], M_DEFAULT);
@@ -119,9 +119,8 @@ void CMLDetCNN::ConstructDataset(string ClassesInfo,
 
 
     CreateFolder(MStrWorkingDataPath);
-    MclassControl(Dataset, M_CONTEXT, M_CONSOLIDATE_ENTRIES_INTO_FOLDER, MStrWorkingDataPath);
-    MIL_STRING WorkDatasetPath = MStrWorkingDataPath + MStrDataSetName;
-    MclassSave(WorkDatasetPath, Dataset, M_DEFAULT);
+    //MclassControl(Dataset, M_CONTEXT, M_CONSOLIDATE_ENTRIES_INTO_FOLDER, MStrWorkingDataPath);
+
 }
 
 
@@ -201,15 +200,27 @@ void CMLDetCNN::ConstructDataContext(DataContextParasStruct DataCtxParas, MIL_UN
     MclassHookFunction(PrepareDataCtx, M_PREPARE_ENTRY_POST, DetHookNumPreparedEntriesFunc, &IsDevDataset);
 }
 
-void CMLDetCNN::PrepareDataset(MIL_UNIQUE_CLASS_ID& DatasetContext, MIL_UNIQUE_CLASS_ID& PrepareDataset, MIL_UNIQUE_CLASS_ID& PreparedDataset)
+void CMLDetCNN::PrepareDataset(MIL_UNIQUE_CLASS_ID& DatasetContext, 
+    MIL_UNIQUE_CLASS_ID& PrepareDataset,
+    MIL_UNIQUE_CLASS_ID& PreparedDataset,
+    MIL_STRING WorkingDataPath,
+    MIL_DOUBLE TestDatasetPercentage)
 {
     MclassPreprocess(DatasetContext, M_DEFAULT);
     MclassPrepareData(DatasetContext, PrepareDataset, PreparedDataset, M_NULL, M_DEFAULT);
 
-    //MIL_STRING PreparedDatasetPath =  MIL_TEXT("I:/MIL_Detection_Dataset/lslm_all/PreparedDataSet.mclassd");
-    //MclassSave(PreparedDatasetPath, PreparedDataset, M_DEFAULT);
-    //MclassExport(MIL_TEXT("I:/MIL_Detection_Dataset/lslm_all/TrainDatasetFeatures.csv"), M_FORMAT_CSV, PreparedDataset, M_DEFAULT, M_ENTRIES, M_DEFAULT);
-  
+    MIL_UNIQUE_CLASS_ID WorkingDataset = MclassAlloc(m_MilSystem, M_DATASET_IMAGES, M_DEFAULT, M_UNIQUE_ID);
+    MIL_UNIQUE_CLASS_ID TestDataset = MclassAlloc(m_MilSystem, M_DATASET_IMAGES, M_DEFAULT, M_UNIQUE_ID);
+    MclassSplitDataset(M_SPLIT_CONTEXT_FIXED_SEED, PreparedDataset, WorkingDataset, TestDataset,
+        100.0 - TestDatasetPercentage, M_NULL, M_DEFAULT);
+    //±£´æ½á¹û
+    MclassSave(WorkingDataPath + MIL_TEXT("WorkingDataset.mclassd"), WorkingDataset, M_DEFAULT);
+    MclassSave(WorkingDataPath + MIL_TEXT("TestDataset.mclassd"), TestDataset, M_DEFAULT);
+
+    CreateFolder(WorkingDataPath + MIL_TEXT("Train_entries"));
+    CreateFolder(WorkingDataPath + MIL_TEXT("Test_entries"));
+    MclassExport(WorkingDataPath + MIL_TEXT("Train_entries"), M_IMAGE_DATASET_FOLDER, WorkingDataset, M_DEFAULT, M_COMPLETE, M_DEFAULT);
+    MclassExport(WorkingDataPath + MIL_TEXT("Test_entries"), M_IMAGE_DATASET_FOLDER, TestDataset, M_DEFAULT, M_COMPLETE, M_DEFAULT);
 }
 
 void CMLDetCNN::ConstructTrainCtx(DetParas ClassifierParas, MIL_UNIQUE_CLASS_ID& TrainCtx)
@@ -219,10 +230,6 @@ void CMLDetCNN::ConstructTrainCtx(DetParas ClassifierParas, MIL_UNIQUE_CLASS_ID&
 
     //MIL_STRING MPF2;
     //MclassInquire(TrainCtx, M_GENERAL, M_PREDICT_ENGINE_PRECISION, MPF2);
-
-
-
-
     if (M_NULL == TrainCtx)
     {
         TrainCtx = MclassAlloc(m_MilSystem, M_TRAIN_DET, M_DEFAULT, M_UNIQUE_ID);

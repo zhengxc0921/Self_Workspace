@@ -9,7 +9,8 @@
 int main(int argc, char* argv[]) {
 
 
-	MIL_STRING strProject = L"FZ";
+	//MIL_STRING strProject = L"FZ";
+	MIL_STRING strProject = L"DSW_random";
 	MIL_UNIQUE_APP_ID MilApplication = MappAlloc(M_NULL, M_DEFAULT, M_UNIQUE_ID);
 	MIL_UNIQUE_SYS_ID MilSystem = MsysAlloc(M_DEFAULT, M_SYSTEM_HOST, M_DEFAULT, M_DEFAULT, M_UNIQUE_ID);
 	MIL_UNIQUE_DISP_ID MilDisplay = MdispAlloc(MilSystem, M_DEFAULT, MIL_TEXT("M_DEFAULT"), M_DEFAULT, M_UNIQUE_ID);
@@ -20,14 +21,14 @@ int main(int argc, char* argv[]) {
 	//m_MILTestPtr->FillImgs();
 	//m_MILTestPtr->CropImgs();
 
-	m_MILTestPtr->MILTestGenDataset();
-	m_MILTestPtr->MILTestTrain();
-	m_MILTestPtr->MILTestPredict();
+	//m_MILTestPtr->MILTestGenDataset();
+	//m_MILTestPtr->MILTestTrain();
+	//m_MILTestPtr->MILTestPredict();
 	//m_MILTestPtr->MILTestPredictWithBlob();
 	//m_MILTestPtr->MILTestPredictEngine();
 	
 	//Detection CNN test
-	//m_MILTestPtr->MILTestGenDetDataset();
+	m_MILTestPtr->MILTestGenDetDataset();
 	//m_MILTestPtr->MILTestDetTrain();
 	//m_MILTestPtr->MILTestDetPredict();
 	//ONNX test

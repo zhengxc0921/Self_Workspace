@@ -327,14 +327,24 @@ void CMLClassCNN::ConstructDataContext(DataContextParasStruct DataCtxParas, MIL_
 
 void CMLClassCNN::PrepareDataset(MIL_UNIQUE_CLASS_ID& DatasetContext, 
     MIL_UNIQUE_CLASS_ID& PrepareDataset, MIL_UNIQUE_CLASS_ID& PreparedDataset,
-    MIL_STRING WorkingDataPath)
+    MIL_STRING WorkingDataPath,
+    MIL_DOUBLE TestDatasetPercentage)
 {
     MclassPreprocess(DatasetContext, M_DEFAULT);
     MclassPrepareData(DatasetContext, PrepareDataset, PreparedDataset, M_NULL, M_DEFAULT);
+    //将数据划分为PreparedDataset和TestDataset
+    MIL_UNIQUE_CLASS_ID WorkingDataset = MclassAlloc(m_MilSystem, M_DATASET_IMAGES, M_DEFAULT, M_UNIQUE_ID);
+    MIL_UNIQUE_CLASS_ID TestDataset = MclassAlloc(m_MilSystem, M_DATASET_IMAGES, M_DEFAULT, M_UNIQUE_ID);
+    MclassSplitDataset(M_SPLIT_CONTEXT_FIXED_SEED, PreparedDataset, WorkingDataset, TestDataset,
+        100.0 - TestDatasetPercentage, M_NULL, M_DEFAULT);
     //保存结果
-    MclassSave(WorkingDataPath + MIL_TEXT("PreparedDataset.mclassd"), PreparedDataset, M_DEFAULT);
-    MclassExport(WorkingDataPath+MIL_TEXT("entries.csv"), M_FORMAT_CSV, PreparedDataset, M_DEFAULT, M_ENTRIES, M_DEFAULT);
-    MclassExport(WorkingDataPath+MIL_TEXT("class_definitions.csv"), M_FORMAT_CSV, PreparedDataset, M_DEFAULT, M_CLASS_DEFINITIONS, M_DEFAULT);
+    MclassSave(WorkingDataPath + MIL_TEXT("WorkingDataset.mclassd"), WorkingDataset, M_DEFAULT);
+    MclassExport(WorkingDataPath + MIL_TEXT("class_definitions.csv"), M_FORMAT_CSV,
+        WorkingDataset, M_DEFAULT, M_CLASS_DEFINITIONS, M_DEFAULT);
+    MclassExport(WorkingDataPath+MIL_TEXT("train_entries.csv"), M_FORMAT_CSV, WorkingDataset, M_DEFAULT, M_ENTRIES, M_DEFAULT);
+    MclassSave(WorkingDataPath + MIL_TEXT("TestDataset.mclassd"), TestDataset, M_DEFAULT);
+    MclassExport(WorkingDataPath + MIL_TEXT("test_entries.csv"), M_FORMAT_CSV, TestDataset, M_DEFAULT, M_ENTRIES, M_DEFAULT);
+   
 
 }
 
