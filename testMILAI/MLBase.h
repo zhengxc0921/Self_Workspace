@@ -26,6 +26,9 @@ struct AugmentationParasStruct
     MIL_DOUBLE GaussNoiseStdev;         //gauss noise stdev, default:25.0
     MIL_DOUBLE SmoothnessMin;           //min smoothness, default:0.0
     MIL_DOUBLE SmoothnessMax;           //max smoothness, default:100.0
+    MIL_DOUBLE GammaValue;              //default 1.0
+    MIL_DOUBLE GammaDelta;              //default 0.0
+
 
 };
 

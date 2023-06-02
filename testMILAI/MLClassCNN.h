@@ -37,11 +37,11 @@ public:
         MIL_UNIQUE_CLASS_ID& Dataset);
     //多个文件Dataset 汇总
     void GeneralDataset(
-        std::vector<vector<MIL_STRING>> ClassName,
-        std::vector<vector<MIL_STRING>> ClassIcon,
-        std::vector<MIL_STRING>& AuthorName,
-        std::vector<MIL_STRING>& OriginalDataPath,
-        const MIL_STRING& WorkingDataPath);
+        vector<MIL_STRING> ClassName,
+        vector<MIL_STRING> ClassIcon,
+        MIL_STRING AuthorName,
+        MIL_STRING OriginalDataPath,
+        MIL_STRING WorkingDataPath);
 
 
     void ConstructDataContext(
@@ -60,7 +60,7 @@ public:
 
     void TrainClassifier(
         MIL_UNIQUE_CLASS_ID& Dataset,
-        MIL_UNIQUE_CLASS_ID& DatasetContext,
+        //MIL_UNIQUE_CLASS_ID& DatasetContext,
         MIL_UNIQUE_CLASS_ID& TrainCtx,
         MIL_UNIQUE_CLASS_ID& PrevClassifierCtx,
         MIL_UNIQUE_CLASS_ID& TrainedClassifierCtx,

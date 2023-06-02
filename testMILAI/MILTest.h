@@ -11,7 +11,7 @@ class MILTest;
 typedef boost::shared_ptr<MILTest>MILTestPtr;
 class MILTest {
 public:
-	MILTest(MIL_ID MilSystem, MIL_ID MilDisplay,string strProject);
+	MILTest(MIL_ID MilSystem, MIL_ID MilDisplay, MIL_STRING strProject);
 	~MILTest();
 
 	void getIcon(vector<MIL_STRING> OriginalDataPath,
@@ -88,7 +88,16 @@ public:
 	MIL_INT m_InputSizeY = 0;
 
 	//≤‚ ‘≤Œ ˝
-	string m_strProject;
+	
+	MIL_STRING m_ClassifierSrcDataDir = L"G:/DefectDataCenter/ParseData/Classifier/";
+	MIL_STRING m_DetectionSrcDataDir = L"G:/DefectDataCenter/ParseData/Detection/";
+
+	MIL_STRING m_ClassifierWorkSpace = L"G:/DefectDataCenter/WorkSpace/Classifier/";
+	MIL_STRING m_DetectionWorkSpace = L"G:/DefectDataCenter/WorkSpace/Detection/";
+
+
+	MIL_STRING m_strProject;
+
 	vector<MIL_STRING> m_FilesInFolder;
 	vector < ClassificationResultStruct> m_vecResults;
 	bool m_SavePredictedImg = TRUE;
@@ -96,5 +105,6 @@ public:
 	MIL_UNIQUE_CLASS_ID m_TrainedCtx;
 	map<string,MIL_ID >m_PathRawImageMap;
 	vector<DetResult> m_vecDetResults;
+
 
 };

@@ -188,8 +188,9 @@ void CMLClassCNN::InitClassWeights()
     m_ClassWeights.resize(m_ClassesNum, 1.0);
 }
 
-void CMLClassCNN::ConstructDataset(std::vector<MIL_STRING> ClassName, 
-    std::vector<MIL_STRING> ClassIcon, 
+void CMLClassCNN::ConstructDataset(
+    vector<MIL_STRING> ClassName, 
+    vector<MIL_STRING> ClassIcon, 
     MIL_STRING AuthorName, 
     MIL_STRING OriginalDataPath, 
     const MIL_STRING& WorkingDataPath,
@@ -210,51 +211,43 @@ void CMLClassCNN::ConstructDataset(std::vector<MIL_STRING> ClassName,
 
 }
 
-void CMLClassCNN::GeneralDataset(vector<vector<MIL_STRING>> ClassName, 
-    vector<vector<MIL_STRING>> ClassIcon, 
-    vector<MIL_STRING>& AuthorName,
-    vector<MIL_STRING>& OriginalDataPath,
-    const MIL_STRING& WorkingDataPath)
+void CMLClassCNN::GeneralDataset(vector<MIL_STRING> ClassName,
+    vector<MIL_STRING> ClassIcon,
+    MIL_STRING AuthorName,
+    MIL_STRING OriginalDataPath,
+    MIL_STRING WorkingDataPath)
 {
     MIL_UNIQUE_CLASS_ID  Dataset = MclassAlloc(m_MilSystem, M_DATASET_IMAGES, M_DEFAULT, M_UNIQUE_ID);
 
-    for (int p_i = 0; p_i < OriginalDataPath.size(); p_i++) {
-
-        ConstructDataset(
-            ClassName[p_i],
-            ClassIcon[p_i],
-            AuthorName[p_i],
-            OriginalDataPath[p_i],
-            WorkingDataPath,
-            Dataset);
-    }
-
+    ConstructDataset(ClassName,ClassIcon,AuthorName,OriginalDataPath,WorkingDataPath,Dataset);
+ 
     CreateFolder(WorkingDataPath);
     MclassControl(Dataset, M_CONTEXT, M_CONSOLIDATE_ENTRIES_INTO_FOLDER, WorkingDataPath);
 
-    //汇总数据，然后再保存
-    MIL_STRING OriginalAllDataPath = WorkingDataPath + MIL_TEXT("Images\\");
-    MIL_STRING OriginalAllIconsPath = WorkingDataPath + MIL_TEXT("Icons\\");
-    std::vector<MIL_STRING>ClassName_A;
-    std::vector<MIL_STRING>ClassIcon_A;
-    MIL_UNIQUE_CLASS_ID  AllDataset = MclassAlloc(m_MilSystem, M_DATASET_IMAGES, M_DEFAULT, M_UNIQUE_ID);
+    ////默认该数据已经由软件汇总，汇总数据，然后再保存
+    //MIL_STRING OriginalAllDataPath = WorkingDataPath + MIL_TEXT("Images\\");
+    //MIL_STRING OriginalAllIconsPath = WorkingDataPath + MIL_TEXT("Icons\\");
+    //std::vector<MIL_STRING>ClassName_A;
+    //std::vector<MIL_STRING>ClassIcon_A;
+    //MIL_UNIQUE_CLASS_ID  AllDataset = MclassAlloc(m_MilSystem, M_DATASET_IMAGES, M_DEFAULT, M_UNIQUE_ID);
 
-    string OrgAIconsPath;
-    m_AIParse->MIL_STRING2string(OriginalAllIconsPath, OrgAIconsPath);
-    m_AIParse->getFilesInFolder(OrgAIconsPath,"mim", ClassIcon_A);
-    for (int i = 0; i < ClassIcon_A.size(); i++) {
-        MIL_STRING ClassIconPath = ClassIcon_A[i];
-        MIL_STRING::size_type iPos = ClassIconPath.find_last_of('\\') + 1;
-        MIL_STRING filename = ClassIconPath.substr(iPos, ClassIconPath.length() - iPos);
+    //string OrgAIconsPath;
+    //m_AIParse->MIL_STRING2string(OriginalAllIconsPath, OrgAIconsPath);
+    //m_AIParse->getFilesInFolder(OrgAIconsPath,"mim", ClassIcon_A);
+    //for (int i = 0; i < ClassIcon_A.size(); i++) {
+    //    MIL_STRING ClassIconPath = ClassIcon_A[i];
+    //    MIL_STRING::size_type iPos = ClassIconPath.find_last_of('\\') + 1;
+    //    MIL_STRING filename = ClassIconPath.substr(iPos, ClassIconPath.length() - iPos);
 
-        MIL_STRING::size_type iPosP = filename.find_last_of('.') + 1;
-        MIL_STRING ClassName = filename.substr(0, iPosP - 1);
+    //    MIL_STRING::size_type iPosP = filename.find_last_of('.') + 1;
+    //    MIL_STRING ClassName = filename.substr(0, iPosP - 1);
 
-        ClassName_A.emplace_back(ClassName);
-    }
-    ConstructDataset(ClassName_A, ClassIcon_A, AuthorName[0], OriginalAllDataPath, WorkingDataPath, AllDataset);
+    //    ClassName_A.emplace_back(ClassName);
+    //}
+    //ConstructDataset(ClassName_A, ClassIcon_A, AuthorName[0], OriginalAllDataPath, WorkingDataPath, AllDataset);
     MIL_STRING WorkDatasetPath = WorkingDataPath + MIL_TEXT("DataSet.mclassd");
-    MclassSave(WorkDatasetPath, AllDataset, M_DEFAULT);
+    MclassSave(WorkDatasetPath, Dataset, M_DEFAULT);
+
 
 }
 
@@ -267,7 +260,6 @@ void CMLClassCNN::ConstructDataContext(DataContextParasStruct DataCtxParas, MIL_
     //数据保存
     CreateFolder(DataCtxParas.PreparedDataFolder);
     MclassControl(DataContext, M_CONTEXT, M_PREPARED_DATA_FOLDER, DataCtxParas.PreparedDataFolder);
-    // On average, we do two augmentations per image + the original images.
     MclassControl(DataContext, M_CONTEXT, M_AUGMENT_NUMBER_FACTOR, DataCtxParas.AugParas.AugmentationNumPerImage);
     if (DataCtxParas.ImageSizeX > 0 && DataCtxParas.ImageSizeY > 0)
     {
@@ -325,38 +317,25 @@ void CMLClassCNN::ConstructDataContext(DataContextParasStruct DataCtxParas, MIL_
         MimControl(AugmentContext, M_AUG_SMOOTH_DERICHE_OP_FACTOR_MAX, DataCtxParas.AugParas.SmoothnessMax);
     }
 
-    //if (DataCtxParas.AugParas.GammaValue > 0)
-    //{
-    //    MimControl(AugmentContext, M_AUG_GAMMA_OP, M_ENABLE);
-    //    MimControl(AugmentContext, M_AUG_GAMMA_OP_VALUE, DataCtxParas.AugParas.GammaValue);
-    //    MimControl(AugmentContext, M_AUG_GAMMA_OP_DELTA, DataCtxParas.AugParas.GammaDelta);
-    //}
-        // Translation augmentation and presets in the prepare data context.
-    // MclassControl(TrainPrepareDataCtx, M_CONTEXT, M_PRESET_TRANSLATION, M_ENABLE);
-    //if (DataCtxParas.AugParas.TranslationXMax > 0)
-    //{
-    //    MimControl(AugmentContext, M_AUG_TRANSLATION_X_OP, M_ENABLE);
-    //    MimControl(AugmentContext, M_AUG_TRANSLATION_X_OP_MAX, DataCtxParas.AugParas.TranslationXMax);
-    //}
-    //if (DataCtxParas.AugParas.TranslationYMax > 0)
-    //{
-    //    MimControl(AugmentContext, M_AUG_TRANSLATION_Y_OP, M_ENABLE);
-    //    MimControl(AugmentContext, M_AUG_TRANSLATION_Y_OP_MAX, DataCtxParas.AugParas.TranslationYMax);
-    //}
-
-    // Scale augmentation and presets in the prepare data context.
-    // MclassControl(TrainPrepareDataCtx, M_CONTEXT, M_PRESET_SCALE, M_ENABLE);
+    if (DataCtxParas.AugParas.GammaValue > 0)
+    {
+        MimControl(AugmentContext, M_AUG_GAMMA_OP, M_ENABLE);
+        MimControl(AugmentContext, M_AUG_GAMMA_OP_VALUE, DataCtxParas.AugParas.GammaValue);
+        MimControl(AugmentContext, M_AUG_GAMMA_OP_DELTA, DataCtxParas.AugParas.GammaDelta);
+    }
 }
 
 void CMLClassCNN::PrepareDataset(MIL_UNIQUE_CLASS_ID& DatasetContext, 
     MIL_UNIQUE_CLASS_ID& PrepareDataset, MIL_UNIQUE_CLASS_ID& PreparedDataset,
-    MIL_STRING PreparedDatasetPath)
+    MIL_STRING WorkingDataPath)
 {
     MclassPreprocess(DatasetContext, M_DEFAULT);
     MclassPrepareData(DatasetContext, PrepareDataset, PreparedDataset, M_NULL, M_DEFAULT);
-    
+    //保存结果
+    MclassSave(WorkingDataPath + MIL_TEXT("PreparedDataset.mclassd"), PreparedDataset, M_DEFAULT);
+    MclassExport(WorkingDataPath+MIL_TEXT("entries.csv"), M_FORMAT_CSV, PreparedDataset, M_DEFAULT, M_ENTRIES, M_DEFAULT);
+    MclassExport(WorkingDataPath+MIL_TEXT("class_definitions.csv"), M_FORMAT_CSV, PreparedDataset, M_DEFAULT, M_CLASS_DEFINITIONS, M_DEFAULT);
 
-    MclassSave(PreparedDatasetPath, PreparedDataset, M_DEFAULT);
 }
 
 void CMLClassCNN::ConstructTrainCtx(ClassifierParasStruct ClassifierParas, MIL_UNIQUE_CLASS_ID& TrainCtx)
@@ -366,6 +345,7 @@ void CMLClassCNN::ConstructTrainCtx(ClassifierParasStruct ClassifierParas, MIL_U
         TrainCtx = MclassAlloc(m_MilSystem, M_TRAIN_CNN, M_DEFAULT, M_UNIQUE_ID);
     }
 
+    CreateFolder(ClassifierParas.TrainDstFolder);
     MclassControl(TrainCtx, M_CONTEXT, M_TRAIN_DESTINATION_FOLDER, ClassifierParas.TrainDstFolder);
 
     //if (ClassifierParas.TrainMode == 1)
@@ -419,8 +399,11 @@ void CMLClassCNN::ConstructTrainCtx(ClassifierParasStruct ClassifierParas, MIL_U
 }
 
 void CMLClassCNN::TrainClassifier(MIL_UNIQUE_CLASS_ID& Dataset, 
-    MIL_UNIQUE_CLASS_ID& DatasetContext,
-    MIL_UNIQUE_CLASS_ID& TrainCtx, MIL_UNIQUE_CLASS_ID& PrevClassifierCtx, MIL_UNIQUE_CLASS_ID& TrainedClassifierCtx, MIL_STRING& ClassifierDumpFile)
+    //MIL_UNIQUE_CLASS_ID& DatasetContext,
+    MIL_UNIQUE_CLASS_ID& TrainCtx, 
+    MIL_UNIQUE_CLASS_ID& PrevClassifierCtx,
+    MIL_UNIQUE_CLASS_ID& TrainedClassifierCtx,
+    MIL_STRING& ClassifierDumpFile)
 {
     MIL_INT MaxEpoch = 0;
     MIL_INT MinibatchSize = 0;
@@ -474,22 +457,14 @@ void CMLClassCNN::TrainClassifier(MIL_UNIQUE_CLASS_ID& Dataset,
         MosPrintf(MIL_TEXT("Training is performed on the CPU used %f second\n"), time);
     else
         MosPrintf(MIL_TEXT("Training is performed on the GPU used %f second\n"), time);
-
     // Check the training status to ensure the training has completed properly.
     MIL_INT Status = -1;
     MclassGetResult(TrainRes, M_DEFAULT, M_STATUS + M_TYPE_MIL_INT, &Status);
     if (Status == M_COMPLETE)
     {
-
-        //MIL_STRING Respath = MIL_TEXT("G:/DefectDataCenter/zhjuzhiqiang_2023/2023/spa/PreparedData/res.mclass");
-        //MclassExport(Respath, TrainRes, M_DEFAULT);
-        //MIL_UNIQUE_CLASS_ID TrainRes_dsk = MclassRestore(Respath, m_MilSystem, M_DEFAULT, M_UNIQUE_ID);
-
         TrainedClassifierCtx = MclassAlloc(m_MilSystem, M_CLASSIFIER_CNN_PREDEFINED, M_DEFAULT, M_UNIQUE_ID);
         MclassCopyResult(TrainRes, M_DEFAULT, TrainedClassifierCtx, M_DEFAULT, M_TRAINED_CLASSIFIER, M_DEFAULT);
-
     }
-
 }
 
 void CMLClassCNN::PredictBegin(MIL_UNIQUE_CLASS_ID& TrainedCCtx,MIL_ID Image,vector<MIL_DOUBLE>Class_Weights)
