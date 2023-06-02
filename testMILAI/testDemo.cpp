@@ -28,9 +28,9 @@ int main(int argc, char* argv[]) {
 	//m_MILTestPtr->MILTestPredictEngine();
 	
 	//Detection CNN test
-	m_MILTestPtr->MILTestGenDetDataset();
+	//m_MILTestPtr->MILTestGenDetDataset();
 	//m_MILTestPtr->MILTestDetTrain();
-	//m_MILTestPtr->MILTestDetPredict();
+	m_MILTestPtr->MILTestDetPredict();
 	//ONNX test
 	//m_MILTestPtr->MILTestONNXPredict();
 	//多进程测试前的预备测试

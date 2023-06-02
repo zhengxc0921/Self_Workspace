@@ -290,7 +290,7 @@ void CMLDetCNN::ConstructTrainCtx(DetParas ClassifierParas, MIL_UNIQUE_CLASS_ID&
 }
 
 void CMLDetCNN::TrainClassifier(MIL_UNIQUE_CLASS_ID& Dataset, 
-    MIL_UNIQUE_CLASS_ID& DatasetContext,
+    //MIL_UNIQUE_CLASS_ID& DatasetContext,
     MIL_UNIQUE_CLASS_ID& TrainCtx,
     MIL_UNIQUE_CLASS_ID& TrainedDetCtx,
     MIL_STRING& ClassifierDumpFile)

@@ -48,7 +48,7 @@ public:
 
     void TrainClassifier(
         MIL_UNIQUE_CLASS_ID& Dataset,
-        MIL_UNIQUE_CLASS_ID& DatasetContext,
+        //MIL_UNIQUE_CLASS_ID& DatasetContext,
         MIL_UNIQUE_CLASS_ID& TrainCtx,
        
         MIL_UNIQUE_CLASS_ID& TrainedDetCtx,

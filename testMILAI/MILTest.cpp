@@ -491,59 +491,34 @@ void MILTest::MILTestGenDetDataset()
 	m_MLDetCNN->PrepareDataset(DataContext, WorkingDataset, PreparedDataset, WorkingDataPath, TestDatasetPercentage);
 }
 
-//void MILTest::MILTestDetTrain()
-//{
-//
-//	//int ImageSizeX = 1440;				//进入模型训练的图片的尺寸宽360*2 ;704
-//	//int ImageSizeY = 1080;				//进入模型训练的图片的尺寸高270*2  ;512
-//
-//	//int AugmentationNumPerImage = 0;	//进入模型训练的图片的扩充倍数
-//	int MaxNumberOfEpoch = 3;			//模型训练次数
-//	int MiniBatchSize = 8;				//模型训练单次迭代的张数
-//	//string strProject = "DSW_random";
-//	//string strSrcImgDir = "G:/DefectDataCenter/ParseData/Detection/" + strProject + "/MIL_Data/";
-//	//
-//	//MIL_STRING DetFileName = m_MLDetCNN->m_AIParse->string2MIL_STRING(strProject + ".mclass");
-//	//MIL_STRING SrcImgDir = m_MLDetCNN->m_AIParse->string2MIL_STRING(strSrcImgDir);
-//
-//	//////*******************************必须参数*******************************//
-//	//MIL_UNIQUE_CLASS_ID DataContext = MclassAlloc(m_MilSystem, M_PREPARE_IMAGES_DET, M_DEFAULT, M_UNIQUE_ID);
-//
-//	//DataContextParasStruct DataCtxParas;
-//	//DataCtxParas.ImageSizeX = ImageSizeX;
-//	//DataCtxParas.ImageSizeY = ImageSizeY;
-//	//DataCtxParas.DstFolderMode = 1;
-//	//DataCtxParas.PreparedDataFolder = SrcImgDir + MIL_TEXT("PreparedData\\");
-//	//memset(&DataCtxParas.AugParas, 0, sizeof(AugmentationParasStruct));
-//	//DataCtxParas.AugParas.AugmentationNumPerImage = AugmentationNumPerImage;
-//	//m_MLDetCNN->ConstructDataContext(DataCtxParas, DataContext);
-//
-//	//MIL_STRING WorkingDataPath = SrcImgDir + MIL_TEXT("TrainDataSet.mclassd");				//原始数据根文件下的 存放中间数据的文件夹
-//	//MIL_UNIQUE_CLASS_ID WorkingDataset = MclassRestore(WorkingDataPath, m_MilSystem, M_DEFAULT, M_UNIQUE_ID);
-//	//MIL_UNIQUE_CLASS_ID PreparedDataset = MclassAlloc(m_MilSystem, M_DATASET_IMAGES, M_DEFAULT, M_UNIQUE_ID);
-//
-//	//m_MLDetCNN->PrepareDataset(DataContext, WorkingDataset, PreparedDataset);
-//	MIL_UNIQUE_CLASS_ID TrainCtx = MclassAlloc(m_MilSystem, M_TRAIN_DET, M_DEFAULT, M_UNIQUE_ID);  //网络类型定义1，默认形式：M_TRAIN_CNN？
-//	DetParas DtParas;
-//
-//	DtParas.TrainMode = 0;
-//	DtParas.TrainEngineUsed = 0;
-//	DtParas.MaxNumberOfEpoch = MaxNumberOfEpoch;
-//	DtParas.MiniBatchSize = MiniBatchSize;
-//	DtParas.SchedulerType = 0;
-//	DtParas.LearningRate = 0.001;
-//	DtParas.LearningRateDecay = 0.1;
-//	DtParas.SplitPercent = 90.0;
-//	DtParas.TrainDstFolder = SrcImgDir + MIL_TEXT("PreparedData\\");
-//	m_MLDetCNN->ConstructTrainCtx(DtParas, TrainCtx);
-//
-//	MIL_UNIQUE_CLASS_ID TrainedDetCtx;
-//	MIL_STRING DetDumpFile = SrcImgDir + MIL_TEXT("PreparedData\\") + DetFileName;
-//	m_MLDetCNN->TrainClassifier(PreparedDataset, DataContext, TrainCtx, TrainedDetCtx, DetDumpFile);
-//	return;
-//
-//
-//}
+void MILTest::MILTestDetTrain()
+{
+
+	int MaxNumberOfEpoch = 3;			//模型训练次数
+	int MiniBatchSize = 8;				//模型训练单次迭代的张数
+	MIL_UNIQUE_CLASS_ID TrainCtx = MclassAlloc(m_MilSystem, M_TRAIN_DET, M_DEFAULT, M_UNIQUE_ID);  //网络类型定义1，默认形式：M_TRAIN_CNN？
+	DetParas DtParas;
+
+	DtParas.TrainMode = 0;
+	DtParas.TrainEngineUsed = 0;
+	DtParas.MaxNumberOfEpoch = MaxNumberOfEpoch;
+	DtParas.MiniBatchSize = MiniBatchSize;
+	DtParas.SchedulerType = 0;
+	DtParas.LearningRate = 0.001;
+	DtParas.LearningRateDecay = 0.1;
+	DtParas.SplitPercent = 90.0;
+	DtParas.TrainDstFolder = m_DetectionWorkSpace + L"//" + m_strProject + MIL_TEXT("/PreparedData/");
+	m_MLDetCNN->CreateFolder(DtParas.TrainDstFolder);
+	m_MLDetCNN->ConstructTrainCtx(DtParas, TrainCtx);
+
+	MIL_UNIQUE_CLASS_ID TrainedDetCtx;
+	MIL_STRING DetDumpFile = DtParas.TrainDstFolder + m_strProject + L".mclass";
+
+	MIL_STRING PreparedPath = m_DetectionWorkSpace + m_strProject + MIL_TEXT("/WorkingDataset.mclassd");
+	MIL_UNIQUE_CLASS_ID PreparedDataset = MclassRestore(PreparedPath, m_MilSystem, M_DEFAULT, M_UNIQUE_ID);
+	m_MLDetCNN->TrainClassifier(PreparedDataset, TrainCtx, TrainedDetCtx, DetDumpFile);
+	return;
+}
 
 void MILTest::MILTestDetPredict()
 {
