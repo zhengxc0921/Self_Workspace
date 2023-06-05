@@ -78,7 +78,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(mil_path64)\..\include;G:/WSD_CODE2/CppLib/boost/boost_1_73_0_vs2019_win10;$(IncludePath)</IncludePath>
+    <IncludePath>$(mil_path64)\..\include;G:/WSD_CODE2/CppLib/boost/boost_1_73_0_vs2019_win10;D:\Program Files (x86)\Microsoft Visual Studio\Shared\Python37_64\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
@@ -117,12 +117,13 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;_AMD64_;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>D:\Program Files\opencv\build\include\opencv2;D:\Program Files\opencv\build\include\opencv;D:\Program Files\opencv\build\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(mil_path64)\..\lib</AdditionalLibraryDirectories>
-      <AdditionalDependencies>milim.lib;milclass.lib;mil.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(mil_path64)\..\lib;D:\Program Files (x86)\Microsoft Visual Studio\Shared\Python37_64\libs;D:\Program Files\opencv\build\x64\vc14\lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>opencv_world341d.lib;milim.lib;milclass.lib;mil.lib;python37.lib;python3.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -151,6 +152,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AIParse.cpp" />
+    <ClCompile Include="call_py_test.cpp" />
     <ClCompile Include="Dashboard.cpp" />
     <ClCompile Include="MILTest.cpp" />
     <ClCompile Include="MLBase.cpp" />

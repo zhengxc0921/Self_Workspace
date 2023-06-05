@@ -1,9 +1,6 @@
 #pragma once
 #include <iostream>
 
-
-
-
 #if 1
 #include "MILTest.h"
 int main(int argc, char* argv[]) {
@@ -19,18 +16,19 @@ int main(int argc, char* argv[]) {
 	//m_MILTestPtr->FillImgs();
 	//m_MILTestPtr->CropImgs();
 
-	m_MILTestPtr->MILTestGenDataset();
-	m_MILTestPtr->MILTestTrain();
-	m_MILTestPtr->MILTestPredict();
+	//m_MILTestPtr->MILTestGenDataset();
+	//m_MILTestPtr->MILTestTrain();
+	//m_MILTestPtr->MILTestPredict();
 	//m_MILTestPtr->MILTestPredictWithBlob();
 	//m_MILTestPtr->MILTestPredictEngine();
 	
 	//Detection CNN test
-	m_MILTestPtr->MILTestGenDetDataset();
-	m_MILTestPtr->MILTestDetTrain();
-	m_MILTestPtr->MILTestDetPredict();
+	//m_MILTestPtr->MILTestGenDetDataset();
+	//m_MILTestPtr->MILTestDetTrain();
+	//m_MILTestPtr->MILTestDetPredict();
 	//ONNX test
-	//m_MILTestPtr->MILTestONNXPredict();
+	//m_MILTestPtr->OpencvTest();
+	m_MILTestPtr->MILTestONNXPredict();
 	//多进程测试前的预备测试
 	//m_MILTestPtr->MILTestDetPredictMutiProcessSingle();
 

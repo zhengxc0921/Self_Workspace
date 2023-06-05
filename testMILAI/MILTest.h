@@ -1,4 +1,8 @@
 #pragma once
+
+#include <opencv2/opencv.hpp>
+#include <opencv2/highgui.hpp>
+
 #include <direct.h>
 #include<map>
 //#include<boost/weak_ptr.hpp>
@@ -6,6 +10,8 @@
 #include "MLClassCNN.h"
 #include "MLDetCNN.h"
 #include <thread>
+
+using namespace cv;
 
 class MILTest;
 typedef boost::shared_ptr<MILTest>MILTestPtr;
@@ -28,6 +34,8 @@ public:
 
 	void CropImgs();
 
+	void OpencvTest(MIL_ID& ImageReshape);
+	
 	void FillImgs();
 
 	void MILTestGenDataset();

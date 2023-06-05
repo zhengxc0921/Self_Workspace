@@ -172,6 +172,70 @@ void MILTest::CropImgs()
 	}
 }
 
+void MILTest::OpencvTest(MIL_ID& ImageReshape)
+{
+	//opencv test
+	string img_name = "G:/DefectDataCenter/ParseData/Detection/lslm/raw_data/TImg/lslm.bmp";
+	cv::Mat image = imread(img_name, CV_LOAD_IMAGE_UNCHANGED);
+	//image = imread(fn[i], IMREAD_GRAYSCALE);
+	// 2. convert color space, opencv read the image in BGR
+	Mat img_float;
+	// convert to float format
+	image.convertTo(img_float, CV_32F, 1.0 / 255);
+	// 3. resize the image for resnet101 model
+	Mat img_resize;
+	resize(img_float, img_resize, Size(704, 512), INTER_CUBIC);
+
+	int width = img_resize.cols;//获取图像宽度
+	int height = img_resize.rows;//获取图像高度
+	int channel = img_resize.channels();//获取通道数
+	float* pNorlzBuffer = new float[(int)(width * height * 3)];
+	//数组方法遍历
+		for (int h = 0; h < height; h++) //height
+		{
+			for (int w = 0; w < width; w++) //width
+			{
+				if (channel == 3)//彩色图像
+				{
+					//bgr 是一个vector，包含三个通道的值
+					Vec3f bgr = img_resize.at<Vec3f>(h, w);
+	/*				bgr[0] = 255 - bgr[0];
+					bgr[1] = 255 - bgr[1];
+					bgr[2] = 255 - bgr[2];
+					img_resize.at<Vec3f>(h, w) = bgr;*/
+					//cout << " b: " << bgr[0] << " g: " << bgr[1] << " r: " << bgr[2] << endl;
+
+					pNorlzBuffer[h  + w+0] = bgr[0];
+					pNorlzBuffer[h   + w  + 1] = bgr[1];
+					pNorlzBuffer[h   + w  + 2] = bgr[2];
+
+				}
+
+			}
+		}
+
+		ImageReshape = MbufAllocColor(m_MilSystem, 3, width, height, M_FLOAT + 32, M_IMAGE + M_PROC, M_NULL);
+		MbufPut(ImageReshape, pNorlzBuffer);
+
+		float* m_pResizeBufferOrgRGB = new float[(int)(width * height * 3)];
+		MbufGetColor(ImageReshape, M_PLANAR, M_ALL_BANDS, m_pResizeBufferOrgRGB);
+		int nPixelIndex = 0;
+		long nResizeCount = width * height;
+		for (int i = 0; i < nResizeCount; i++) {
+		//M_PLANAR的图片存放格式为：RRRR...GGGG...BBBB
+		//OpenCV的图片存放格式为：BGRBGR...BGR
+		//AI模型使用OPENCV图像形式训练所得，故需要将MIL格式转换
+		for (int j = 2; j >= 0; j--) {
+		//pNorlzBuffer[nPixelIndex] = m_pResizeBufferOrgRGB[i + nResizeCount * j];    //R_OpenCv<--R_MIL
+		//cout << "m_pResizeBufferOrgRGB[nPixelIndex]: " << m_pResizeBufferOrgRGB[nPixelIndex] << endl;
+		//cout << "pNorlzBuffer[nPixelIndex]: " << pNorlzBuffer[nPixelIndex] << endl;
+
+		nPixelIndex++;
+		}
+		}
+
+}
+
 void MILTest::FillImgs()
 {
 
@@ -823,43 +887,96 @@ void MILTest::MILTestDetPredictMutiThreadCore()
 //}
 
 void MILTest::MILTestONNXPredict()
-{
-	MIL_STRING TdONNXCtxName = MIL_TEXT("I:/MIL_AI/testMILAI/yolov4_weights_LMK.onnx");
 
+
+
+{
+	MIL_STRING ImagepATH = MIL_TEXT("G:/DefectDataCenter/ParseData/Detection/lslm/raw_data/TImg/lslm.bmp");
+	MIL_ID Image = MbufRestore(ImagepATH, m_MilSystem, M_NULL);
+	MIL_INT m_ImageSizeX = MbufInquire(Image, M_SIZE_X, M_NULL);
+	MIL_INT m_ImageSizeY = MbufInquire(Image, M_SIZE_Y, M_NULL);
+	float* pNorlzBuffer = new float[(int)(m_ImageSizeX * m_ImageSizeY * 3)];
+	MIL_STRING TdONNXCtxName = MIL_TEXT("I:/MIL_AI/testMILAI/yolov4_tiny_weights_lslm_x.onnx");
 	MIL_UNIQUE_CLASS_ID TestONNXCtx = MclassAlloc(m_MilSystem,M_CLASSIFIER_ONNX, M_DEFAULT, M_UNIQUE_ID);
 	MclassImport(TdONNXCtxName,M_ONNX_FILE, TestONNXCtx, M_DEFAULT, M_DEFAULT, M_DEFAULT);
 	MclassInquire(TestONNXCtx, M_DEFAULT_SOURCE_LAYER, M_SIZE_X + M_TYPE_MIL_INT, &m_InputSizeX);
 	MclassInquire(TestONNXCtx, M_DEFAULT_SOURCE_LAYER, M_SIZE_Y + M_TYPE_MIL_INT, &m_InputSizeY);
 	MclassInquire(TestONNXCtx, M_CONTEXT, M_NUMBER_OF_CLASSES + M_TYPE_MIL_INT, &m_ClassesNum);
-	
-	MIL_STRING ImagepATH = MIL_TEXT("I:/MIL_AI/testMILAI/LMK1.bmp");
-	MIL_ID Image = MbufRestore(ImagepATH, m_MilSystem, M_NULL);
-	MIL_INT m_ImageSizeX = MbufInquire(Image, M_SIZE_X, M_NULL);
-	MIL_INT m_ImageSizeY = MbufInquire(Image, M_SIZE_Y, M_NULL);
-
 	MIL_ID ImageReduce = MbufAllocColor(m_MilSystem, 3, m_InputSizeX, m_InputSizeY, M_FLOAT + 32, M_IMAGE + M_PROC, M_NULL);
-	MimResize(Image, ImageReduce, M_FILL_DESTINATION, M_FILL_DESTINATION, M_DEFAULT);
+	MimResize(Image, ImageReduce, M_FILL_DESTINATION, M_FILL_DESTINATION, M_BICUBIC);
+	MimArith(ImageReduce, 255.0, ImageReduce, M_DIV_CONST);
+	//vector<MIL_DOUBLE> m_pRGB;
+	//MbufGetColor(ImageReduce, M_PLANAR, M_ALL_BANDS, m_pRGB);
 
-	MIL_UNIQUE_CLASS_ID ClassRes = MclassAllocResult(m_MilSystem, M_PREDICT_ONNX_RESULT, M_DEFAULT, M_UNIQUE_ID);
+	MIL_ID OpencvImageReduce;
+	OpencvTest(OpencvImageReduce);
+
+
+
+
+	//float* pNorlzBuffer = new float[(int)(m_InputSizeX * m_InputSizeY * 3)];
+	//float* m_pResizeBufferOrgRGB = new float[(int)(m_InputSizeX * m_InputSizeY * 3)];
+	//MbufGetColor(ImageReduce, M_PACKED + M_BGR24, M_ALL_BANDS, m_pResizeBufferOrgRGB);
+	//MbufGetColor(ImageReduce, M_PLANAR , M_ALL_BANDS, m_pResizeBufferOrgRGB);
+	//int nPixelIndex = 0;
+	//long nResizeCount = m_InputSizeX * m_InputSizeY;
+	//for (int i = 0; i < nResizeCount; i++) {
+	//	//M_PLANAR的图片存放格式为：RRRR...GGGG...BBBB
+	//	//OpenCV的图片存放格式为：BGRBGR...BGR
+	//	//AI模型使用OPENCV图像形式训练所得，故需要将MIL格式转换
+	//	for (int j = 2; j >= 0; j--) {
+	//		pNorlzBuffer[nPixelIndex] = m_pResizeBufferOrgRGB[i + nResizeCount * j];    //R_OpenCv<--R_MIL
+
+	//		cout << "pNorlzBuffer[nPixelIndex]: " 
+	//			<<float(pNorlzBuffer[nPixelIndex]) << endl;
+	//	nPixelIndex++;
+	//	}
+
+	//	//for (int j = 0; j <= 2; j++) {
+	//	//	pNorlzBuffer[nPixelIndex] = m_pResizeBufferOrgRGB[i + nResizeCount * j];    //R_OpenCv<--R_MIL
+	//	//	nPixelIndex++;
+	//	//}
+	//}
+
+
+
+	//int* pNorlzBuffer = new int[(int)(m_InputSizeX * m_InputSizeY * 3)];
+	//int* m_pResizeBufferOrgRGB = new int[(int)(m_InputSizeX * m_InputSizeY * 3)];
+	//MbufGetColor(Image, M_PLANAR, M_ALL_BANDS, m_pResizeBufferOrgRGB);
+	//int nPixelIndex = 0;
+	//long nResizeCount = m_InputSizeX * m_InputSizeY;
+	//for (int i = 0; i < nResizeCount; i++) {
+	//	//M_PLANAR的图片存放格式为：RRRR...GGGG...BBBB
+	//	//OpenCV的图片存放格式为：BGRBGR...BGR
+	//	//AI模型使用OPENCV图像形式训练所得，故需要将MIL格式转换
+	//	for (int j = 2; j >= 0; j--) {
+	//		pNorlzBuffer[nPixelIndex] = m_pResizeBufferOrgRGB[i + nResizeCount * j];    //R_OpenCv<--R_MIL
+	//		//cout <<"pNorlzBuffer[nPixelIndex]: "<< pNorlzBuffer[nPixelIndex]*255 << endl;
+	//		cout << "[nPixelIndex]: " << m_pResizeBufferOrgRGB[nPixelIndex] << endl;
+	//		nPixelIndex++;
+	//	}
+	//}
+	//MIL_ID ImageReshape = MbufAllocColor(m_MilSystem, 3, m_InputSizeX, m_InputSizeY, M_FLOAT + 32, M_IMAGE + M_PROC, M_NULL);
+	//MbufPut(ImageReshape, pNorlzBuffer);
 
 	MclassControl(TestONNXCtx, M_DEFAULT, M_TARGET_IMAGE_SIZE_X, m_InputSizeX);
 	MclassControl(TestONNXCtx, M_DEFAULT, M_TARGET_IMAGE_SIZE_Y, m_InputSizeY);
 	MclassControl(TestONNXCtx, M_DEFAULT, M_TARGET_IMAGE_SIZE_BAND, 3);
-
 	MclassPreprocess(TestONNXCtx, M_DEFAULT);
-	MclassPredict(TestONNXCtx, ImageReduce, ClassRes, M_DEFAULT);
-
+	MIL_UNIQUE_CLASS_ID ClassRes = MclassAllocResult(m_MilSystem, M_PREDICT_ONNX_RESULT, M_DEFAULT, M_UNIQUE_ID);
+	MclassPredict(TestONNXCtx, OpencvImageReduce, ClassRes, M_DEFAULT);
 	MIL_INT NO = 0;
 	MclassGetResult(ClassRes, M_GENERAL, M_NUMBER_OF_OUTPUTS+ M_TYPE_MIL_INT, &NO);
-
 	vector<MIL_UINT8>ROut;
-	vector<MIL_DOUBLE>Out;
+	vector<MIL_FLOAT>Out;
 	vector<MIL_INT>OutSp;
-	for (int i = 0; i < NO; i++) {
+	for (int i = 0; i < 1; i++) {
 		MclassGetResult(ClassRes, M_OUTPUT_INDEX(i), M_OUTPUT_RAW, ROut);
 		MclassGetResult(ClassRes, M_OUTPUT_INDEX(i), M_OUTPUT_SHAPE, OutSp);
 		MclassGetResult(ClassRes, M_OUTPUT_INDEX(i), M_OUTPUT_DATA, Out);
+		//cout << Out[0] << endl;
 	}
 
+	
 }
 
