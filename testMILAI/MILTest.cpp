@@ -356,11 +356,11 @@ void MILTest::MILTestGenDataset()
 void MILTest::MILTestTrain()
 {
 
-	int MaxNumberOfEpoch = 5;			//模型训练次数
-	int MiniBatchSize = 64;				//模型训练单次迭代的张数
+	int MaxNumberOfEpoch = 40;			//模型训练次数
+	int MiniBatchSize = 8;				//模型训练单次迭代的张数
 
 	//////*******************************必须参数*******************************//
-	MIL_STRING PreparedPath = m_ClassifierWorkSpace +m_strProject+ MIL_TEXT("/PreparedDataset.mclassd");				
+	MIL_STRING PreparedPath = m_ClassifierWorkSpace +m_strProject+ MIL_TEXT("/WorkingDataset.mclassd");				
 	MIL_UNIQUE_CLASS_ID PreparedDataset = MclassRestore(PreparedPath, m_MilSystem, M_DEFAULT, M_UNIQUE_ID);
 	MIL_UNIQUE_CLASS_ID TrainCtx = MclassAlloc(m_MilSystem, M_TRAIN_CNN, M_DEFAULT, M_UNIQUE_ID);  
 	ClassifierParasStruct ClassifierParas;
@@ -369,13 +369,15 @@ void MILTest::MILTestTrain()
 	ClassifierParas.MaxNumberOfEpoch = MaxNumberOfEpoch;
 	ClassifierParas.MiniBatchSize = MiniBatchSize;
 	ClassifierParas.SchedulerType = 0;
-	ClassifierParas.LearningRate = 0.0001;
+	ClassifierParas.LearningRate = 0.0001/1; //normal:0.0001; 
 	ClassifierParas.LearningRateDecay = 0;
 	ClassifierParas.SplitPercent = 90.0;
-	ClassifierParas.TrainDstFolder = m_ClassifierWorkSpace+L"//" + m_strProject + MIL_TEXT("/PreparedData/");
+	ClassifierParas.TrainDstFolder = m_ClassifierWorkSpace+ m_strProject + MIL_TEXT("/PreparedData/");
 	m_MLClassCNN->ConstructTrainCtx(ClassifierParas, TrainCtx);
 
 	MIL_UNIQUE_CLASS_ID TrainedClassifierCtx;
+	//MIL_STRING TrainedCtxFile = m_ClassifierWorkSpace  + MIL_TEXT("FZ/PreparedData/") + L"FZ.mclass";
+	//MIL_UNIQUE_CLASS_ID PrevClassifierCtx = MclassRestore(TrainedCtxFile, m_MilSystem, M_DEFAULT, M_UNIQUE_ID);
 	MIL_UNIQUE_CLASS_ID PrevClassifierCtx;
 	MIL_STRING ClassifierDumpFile = ClassifierParas.TrainDstFolder + m_strProject+L".mclass";
 	m_MLClassCNN->TrainClassifier(PreparedDataset, TrainCtx, PrevClassifierCtx, TrainedClassifierCtx, ClassifierDumpFile);
@@ -385,8 +387,10 @@ void MILTest::MILTestTrain()
 void MILTest::MILTestPredict() {
 
 	MIL_STRING PreClassifierName = m_ClassifierWorkSpace + m_strProject + MIL_TEXT("/PreparedData/") + m_strProject + L".mclass";
-	string	SrcImgDir = "G:/DefectDataCenter/ParseData/Classifier/SXX_GrayWave/Original_Gray3/91/";
-	m_DstImgDir = MIL_TEXT("G:/DefectDataCenter/ParseData/Classifier/SXX_GrayWave/Original_Gray3/MIL/");
+	//string	SrcImgDir = "G:/DefectDataCenter/ParseData/Classifier/SXX_GrayWave/Original_Gray3/91/";
+	//m_DstImgDir = MIL_TEXT("G:/DefectDataCenter/ParseData/Classifier/SXX_GrayWave/Original_Gray3/MIL/");
+	string	SrcImgDir = "G:/DefectDataCenter/DeepLearningDataSet/Output/sct_asi_0401/FZ/10/";
+	m_DstImgDir = MIL_TEXT("G:/DefectDataCenter/DeepLearningDataSet/Output/sct_asi_0401/FZ_ADD_10/");
 	LARGE_INTEGER t1, t2, tc;
 	QueryPerformanceFrequency(&tc);
 	QueryPerformanceCounter(&t1);

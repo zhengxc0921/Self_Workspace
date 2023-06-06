@@ -332,7 +332,7 @@ void CMLClassCNN::PrepareDataset(MIL_UNIQUE_CLASS_ID& DatasetContext,
 {
     MclassPreprocess(DatasetContext, M_DEFAULT);
     MclassPrepareData(DatasetContext, PrepareDataset, PreparedDataset, M_NULL, M_DEFAULT);
-    //将数据划分为PreparedDataset和TestDataset
+    //将数据划分为WorkingDataset和TestDataset
     MIL_UNIQUE_CLASS_ID WorkingDataset = MclassAlloc(m_MilSystem, M_DATASET_IMAGES, M_DEFAULT, M_UNIQUE_ID);
     MIL_UNIQUE_CLASS_ID TestDataset = MclassAlloc(m_MilSystem, M_DATASET_IMAGES, M_DEFAULT, M_UNIQUE_ID);
     MclassSplitDataset(M_SPLIT_CONTEXT_FIXED_SEED, PreparedDataset, WorkingDataset, TestDataset,

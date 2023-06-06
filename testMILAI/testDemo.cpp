@@ -5,7 +5,8 @@
 #include "MILTest.h"
 int main(int argc, char* argv[]) {
 	//MIL_STRING strProject = L"FZ";
-	MIL_STRING strProject = L"DSW_random";
+	MIL_STRING strProject = L"FZ_ADD_1";
+	//MIL_STRING strProject = L"DSW_random";
 	MIL_UNIQUE_APP_ID MilApplication = MappAlloc(M_NULL, M_DEFAULT, M_UNIQUE_ID);
 	MIL_UNIQUE_SYS_ID MilSystem = MsysAlloc(M_DEFAULT, M_SYSTEM_HOST, M_DEFAULT, M_DEFAULT, M_UNIQUE_ID);
 	MIL_UNIQUE_DISP_ID MilDisplay = MdispAlloc(MilSystem, M_DEFAULT, MIL_TEXT("M_DEFAULT"), M_DEFAULT, M_UNIQUE_ID);
@@ -18,7 +19,7 @@ int main(int argc, char* argv[]) {
 
 	//m_MILTestPtr->MILTestGenDataset();
 	//m_MILTestPtr->MILTestTrain();
-	//m_MILTestPtr->MILTestPredict();
+	m_MILTestPtr->MILTestPredict();
 	//m_MILTestPtr->MILTestPredictWithBlob();
 	//m_MILTestPtr->MILTestPredictEngine();
 	
@@ -28,7 +29,7 @@ int main(int argc, char* argv[]) {
 	//m_MILTestPtr->MILTestDetPredict();
 	//ONNX test
 	//m_MILTestPtr->OpencvTest();
-	m_MILTestPtr->MILTestONNXPredict();
+	//m_MILTestPtr->MILTestONNXPredict();
 	//多进程测试前的预备测试
 	//m_MILTestPtr->MILTestDetPredictMutiProcessSingle();
 
