@@ -38,6 +38,10 @@ public:
 	
 	void FillImgs();
 
+	bool isTagSameClass(MIL_UNIQUE_CLASS_ID& PreparedDataset, const vector<string>& TagClassIcons, vector<MIL_STRING>& DataSetClassIcons);
+
+	void MILTestWKSPDataset();
+
 	void MILTestGenDataset();
 
 	void MILTestTrain();
@@ -79,6 +83,7 @@ public:
 
 	//onnxÀý×Ó
 	void MILTestONNXPredict();
+	void MILTestCNNONNXPredict();
 
 
 

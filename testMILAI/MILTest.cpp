@@ -307,6 +307,7 @@ void MILTest::FillImgs()
 	
 }
 
+
 void MILTest::MILTestGenDataset()
 {
 	MIL_STRING AuthorName = MIL_TEXT("AA");
@@ -346,17 +347,105 @@ void MILTest::MILTestGenDataset()
 	DataCtxParas.AugParas.GaussNoiseDelta = 25; //25
 
 	m_MLClassCNN->ConstructDataContext(DataCtxParas, DataContext);
-	//MIL_STRING WorkingDataPath = SrcImgDir + MIL_TEXT("DataSet\\DataSet.mclassd");				//原始数据根文件下的 存放中间数据的文件夹
-	//MIL_UNIQUE_CLASS_ID WorkingDataset = MclassRestore(WorkingDataPath, m_MilSystem, M_DEFAULT, M_UNIQUE_ID);
 	MIL_UNIQUE_CLASS_ID PreparedDataset = MclassAlloc(m_MilSystem, M_DATASET_IMAGES, M_DEFAULT, M_UNIQUE_ID);
 	m_MLClassCNN->PrepareDataset(DataContext, Dataset, PreparedDataset, WorkingDataPath, TestDatasetPercentage);
 
 }
 
+/// MILTestWKSPDataset
+bool isFileExists_ifstream(string& name) {
+	ifstream f(name.c_str());
+	return f.good();
+}
+
+//Check Tag_ClasssIcon == DataSet.mclassd ClassIcon
+
+bool MILTest::isTagSameClass(MIL_UNIQUE_CLASS_ID& PreparedDataset,
+	const vector<string>& TagClassIcons,
+	vector<MIL_STRING>& DataSetClassIcons) {
+	
+	MIL_INT nClassesNum;
+	MclassInquire(PreparedDataset, M_CONTEXT, M_NUMBER_OF_CLASSES + M_TYPE_MIL_INT, &nClassesNum);
+	if (TagClassIcons.size() != nClassesNum) {
+		return FALSE;
+	}
+	MIL_STRING ClassIcon;
+	string strDataClassIcon;
+	for (int i = 0; i < nClassesNum; i++) {
+		MclassInquire(PreparedDataset, M_CLASS_INDEX(i), M_CLASS_NAME, ClassIcon);
+		
+		m_MLClassCNN->m_AIParse->MIL_STRING2string(ClassIcon, strDataClassIcon);
+		DataSetClassIcons.emplace_back(ClassIcon);
+		if (std::find(TagClassIcons.begin(), TagClassIcons.end(), strDataClassIcon) == TagClassIcons.end())
+		{
+			return FALSE;
+		}
+	}
+	return TRUE;
+}
+
+
+void MILTest::MILTestWKSPDataset()
+{
+
+	MIL_STRING AuthorName = MIL_TEXT("AA");
+	MIL_STRING WorkingDataDir = m_ClassifierWorkSpace + m_strProject + L"//";
+	MIL_STRING WorkingDataPath = m_ClassifierWorkSpace + m_strProject + L"//WorkingDataset.mclassd";
+	string strWorkingDataPath;
+	m_MLClassCNN->m_AIParse->MIL_STRING2string(WorkingDataPath, strWorkingDataPath);
+	bool DataSetExist = isFileExists_ifstream(strWorkingDataPath);
+	string TagPath = "G:/DefectDataCenter/WorkSpace/Tag/3/";
+	MIL_STRING MSTRTagPath = MIL_TEXT("G:/DefectDataCenter/WorkSpace/Tag/3/");
+	vector<string> TagClassIcons;
+	m_MLClassCNN->m_AIParse->getFoldersInFolder(TagPath, TagClassIcons);
+
+	if (DataSetExist) {
+		//Tag_ClasssIcon == DataSet.mclassd ClassIcon?
+		//读取DataSet.mclassd的ClassIcons
+		
+		MIL_UNIQUE_CLASS_ID BaseDataSet = MclassRestore(WorkingDataPath, m_MilSystem, M_DEFAULT, M_UNIQUE_ID);
+		vector<MIL_STRING> DataSetClassName;
+		bool TagSameClass = isTagSameClass(BaseDataSet,TagClassIcons, DataSetClassName);
+
+		if (TagSameClass) {	
+			vector<MIL_STRING > DataSetClassIcon;
+			for (int i = 0; i < DataSetClassName.size(); i++) {
+				DataSetClassIcon.emplace_back(m_ClassifierSrcDataDir + m_strProject + L"//" + DataSetClassName[i] + L".mim");
+			}
+			//生成UpdateData.mclassd更新DataSet.mclassd 
+			MIL_UNIQUE_CLASS_ID  UpdateDataset = MclassAlloc(m_MilSystem, M_DATASET_IMAGES, M_DEFAULT, M_UNIQUE_ID);
+			m_MLClassCNN->ConstructDataset(DataSetClassName, DataSetClassIcon, AuthorName, MSTRTagPath, WorkingDataDir, UpdateDataset);
+			m_MLClassCNN->ConstructDataset(DataSetClassName, DataSetClassIcon, AuthorName, MSTRTagPath, WorkingDataDir, BaseDataSet);
+			//输出BaseDataSet.mclassd 和UpdateDataSet.mclassd
+			MIL_STRING BaseDatasetPath = WorkingDataDir + MIL_TEXT("BaseDataSet.mclassd");
+			MIL_STRING UpdateDatasetPath = WorkingDataDir + MIL_TEXT("UpdateDataSet.mclassd");
+			MclassSave(BaseDatasetPath, BaseDataSet, M_DEFAULT);
+			MclassSave(UpdateDatasetPath, UpdateDataset, M_DEFAULT);
+
+
+		}
+		else
+		{
+			//读取TAG中图片，加入DataSet.mclassd 。复制DataSet.mclassd到UpdateData.mclassd
+		}
+	}
+	else {
+		//读取TAG中图片，加入DataSet.mclassd 。复制DataSet.mclassd到UpdateData.mclassd	
+	}
+
+		
+
+
+
+
+}
+
+
+
 void MILTest::MILTestTrain()
 {
 
-	int MaxNumberOfEpoch = 40;			//模型训练次数
+	int MaxNumberOfEpoch = 15;			//模型训练次数
 	int MiniBatchSize = 8;				//模型训练单次迭代的张数
 
 	//////*******************************必须参数*******************************//
@@ -371,26 +460,25 @@ void MILTest::MILTestTrain()
 	ClassifierParas.SchedulerType = 0;
 	ClassifierParas.LearningRate = 0.0001/1; //normal:0.0001; 
 	ClassifierParas.LearningRateDecay = 0;
-	ClassifierParas.SplitPercent = 90.0;
+	ClassifierParas.SplitPercent = 80.0;
 	ClassifierParas.TrainDstFolder = m_ClassifierWorkSpace+ m_strProject + MIL_TEXT("/PreparedData/");
 	m_MLClassCNN->ConstructTrainCtx(ClassifierParas, TrainCtx);
 
 	MIL_UNIQUE_CLASS_ID TrainedClassifierCtx;
-	//MIL_STRING TrainedCtxFile = m_ClassifierWorkSpace  + MIL_TEXT("FZ/PreparedData/") + L"FZ.mclass";
-	//MIL_UNIQUE_CLASS_ID PrevClassifierCtx = MclassRestore(TrainedCtxFile, m_MilSystem, M_DEFAULT, M_UNIQUE_ID);
-	MIL_UNIQUE_CLASS_ID PrevClassifierCtx;
+	MIL_STRING TrainedCtxFile = m_ClassifierWorkSpace  + MIL_TEXT("FZ/PreparedData/") + L"FZ.mclass";
+	MIL_UNIQUE_CLASS_ID PrevClassifierCtx = MclassRestore(TrainedCtxFile, m_MilSystem, M_DEFAULT, M_UNIQUE_ID);
+	//MIL_UNIQUE_CLASS_ID PrevClassifierCtx;
 	MIL_STRING ClassifierDumpFile = ClassifierParas.TrainDstFolder + m_strProject+L".mclass";
 	m_MLClassCNN->TrainClassifier(PreparedDataset, TrainCtx, PrevClassifierCtx, TrainedClassifierCtx, ClassifierDumpFile);
 	return;
 }
 
 void MILTest::MILTestPredict() {
-
 	MIL_STRING PreClassifierName = m_ClassifierWorkSpace + m_strProject + MIL_TEXT("/PreparedData/") + m_strProject + L".mclass";
-	//string	SrcImgDir = "G:/DefectDataCenter/ParseData/Classifier/SXX_GrayWave/Original_Gray3/91/";
-	//m_DstImgDir = MIL_TEXT("G:/DefectDataCenter/ParseData/Classifier/SXX_GrayWave/Original_Gray3/MIL/");
-	string	SrcImgDir = "G:/DefectDataCenter/DeepLearningDataSet/Output/sct_asi_0401/FZ/10/";
-	m_DstImgDir = MIL_TEXT("G:/DefectDataCenter/DeepLearningDataSet/Output/sct_asi_0401/FZ_ADD_10/");
+	string	SrcImgDir = "G:/DefectDataCenter/ParseData/Classifier/SXX_GrayWave/Original_Gray3/91/";
+	m_DstImgDir = MIL_TEXT("G:/DefectDataCenter/ParseData/Classifier/SXX_GrayWave/Original_Gray3/MIL_ADD3_91/");
+	//string	SrcImgDir = "G:/DefectDataCenter/DeepLearningDataSet/Output/sct_asi_0401/FZ/10/";
+	//m_DstImgDir = MIL_TEXT("G:/DefectDataCenter/DeepLearningDataSet/Output/sct_asi_0401/FZ_ADD3_10/");
 	LARGE_INTEGER t1, t2, tc;
 	QueryPerformanceFrequency(&tc);
 	QueryPerformanceCounter(&t1);
@@ -892,31 +980,46 @@ void MILTest::MILTestDetPredictMutiThreadCore()
 
 void MILTest::MILTestONNXPredict()
 
-
-
 {
-	MIL_STRING ImagepATH = MIL_TEXT("G:/DefectDataCenter/ParseData/Detection/lslm/raw_data/TImg/lslm.bmp");
+	MIL_STRING ImagepATH = MIL_TEXT("I:/MIL_AI/testMILAI/lslm.bmp");
 	MIL_ID Image = MbufRestore(ImagepATH, m_MilSystem, M_NULL);
 	MIL_INT m_ImageSizeX = MbufInquire(Image, M_SIZE_X, M_NULL);
 	MIL_INT m_ImageSizeY = MbufInquire(Image, M_SIZE_Y, M_NULL);
-	float* pNorlzBuffer = new float[(int)(m_ImageSizeX * m_ImageSizeY * 3)];
-	MIL_STRING TdONNXCtxName = MIL_TEXT("I:/MIL_AI/testMILAI/yolov4_tiny_weights_lslm_x.onnx");
+	//float* pNorlzBuffer = new float[(int)(m_ImageSizeX * m_ImageSizeY * 3)];
+	MIL_STRING TdONNXCtxName = MIL_TEXT("I:/MIL_AI/testMILAI/yolov4_tiny_weights_lslm_b.onnx");
 	MIL_UNIQUE_CLASS_ID TestONNXCtx = MclassAlloc(m_MilSystem,M_CLASSIFIER_ONNX, M_DEFAULT, M_UNIQUE_ID);
 	MclassImport(TdONNXCtxName,M_ONNX_FILE, TestONNXCtx, M_DEFAULT, M_DEFAULT, M_DEFAULT);
 	MclassInquire(TestONNXCtx, M_DEFAULT_SOURCE_LAYER, M_SIZE_X + M_TYPE_MIL_INT, &m_InputSizeX);
 	MclassInquire(TestONNXCtx, M_DEFAULT_SOURCE_LAYER, M_SIZE_Y + M_TYPE_MIL_INT, &m_InputSizeY);
 	MclassInquire(TestONNXCtx, M_CONTEXT, M_NUMBER_OF_CLASSES + M_TYPE_MIL_INT, &m_ClassesNum);
 	MIL_ID ImageReduce = MbufAllocColor(m_MilSystem, 3, m_InputSizeX, m_InputSizeY, M_FLOAT + 32, M_IMAGE + M_PROC, M_NULL);
-	MimResize(Image, ImageReduce, M_FILL_DESTINATION, M_FILL_DESTINATION, M_BICUBIC);
-	MimArith(ImageReduce, 255.0, ImageReduce, M_DIV_CONST);
+	//MimResize(Image, ImageReduce, M_FILL_DESTINATION, M_FILL_DESTINATION, M_BICUBIC);
+	//MimArith(ImageReduce, 255.0, ImageReduce, M_DIV_CONST);
+	MimArith(Image, 255.0, ImageReduce, M_DIV_CONST);
+
+	MclassControl(TestONNXCtx, M_DEFAULT, M_TARGET_IMAGE_SIZE_X, m_InputSizeX);
+	MclassControl(TestONNXCtx, M_DEFAULT, M_TARGET_IMAGE_SIZE_Y, m_InputSizeY);
+	MclassControl(TestONNXCtx, M_DEFAULT, M_TARGET_IMAGE_SIZE_BAND, 3);
+	MclassPreprocess(TestONNXCtx, M_DEFAULT);
+	MIL_UNIQUE_CLASS_ID ClassRes = MclassAllocResult(m_MilSystem, M_PREDICT_ONNX_RESULT, M_DEFAULT, M_UNIQUE_ID);
+	MclassPredict(TestONNXCtx, ImageReduce, ClassRes, M_DEFAULT);
+	MIL_INT NO = 0;
+	MclassGetResult(ClassRes, M_GENERAL, M_NUMBER_OF_OUTPUTS + M_TYPE_MIL_INT, &NO);
+	vector<MIL_UINT8>ROut;
+	vector<MIL_FLOAT>Out;
+	vector<MIL_INT>OutSp;
+	for (int i = 0; i < 1; i++) {
+		MclassGetResult(ClassRes, M_OUTPUT_INDEX(i), M_OUTPUT_RAW, ROut);
+		MclassGetResult(ClassRes, M_OUTPUT_INDEX(i), M_OUTPUT_SHAPE, OutSp);
+		MclassGetResult(ClassRes, M_OUTPUT_INDEX(i), M_OUTPUT_DATA, Out);
+		//cout << Out[0] << endl;
+	}
+
 	//vector<MIL_DOUBLE> m_pRGB;
 	//MbufGetColor(ImageReduce, M_PLANAR, M_ALL_BANDS, m_pRGB);
 
-	MIL_ID OpencvImageReduce;
-	OpencvTest(OpencvImageReduce);
-
-
-
+	//MIL_ID OpencvImageReduce;
+	//OpencvTest(OpencvImageReduce);
 
 	//float* pNorlzBuffer = new float[(int)(m_InputSizeX * m_InputSizeY * 3)];
 	//float* m_pResizeBufferOrgRGB = new float[(int)(m_InputSizeX * m_InputSizeY * 3)];
@@ -963,14 +1066,58 @@ void MILTest::MILTestONNXPredict()
 	//MIL_ID ImageReshape = MbufAllocColor(m_MilSystem, 3, m_InputSizeX, m_InputSizeY, M_FLOAT + 32, M_IMAGE + M_PROC, M_NULL);
 	//MbufPut(ImageReshape, pNorlzBuffer);
 
+	//MclassControl(TestONNXCtx, M_DEFAULT, M_TARGET_IMAGE_SIZE_X, m_InputSizeX);
+	//MclassControl(TestONNXCtx, M_DEFAULT, M_TARGET_IMAGE_SIZE_Y, m_InputSizeY);
+	//MclassControl(TestONNXCtx, M_DEFAULT, M_TARGET_IMAGE_SIZE_BAND, 3);
+	//MclassPreprocess(TestONNXCtx, M_DEFAULT);
+	//MIL_UNIQUE_CLASS_ID ClassRes = MclassAllocResult(m_MilSystem, M_PREDICT_ONNX_RESULT, M_DEFAULT, M_UNIQUE_ID);
+	//MclassPredict(TestONNXCtx, ImageReduce, ClassRes, M_DEFAULT);
+	//MIL_INT NO = 0;
+	//MclassGetResult(ClassRes, M_GENERAL, M_NUMBER_OF_OUTPUTS+ M_TYPE_MIL_INT, &NO);
+	//vector<MIL_UINT8>ROut;
+	//vector<MIL_FLOAT>Out;
+	//vector<MIL_INT>OutSp;
+	//for (int i = 0; i < 1; i++) {
+	//	MclassGetResult(ClassRes, M_OUTPUT_INDEX(i), M_OUTPUT_RAW, ROut);
+	//	MclassGetResult(ClassRes, M_OUTPUT_INDEX(i), M_OUTPUT_SHAPE, OutSp);
+	//	MclassGetResult(ClassRes, M_OUTPUT_INDEX(i), M_OUTPUT_DATA, Out);
+	//	//cout << Out[0] << endl;
+	//}
+
+	
+}
+
+void MILTest::MILTestCNNONNXPredict()
+{
+	MIL_STRING ImagepATH = MIL_TEXT("I:/MIL_AI/testMILAI/Mg_grain.bmp");
+	MIL_ID Image = MbufRestore(ImagepATH, m_MilSystem, M_NULL);
+	MIL_INT m_ImageSizeX = MbufInquire(Image, M_SIZE_X, M_NULL);
+	MIL_INT m_ImageSizeY = MbufInquire(Image, M_SIZE_Y, M_NULL);
+	/*float* pNorlzBuffer = new float[(int)(m_ImageSizeX * m_ImageSizeY * 3)];*/
+	MIL_STRING TdONNXCtxName = MIL_TEXT("I:/MIL_AI/testMILAI/cpu_Mg_grain.onnx");
+	MIL_UNIQUE_CLASS_ID TestONNXCtx = MclassAlloc(m_MilSystem, M_CLASSIFIER_ONNX, M_DEFAULT, M_UNIQUE_ID);
+	MclassImport(TdONNXCtxName, M_ONNX_FILE, TestONNXCtx, M_DEFAULT, M_DEFAULT, M_DEFAULT);
+	MclassInquire(TestONNXCtx, M_DEFAULT_SOURCE_LAYER, M_SIZE_X + M_TYPE_MIL_INT, &m_InputSizeX);
+	MclassInquire(TestONNXCtx, M_DEFAULT_SOURCE_LAYER, M_SIZE_Y + M_TYPE_MIL_INT, &m_InputSizeY);
+	MclassInquire(TestONNXCtx, M_CONTEXT, M_NUMBER_OF_CLASSES + M_TYPE_MIL_INT, &m_ClassesNum);
+	MIL_ID ImageReduce = MbufAllocColor(m_MilSystem, 3, m_InputSizeX, m_InputSizeY, M_FLOAT + 32, M_IMAGE + M_PROC, M_NULL);
+	//灰度图：
+	//原图插值后与Pytorch在INTER_LINEAR插值后计算结果不一致，
+	//而直接使用Pytorch插值后的图计算，结果一致精确度小数点后5位
+	//MimResize(Image, ImageReduce, M_FILL_DESTINATION, M_FILL_DESTINATION, M_BILINEAR);
+	/*MimArith(ImageReduce, 255.0, ImageReduce, M_DIV_CONST);*/
+	//彩图：而直接使用Pytorch插值后的图计算，结果同样不一致
+
+	MimArith(Image, 255.0, ImageReduce, M_DIV_CONST);
+
 	MclassControl(TestONNXCtx, M_DEFAULT, M_TARGET_IMAGE_SIZE_X, m_InputSizeX);
 	MclassControl(TestONNXCtx, M_DEFAULT, M_TARGET_IMAGE_SIZE_Y, m_InputSizeY);
 	MclassControl(TestONNXCtx, M_DEFAULT, M_TARGET_IMAGE_SIZE_BAND, 3);
 	MclassPreprocess(TestONNXCtx, M_DEFAULT);
 	MIL_UNIQUE_CLASS_ID ClassRes = MclassAllocResult(m_MilSystem, M_PREDICT_ONNX_RESULT, M_DEFAULT, M_UNIQUE_ID);
-	MclassPredict(TestONNXCtx, OpencvImageReduce, ClassRes, M_DEFAULT);
+	MclassPredict(TestONNXCtx, ImageReduce, ClassRes, M_DEFAULT);
 	MIL_INT NO = 0;
-	MclassGetResult(ClassRes, M_GENERAL, M_NUMBER_OF_OUTPUTS+ M_TYPE_MIL_INT, &NO);
+	MclassGetResult(ClassRes, M_GENERAL, M_NUMBER_OF_OUTPUTS + M_TYPE_MIL_INT, &NO);
 	vector<MIL_UINT8>ROut;
 	vector<MIL_FLOAT>Out;
 	vector<MIL_INT>OutSp;
@@ -981,6 +1128,7 @@ void MILTest::MILTestONNXPredict()
 		//cout << Out[0] << endl;
 	}
 
-	
+
+
 }
 
