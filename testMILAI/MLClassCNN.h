@@ -35,6 +35,15 @@ public:
         MIL_STRING OriginalDataPath,
         const MIL_STRING& WorkingDataPath,
         MIL_UNIQUE_CLASS_ID& Dataset);
+
+    void ExpanDataset(
+        map<MIL_STRING, int>  ClassName,
+        vector<MIL_STRING> ClassIcon,
+        MIL_STRING AuthorName,
+        MIL_STRING OriginalDataPath,
+        const MIL_STRING& WorkingDataPath,
+        MIL_UNIQUE_CLASS_ID& Dataset);
+
     //多个文件Dataset 汇总
     void GeneralDataset(
         vector<MIL_STRING> ClassName,

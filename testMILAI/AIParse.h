@@ -39,6 +39,8 @@ public:
 
 	void Split(const string& str, vector<string>& tokens, const string& delimiters);
 	void getFoldersInFolder(string Path, vector<string>& Folders);
+	void getFoldersInFolder(string Path, vector<MIL_STRING>& Folders);
+
 	void getFilesInFolder(string Path, string FileType, vector<MIL_STRING>& Files);
 	void getFilesInFolder(string Path, string FileType, vector<string>& Files);
 

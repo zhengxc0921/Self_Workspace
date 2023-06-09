@@ -360,77 +360,131 @@ bool isFileExists_ifstream(string& name) {
 
 //Check Tag_ClasssIcon == DataSet.mclassd ClassIcon
 
-bool MILTest::isTagSameClass(MIL_UNIQUE_CLASS_ID& PreparedDataset,
-	const vector<string>& TagClassIcons,
-	vector<MIL_STRING>& DataSetClassIcons) {
-	
+void MILTest::isTagSameClass(MIL_UNIQUE_CLASS_ID& PreparedDataset,
+	const vector<MIL_STRING>& TagClassIcons,
+	map<MIL_STRING,int>& TagClassIconsIndex,
+	bool& isTagSameClass) {
+	isTagSameClass = TRUE;
 	MIL_INT nClassesNum;
+	MIL_STRING BaseClassIcon;
+	vector<MIL_STRING>BaseClassIcons;
 	MclassInquire(PreparedDataset, M_CONTEXT, M_NUMBER_OF_CLASSES + M_TYPE_MIL_INT, &nClassesNum);
-	if (TagClassIcons.size() != nClassesNum) {
-		return FALSE;
+	for (int i = 0; i < nClassesNum; i++)
+	{	
+		MclassInquire(PreparedDataset, M_CLASS_INDEX(i), M_CLASS_NAME, BaseClassIcon);
+		BaseClassIcons.emplace_back(BaseClassIcon);
 	}
-	MIL_STRING ClassIcon;
-	string strDataClassIcon;
-	for (int i = 0; i < nClassesNum; i++) {
-		MclassInquire(PreparedDataset, M_CLASS_INDEX(i), M_CLASS_NAME, ClassIcon);
-		
-		m_MLClassCNN->m_AIParse->MIL_STRING2string(ClassIcon, strDataClassIcon);
-		DataSetClassIcons.emplace_back(ClassIcon);
-		if (std::find(TagClassIcons.begin(), TagClassIcons.end(), strDataClassIcon) == TagClassIcons.end())
+	int Cont = 0;
+	for (int i = 0; i < TagClassIcons.size(); i++) {
+		if (std::find(BaseClassIcons.begin(), BaseClassIcons.end(), TagClassIcons[i]) == BaseClassIcons.end())
 		{
-			return FALSE;
+			TagClassIconsIndex.insert(pair<MIL_STRING, int>(TagClassIcons[i], nClassesNum+ Cont));
+			isTagSameClass = FALSE;
+			Cont++;
+		}
+		else {
+			int index = distance(BaseClassIcons.begin(), find(BaseClassIcons.begin(), BaseClassIcons.end(), TagClassIcons[i]));
+			TagClassIconsIndex.insert(pair<MIL_STRING, int>(TagClassIcons[i],index));
 		}
 	}
-	return TRUE;
+
 }
 
 
 void MILTest::MILTestWKSPDataset()
 {
-
 	MIL_STRING AuthorName = MIL_TEXT("AA");
-	MIL_STRING WorkingDataDir = m_ClassifierWorkSpace + m_strProject + L"//";
-	MIL_STRING WorkingDataPath = m_ClassifierWorkSpace + m_strProject + L"//WorkingDataset.mclassd";
-	string strWorkingDataPath;
-	m_MLClassCNN->m_AIParse->MIL_STRING2string(WorkingDataPath, strWorkingDataPath);
-	bool DataSetExist = isFileExists_ifstream(strWorkingDataPath);
-	string TagPath = "G:/DefectDataCenter/WorkSpace/Tag/3/";
-	MIL_STRING MSTRTagPath = MIL_TEXT("G:/DefectDataCenter/WorkSpace/Tag/3/");
-	vector<string> TagClassIcons;
-	m_MLClassCNN->m_AIParse->getFoldersInFolder(TagPath, TagClassIcons);
+	MIL_STRING BaseDataDir = m_ClassifierWorkSpace + m_strProject + L"//";
+	MIL_STRING BaseDataPath = m_ClassifierWorkSpace + m_strProject + L"//BaseDataSet.mclassd";
+
+	MIL_STRING TagFolder = L"4/";
+	MIL_STRING TagDataDir = m_TagDataDir + TagFolder;
+
+	string strBaseDataPath;
+	m_MLClassCNN->m_AIParse->MIL_STRING2string(BaseDataPath,strBaseDataPath);
+	bool DataSetExist = isFileExists_ifstream(strBaseDataPath);
+
+	//string TagPath = "G:/DefectDataCenter/WorkSpace/Tag/3/";
+	//MIL_STRING MSTRTagPath = MIL_TEXT("G:/DefectDataCenter/WorkSpace/Tag/3/");
+	vector<MIL_STRING> TagClassNames;
+
+	string strTagPath;
+	m_MLClassCNN->m_AIParse->MIL_STRING2string(TagDataDir, strTagPath);
+	m_MLClassCNN->m_AIParse->getFoldersInFolder(strTagPath, TagClassNames);
 
 	if (DataSetExist) {
 		//Tag_ClasssIcon == DataSet.mclassd ClassIcon?
 		//读取DataSet.mclassd的ClassIcons
 		
-		MIL_UNIQUE_CLASS_ID BaseDataSet = MclassRestore(WorkingDataPath, m_MilSystem, M_DEFAULT, M_UNIQUE_ID);
+		MIL_UNIQUE_CLASS_ID BaseDataSet = MclassRestore(BaseDataPath, m_MilSystem, M_DEFAULT, M_UNIQUE_ID);
 		vector<MIL_STRING> DataSetClassName;
-		bool TagSameClass = isTagSameClass(BaseDataSet,TagClassIcons, DataSetClassName);
+		map<MIL_STRING, int> mapTagClassIconsIndex;
+		bool TagSameClass;
+		isTagSameClass(BaseDataSet, TagClassNames, mapTagClassIconsIndex, TagSameClass);
 
 		if (TagSameClass) {	
+			///以下内容生成BaseDataSet 、UpdateDataSet；UpdateDataSet！= BaseDataSet
 			vector<MIL_STRING > DataSetClassIcon;
 			for (int i = 0; i < DataSetClassName.size(); i++) {
 				DataSetClassIcon.emplace_back(m_ClassifierSrcDataDir + m_strProject + L"//" + DataSetClassName[i] + L".mim");
 			}
 			//生成UpdateData.mclassd更新DataSet.mclassd 
 			MIL_UNIQUE_CLASS_ID  UpdateDataset = MclassAlloc(m_MilSystem, M_DATASET_IMAGES, M_DEFAULT, M_UNIQUE_ID);
-			m_MLClassCNN->ConstructDataset(DataSetClassName, DataSetClassIcon, AuthorName, MSTRTagPath, WorkingDataDir, UpdateDataset);
-			m_MLClassCNN->ConstructDataset(DataSetClassName, DataSetClassIcon, AuthorName, MSTRTagPath, WorkingDataDir, BaseDataSet);
+			m_MLClassCNN->ConstructDataset(DataSetClassName, DataSetClassIcon, AuthorName, TagDataDir, BaseDataDir, UpdateDataset);
+			MclassControl(UpdateDataset, M_CONTEXT, M_CONSOLIDATE_ENTRIES_INTO_FOLDER, BaseDataDir);
+			m_MLClassCNN->ConstructDataset(DataSetClassName, DataSetClassIcon, AuthorName, TagDataDir, BaseDataDir, BaseDataSet);
 			//输出BaseDataSet.mclassd 和UpdateDataSet.mclassd
-			MIL_STRING BaseDatasetPath = WorkingDataDir + MIL_TEXT("BaseDataSet.mclassd");
-			MIL_STRING UpdateDatasetPath = WorkingDataDir + MIL_TEXT("UpdateDataSet.mclassd");
+			MIL_STRING BaseDatasetPath = BaseDataDir + MIL_TEXT("BaseDataSet.mclassd");
+			MIL_STRING UpdateDatasetPath = BaseDataDir + MIL_TEXT("UpdateDataSet.mclassd");
 			MclassSave(BaseDatasetPath, BaseDataSet, M_DEFAULT);
 			MclassSave(UpdateDatasetPath, UpdateDataset, M_DEFAULT);
-
-
 		}
 		else
 		{
+			///以下内容生成BaseDataSet 、UpdateDataSet；UpdateDataSet==BaseDataSet
+			vector<MIL_STRING > TagClassIcons;
+			vector<MIL_STRING > MSTRTagClassCNs;
+			for (int i = 0; i < TagClassNames.size(); i++) {
+
+				//MIL_STRING MSTRTagClassCN = m_MLClassCNN->m_AIParse->string2MIL_STRING(TagClassNames[i]);
+				//MSTRTagClassCNs.emplace_back(MSTRTagClassCN);
+			
+				TagClassIcons.emplace_back(TagDataDir + TagClassNames[i] + L".mim");
+			}
+			MIL_UNIQUE_CLASS_ID BaseDataSet = MclassRestore(BaseDataPath, m_MilSystem, M_DEFAULT, M_UNIQUE_ID);
+			m_MLClassCNN->ExpanDataset(mapTagClassIconsIndex, TagClassIcons, AuthorName, TagDataDir, BaseDataDir, BaseDataSet);
 			//读取TAG中图片，加入DataSet.mclassd 。复制DataSet.mclassd到UpdateData.mclassd
+			//CreateFolder(MStrWorkingDataPath);
+
+			MclassControl(BaseDataSet, M_CONTEXT, M_CONSOLIDATE_ENTRIES_INTO_FOLDER, BaseDataDir);
+			
+			MIL_STRING BaseDatasetPath = BaseDataDir + MIL_TEXT("BaseDataSet.mclassd");
+			MIL_STRING UpdateDatasetPath = BaseDataDir + MIL_TEXT("UpdateDataSet.mclassd");
+			MclassSave(BaseDatasetPath, BaseDataSet, M_DEFAULT);
+			MclassSave(UpdateDatasetPath, BaseDataSet, M_DEFAULT);
+
 		}
 	}
 	else {
-		//读取TAG中图片，加入DataSet.mclassd 。复制DataSet.mclassd到UpdateData.mclassd	
+
+		///以下内容生成BaseDataSet 、UpdateDataSet；UpdateDataSet==BaseDataSet
+		vector<MIL_STRING > TagClassIcons;
+		vector<MIL_STRING > MSTRTagClassCNs;
+		for (int i = 0; i < TagClassNames.size(); i++) {
+
+			//MIL_STRING MSTRTagClassCN = m_MLClassCNN->m_AIParse->string2MIL_STRING(TagClassNames[i]);
+			//MSTRTagClassCNs.emplace_back(MSTRTagClassCN);
+			//MIL_STRING MSTRTagPath = m_MLClassCNN->m_AIParse->string2MIL_STRING(TagPath);
+			TagClassIcons.emplace_back(TagDataDir + TagClassNames[i] + L".mim");
+		}
+		MIL_UNIQUE_CLASS_ID BaseDataSet = MclassAlloc(m_MilSystem, M_DATASET_IMAGES, M_DEFAULT, M_UNIQUE_ID);
+		m_MLClassCNN->ConstructDataset(TagClassNames, TagClassIcons, AuthorName, TagDataDir, BaseDataDir, BaseDataSet);
+
+		MclassControl(BaseDataSet, M_CONTEXT, M_CONSOLIDATE_ENTRIES_INTO_FOLDER, BaseDataDir);
+		MIL_STRING BaseDatasetPath = BaseDataDir + MIL_TEXT("BaseDataSet.mclassd");
+		MIL_STRING UpdateDatasetPath = BaseDataDir + MIL_TEXT("UpdateDataSet.mclassd");
+		MclassSave(BaseDatasetPath, BaseDataSet, M_DEFAULT);
+		MclassSave(UpdateDatasetPath, BaseDataSet, M_DEFAULT);
 	}
 
 		
@@ -1127,8 +1181,6 @@ void MILTest::MILTestCNNONNXPredict()
 		MclassGetResult(ClassRes, M_OUTPUT_INDEX(i), M_OUTPUT_DATA, Out);
 		//cout << Out[0] << endl;
 	}
-
-
 
 }
 

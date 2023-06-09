@@ -211,6 +211,41 @@ void CMLClassCNN::ConstructDataset(
 
 }
 
+void CMLClassCNN::ExpanDataset(
+    map<MIL_STRING, int>  mapClassName,
+    vector<MIL_STRING> ClassIcon,
+    MIL_STRING AuthorName,
+    MIL_STRING OriginalDataPath,
+    const MIL_STRING& WorkingDataPath,
+    MIL_UNIQUE_CLASS_ID& Dataset)
+{
+    MIL_INT  NumberOfClasses = mapClassName.size();
+
+    if (M_NULL == Dataset)
+    {
+        Dataset = MclassAlloc(m_MilSystem, M_DATASET_IMAGES, M_DEFAULT, M_UNIQUE_ID);
+    }
+
+    MclassControl(Dataset, M_DEFAULT, M_AUTHOR_ADD, AuthorName);
+
+    map<MIL_STRING, int> ::iterator it;
+    int i = 0;
+    for (it = mapClassName.begin(); it != mapClassName.end(); it++) {
+        MclassControl(Dataset, M_DEFAULT, M_CLASS_ADD, it->first);
+        MIL_UNIQUE_BUF_ID IconImageId = MbufRestore(ClassIcon[i], m_MilSystem, M_UNIQUE_ID);
+        MclassControl(Dataset, M_CLASS_INDEX(it->second), M_CLASS_ICON_ID, IconImageId);
+        AddClassToDataset(it->second, OriginalDataPath, it->first, AuthorName, Dataset);
+        i++;
+    }
+ 
+
+    //for (MIL_INT ClassIdx = 0; ClassIdx < NumberOfClasses; ClassIdx++)
+    //{
+    //    AddClassToDataset(ClassIdx, OriginalDataPath, ClassName[ClassIdx], AuthorName, Dataset);
+    //}
+
+}
+
 void CMLClassCNN::GeneralDataset(vector<MIL_STRING> ClassName,
     vector<MIL_STRING> ClassIcon,
     MIL_STRING AuthorName,
@@ -612,6 +647,7 @@ void CMLClassCNN::AddClassDescription(MIL_ID Dataset, const MIL_STRING& AuthorNa
 
     for (MIL_INT i = 0; i < NumberOfClasses; i++)
     {
+      
         MclassControl(Dataset, M_DEFAULT, M_CLASS_ADD, ClassName[i]);
         MIL_UNIQUE_BUF_ID IconImageId = MbufRestore(ClassIcon[i], m_MilSystem, M_UNIQUE_ID);
         MclassControl(Dataset, M_CLASS_INDEX(i), M_CLASS_ICON_ID, IconImageId);
@@ -632,6 +668,7 @@ void CMLClassCNN::AddClassToDataset(MIL_INT ClassIndex, const MIL_STRING& DataPa
     m_AIParse->getFilesInFolder(strFolderName, "bmp", FilesInFolder);
 
     MIL_INT CurImageIndex = 0;
+
     for (const auto& File : FilesInFolder)
     {
         MclassControl(Dataset, M_DEFAULT, M_ENTRY_ADD, M_DEFAULT);

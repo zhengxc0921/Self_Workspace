@@ -82,8 +82,6 @@ void CMLDetCNN::ConstructDataset(string ClassesInfo,
     //m_AIParse->MIL_STRING2string(MStrIconDir, IconDir);
     //m_AIParse->MIL_STRING2string(MStrWorkingDataPath, WorkingDataPath);
 
-
-    
     MclassControl(Dataset, M_DEFAULT, M_AUTHOR_ADD, MIL_TEXT("ZXC"));
     //step1:txt-->IconDataInfo
     vector<MIL_STRING>vecClasses;

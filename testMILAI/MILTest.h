@@ -38,7 +38,9 @@ public:
 	
 	void FillImgs();
 
-	bool isTagSameClass(MIL_UNIQUE_CLASS_ID& PreparedDataset, const vector<string>& TagClassIcons, vector<MIL_STRING>& DataSetClassIcons);
+	void isTagSameClass(MIL_UNIQUE_CLASS_ID& PreparedDataset, 
+		const vector<MIL_STRING>& TagClassIcons,
+		map<MIL_STRING, int>& TagClassIconsIndex, bool& isTagSameClass);
 
 	void MILTestWKSPDataset();
 
@@ -101,6 +103,8 @@ public:
 	MIL_INT m_InputSizeY = 0;
 
 	//≤‚ ‘≤Œ ˝
+
+	MIL_STRING m_TagDataDir = L"G:/DefectDataCenter/WorkSpace/Tag/";
 	
 	MIL_STRING m_ClassifierSrcDataDir = L"G:/DefectDataCenter/ParseData/Classifier/";
 	MIL_STRING m_DetectionSrcDataDir = L"G:/DefectDataCenter/ParseData/Detection/";

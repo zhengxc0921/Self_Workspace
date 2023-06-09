@@ -68,6 +68,29 @@ void CAIParse::getFoldersInFolder(string Path, vector<string>& Folders)
 	}
 }
 
+void CAIParse::getFoldersInFolder(string Path, vector<MIL_STRING>& Folders)
+{
+	long long  hFile = 0;
+	struct _finddata_t fileinfo;
+	string p;
+	if ((hFile = _findfirst(p.assign(Path).append("\\*").c_str(), &fileinfo)) != -1)
+	{
+		do
+		{
+			//如果是目录,保存在folder中	
+			if ((fileinfo.attrib & _A_SUBDIR))
+			{
+				if (strcmp(fileinfo.name, ".") != 0 && strcmp(fileinfo.name, "..") != 0) {
+					MIL_STRING MfolderName = string2MIL_STRING(fileinfo.name);
+					Folders.emplace_back(MfolderName);
+				}
+
+			}
+		} while (_findnext(hFile, &fileinfo) == 0);
+		_findclose(hFile);
+	}
+}
+
 
 
 void CAIParse::getFilesInFolder(string Path, string FileType, vector<MIL_STRING>& Files)
