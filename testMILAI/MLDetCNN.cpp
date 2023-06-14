@@ -202,8 +202,10 @@ void CMLDetCNN::PrepareDataset(MIL_UNIQUE_CLASS_ID& DatasetContext,
     MIL_UNIQUE_CLASS_ID& PrepareDataset,
     MIL_UNIQUE_CLASS_ID& PreparedDataset,
     MIL_STRING WorkingDataPath,
-    MIL_DOUBLE TestDatasetPercentage)
+    MIL_DOUBLE DatasetName)
 {
+
+    MIL_DOUBLE TestDatasetPercentage = 10;
     MclassPreprocess(DatasetContext, M_DEFAULT);
     MclassPrepareData(DatasetContext, PrepareDataset, PreparedDataset, M_NULL, M_DEFAULT);
 

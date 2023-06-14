@@ -42,13 +42,17 @@ public:
 		const vector<MIL_STRING>& TagClassIcons,
 		map<MIL_STRING, int>& TagClassIconsIndex, bool& isTagSameClass);
 
-	void MILTestWKSPDataset();
+	void MILTestWKSPDataset(MIL_STRING TagFolder);
+
+	void MILTestWKSPTrain();
+
+	void MILTestWKSPUpdate();
 
 	void MILTestGenDataset();
 
 	void MILTestTrain();
 
-	void MILTestPredict();
+	void MILTestPredict(MIL_STRING TagFolder);
 
 	void MILTestPredictWithBlob();
 
@@ -102,6 +106,7 @@ public:
 	MIL_INT m_InputSizeX = 0;
 	MIL_INT m_InputSizeY = 0;
 
+
 	//≤‚ ‘≤Œ ˝
 
 	MIL_STRING m_TagDataDir = L"G:/DefectDataCenter/WorkSpace/Tag/";
@@ -109,11 +114,13 @@ public:
 	MIL_STRING m_ClassifierSrcDataDir = L"G:/DefectDataCenter/ParseData/Classifier/";
 	MIL_STRING m_DetectionSrcDataDir = L"G:/DefectDataCenter/ParseData/Detection/";
 
+
 	MIL_STRING m_ClassifierWorkSpace = L"G:/DefectDataCenter/WorkSpace/Classifier/";
 	MIL_STRING m_DetectionWorkSpace = L"G:/DefectDataCenter/WorkSpace/Detection/";
 
 
-	MIL_STRING m_strProject;
+	MIL_STRING m_strProject;  //
+	MIL_STRING m_TagFolder;
 
 	vector<MIL_STRING> m_FilesInFolder;
 	vector < ClassificationResultStruct> m_vecResults;

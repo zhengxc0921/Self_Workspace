@@ -317,6 +317,7 @@ void CMLClassCNN::ConstructDataContext(DataContextParasStruct DataCtxParas, MIL_
         MimControl(AugmentContext, M_AUG_ROTATION_OP, M_ENABLE);
         MimControl(AugmentContext, M_AUG_ROTATION_OP_ANGLE_DELTA, DataCtxParas.AugParas.RotateAngleDelta);
     }
+
     if ((DataCtxParas.AugParas.ScaleFactorMin > 0 && DataCtxParas.AugParas.ScaleFactorMin != 1.0)
         || (DataCtxParas.AugParas.ScaleFactorMax > 0 && DataCtxParas.AugParas.ScaleFactorMax != 1.0))
     {
@@ -362,25 +363,14 @@ void CMLClassCNN::ConstructDataContext(DataContextParasStruct DataCtxParas, MIL_
 
 void CMLClassCNN::PrepareDataset(MIL_UNIQUE_CLASS_ID& DatasetContext, 
     MIL_UNIQUE_CLASS_ID& PrepareDataset, MIL_UNIQUE_CLASS_ID& PreparedDataset,
-    MIL_STRING WorkingDataPath,
-    MIL_DOUBLE TestDatasetPercentage)
+    MIL_STRING WorkingDataDir,
+    MIL_STRING DatasetName)
 {
     MclassPreprocess(DatasetContext, M_DEFAULT);
     MclassPrepareData(DatasetContext, PrepareDataset, PreparedDataset, M_NULL, M_DEFAULT);
-    //将数据划分为WorkingDataset和TestDataset
-    MIL_UNIQUE_CLASS_ID WorkingDataset = MclassAlloc(m_MilSystem, M_DATASET_IMAGES, M_DEFAULT, M_UNIQUE_ID);
-    MIL_UNIQUE_CLASS_ID TestDataset = MclassAlloc(m_MilSystem, M_DATASET_IMAGES, M_DEFAULT, M_UNIQUE_ID);
-    MclassSplitDataset(M_SPLIT_CONTEXT_FIXED_SEED, PreparedDataset, WorkingDataset, TestDataset,
-        100.0 - TestDatasetPercentage, M_NULL, M_DEFAULT);
-    //保存结果
-    MclassSave(WorkingDataPath + MIL_TEXT("WorkingDataset.mclassd"), WorkingDataset, M_DEFAULT);
-    MclassExport(WorkingDataPath + MIL_TEXT("class_definitions.csv"), M_FORMAT_CSV,
-        WorkingDataset, M_DEFAULT, M_CLASS_DEFINITIONS, M_DEFAULT);
-    MclassExport(WorkingDataPath+MIL_TEXT("train_entries.csv"), M_FORMAT_CSV, WorkingDataset, M_DEFAULT, M_ENTRIES, M_DEFAULT);
-    MclassSave(WorkingDataPath + MIL_TEXT("TestDataset.mclassd"), TestDataset, M_DEFAULT);
-    MclassExport(WorkingDataPath + MIL_TEXT("test_entries.csv"), M_FORMAT_CSV, TestDataset, M_DEFAULT, M_ENTRIES, M_DEFAULT);
-   
-
+    MclassSave(WorkingDataDir + DatasetName+ MIL_TEXT(".mclassd"), PreparedDataset, M_DEFAULT);
+    MclassExport(WorkingDataDir + MIL_TEXT("class_definitions.csv"), M_FORMAT_CSV,PreparedDataset, M_DEFAULT, M_CLASS_DEFINITIONS, M_DEFAULT);
+    MclassExport(WorkingDataDir + DatasetName+MIL_TEXT("_entries.csv"), M_FORMAT_CSV, PreparedDataset, M_DEFAULT, M_ENTRIES, M_DEFAULT);
 }
 
 void CMLClassCNN::ConstructTrainCtx(ClassifierParasStruct ClassifierParas, MIL_UNIQUE_CLASS_ID& TrainCtx)
@@ -393,14 +383,14 @@ void CMLClassCNN::ConstructTrainCtx(ClassifierParasStruct ClassifierParas, MIL_U
     CreateFolder(ClassifierParas.TrainDstFolder);
     MclassControl(TrainCtx, M_CONTEXT, M_TRAIN_DESTINATION_FOLDER, ClassifierParas.TrainDstFolder);
 
-    //if (ClassifierParas.TrainMode == 1)
-    //{
-    //    MclassControl(TrainCtx, M_CONTEXT, M_RESET_TRAINING_VALUES, M_FINE_TUNING);
-    //}
-    //else if (ClassifierParas.TrainMode == 2)
-    //{
-    //    MclassControl(TrainCtx, M_CONTEXT, M_RESET_TRAINING_VALUES, M_TRANSFER_LEARNING);
-    //}
+    if (ClassifierParas.TrainMode == 1)
+    {
+        MclassControl(TrainCtx, M_CONTEXT, M_RESET_TRAINING_VALUES, M_FINE_TUNING);
+    }
+    else if (ClassifierParas.TrainMode == 2)
+    {
+        MclassControl(TrainCtx, M_CONTEXT, M_RESET_TRAINING_VALUES, M_TRANSFER_LEARNING);
+    }
 
     if (ClassifierParas.SplitPercent > 0)
     {
@@ -444,7 +434,6 @@ void CMLClassCNN::ConstructTrainCtx(ClassifierParasStruct ClassifierParas, MIL_U
 }
 
 void CMLClassCNN::TrainClassifier(MIL_UNIQUE_CLASS_ID& Dataset, 
-    //MIL_UNIQUE_CLASS_ID& DatasetContext,
     MIL_UNIQUE_CLASS_ID& TrainCtx, 
     MIL_UNIQUE_CLASS_ID& PrevClassifierCtx,
     MIL_UNIQUE_CLASS_ID& TrainedClassifierCtx,

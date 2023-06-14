@@ -4,8 +4,8 @@
 #if 1
 #include "MILTest.h"
 int main(int argc, char* argv[]) {
-	//MIL_STRING strProject = L"FZ";
-	MIL_STRING strProject = L"FZ_ADD_2";
+	MIL_STRING strProject = L"FZ";
+
 	//MIL_STRING strProject = L"DSW_random";
 	MIL_UNIQUE_APP_ID MilApplication = MappAlloc(M_NULL, M_DEFAULT, M_UNIQUE_ID);
 	MIL_UNIQUE_SYS_ID MilSystem = MsysAlloc(M_DEFAULT, M_SYSTEM_HOST, M_DEFAULT, M_DEFAULT, M_UNIQUE_ID);
@@ -16,9 +16,19 @@ int main(int argc, char* argv[]) {
 	//Classifier CNN test
 	//m_MILTestPtr->FillImgs();
 	//m_MILTestPtr->CropImgs();
-	m_MILTestPtr->MILTestWKSPDataset();
+	
+
+	//将数据集和
+	MIL_STRING TagFolder = L"6/";
+	m_MILTestPtr->MILTestWKSPDataset(TagFolder);
+	//m_MILTestPtr->MILTestWKSPTrain();
+	//m_MILTestPtr->MILTestPredict(TagFolder);
+
+	//m_MILTestPtr->MILTestWKSPUpdate();
+	m_MILTestPtr->MILTestPredict(TagFolder);
+
 	//m_MILTestPtr->MILTestGenDataset();
-	//m_MILTestPtr->MILTestTrain();
+	//m_MILTestPtr->MILTestTrain(); 
 	//m_MILTestPtr->MILTestPredict();
 	//m_MILTestPtr->MILTestPredictWithBlob();
 	//m_MILTestPtr->MILTestPredictEngine();

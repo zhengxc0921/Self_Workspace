@@ -346,9 +346,11 @@ void MILTest::MILTestGenDataset()
 	DataCtxParas.AugParas.GaussNoiseStdev = 25; //25
 	DataCtxParas.AugParas.GaussNoiseDelta = 25; //25
 
+	
+	MIL_STRING DatasetName = L"/BaseDataSet.mclassd";
 	m_MLClassCNN->ConstructDataContext(DataCtxParas, DataContext);
 	MIL_UNIQUE_CLASS_ID PreparedDataset = MclassAlloc(m_MilSystem, M_DATASET_IMAGES, M_DEFAULT, M_UNIQUE_ID);
-	m_MLClassCNN->PrepareDataset(DataContext, Dataset, PreparedDataset, WorkingDataPath, TestDatasetPercentage);
+	m_MLClassCNN->PrepareDataset(DataContext, Dataset, PreparedDataset, WorkingDataPath, DatasetName);
 
 }
 
@@ -391,30 +393,52 @@ void MILTest::isTagSameClass(MIL_UNIQUE_CLASS_ID& PreparedDataset,
 }
 
 
-void MILTest::MILTestWKSPDataset()
+void MILTest::MILTestWKSPDataset(MIL_STRING TagFolder)
 {
+	MIL_DOUBLE ValRatio = 0.1;
 	MIL_STRING AuthorName = MIL_TEXT("AA");
-	MIL_STRING BaseDataDir = m_ClassifierWorkSpace + m_strProject + L"/";
-	MIL_STRING BaseDataPath = m_ClassifierWorkSpace + m_strProject + L"/BaseDataSet.mclassd";
+	MIL_STRING BaseDataDir = m_ClassifierWorkSpace + m_strProject + L"/DataSet/" + L"/";
+	MIL_STRING BaseDataPath = m_ClassifierWorkSpace + m_strProject + L"/DataSet/" + L"/BaseDataSet.mclassd";
 
-	MIL_STRING TagFolder = L"6/";
+	m_MLClassCNN->CreateFolder(m_ClassifierWorkSpace + m_strProject + L"/DataSet/");
+
+	/*MIL_STRING TagFolder = L"3/";*/
 	MIL_STRING TagDataDir = m_TagDataDir + TagFolder;
 	string strBaseDataPath;
 	m_MLClassCNN->m_AIParse->MIL_STRING2string(BaseDataPath,strBaseDataPath);
 	bool DataSetExist = isFileExists_ifstream(strBaseDataPath);
-
 
 	vector<MIL_STRING> TagClassNames;
 	string strTagPath;
 	m_MLClassCNN->m_AIParse->MIL_STRING2string(TagDataDir, strTagPath);
 	m_MLClassCNN->m_AIParse->getFoldersInFolder(strTagPath, TagClassNames);
 
+	//PrePared DataContext
+		////*******************************必须参数*******************************//
+	MIL_UNIQUE_CLASS_ID DataContext = MclassAlloc(m_MilSystem, M_PREPARE_IMAGES_CNN, M_DEFAULT, M_UNIQUE_ID);
+	DataContextParasStruct DataCtxParas;
+	DataCtxParas.ImageSizeX = 128;
+	DataCtxParas.ImageSizeY = 128;
+	memset(&DataCtxParas.AugParas, 0, sizeof(AugmentationParasStruct));
+	DataCtxParas.AugParas.AugmentationNumPerImage = 0;
+	DataCtxParas.ResizeModel = 1;
+	DataCtxParas.AugParas.ScaleFactorMax = 1.03; //1.03
+	DataCtxParas.AugParas.ScaleFactorMin = 0.97; //0.97
+	DataCtxParas.AugParas.RotateAngleDelta = 20; //10
+	DataCtxParas.AugParas.IntyDeltaAdd = 32;  //32
+	DataCtxParas.AugParas.DirIntyMax = 1.2; //1.2
+	DataCtxParas.AugParas.DirIntyMin = 0.8; //0.8
+	DataCtxParas.AugParas.SmoothnessMax = 50; //50 {0<x<100}
+	DataCtxParas.AugParas.SmoothnessMin = 0.5; //0.5 {0<x<100}
+	DataCtxParas.AugParas.GaussNoiseStdev = 25; //25
+	DataCtxParas.AugParas.GaussNoiseDelta = 25; //25
+	DataCtxParas.PreparedDataFolder = m_ClassifierWorkSpace  + m_strProject + L"/DataSet/";
+	m_MLClassCNN->ConstructDataContext(DataCtxParas, DataContext);
+
+
 	if (DataSetExist) {
-		//Tag_ClasssIcon == DataSet.mclassd ClassIcon?
-		//读取DataSet.mclassd的ClassIcons
-		
+	
 		vector<MIL_STRING> DataSetClassName;
-		map<MIL_STRING, int> mapTagClassIconsIndex;
 		vector<MIL_STRING > TagClassIcons;
 		for (int i = 0; i < TagClassNames.size(); i++) {
 			TagClassIcons.emplace_back(TagDataDir + TagClassNames[i] + L".mim");
@@ -424,6 +448,8 @@ void MILTest::MILTestWKSPDataset()
 		MclassControl(UpdateDataSet, M_CONTEXT, M_CONSOLIDATE_ENTRIES_INTO_FOLDER, BaseDataDir);
 		MIL_STRING UpdateDatasetPath = BaseDataDir + MIL_TEXT("UpdateDataSet.mclassd");
 		MclassSave(UpdateDatasetPath, UpdateDataSet, M_DEFAULT);
+
+
 		//汇总数据生成BaseDataSet
 		//汇总数据，然后再保存
 		MIL_STRING ImageDir = BaseDataDir + MIL_TEXT("Images\\");
@@ -447,7 +473,13 @@ void MILTest::MILTestWKSPDataset()
 		m_MLClassCNN->ConstructDataset(ClassName_A, ClassIcon_A, AuthorName, ImageDir, BaseDataDir, BaseDataSet);
 		MIL_STRING BaseDatasetPath = BaseDataDir + MIL_TEXT("BaseDataSet.mclassd");
 		MclassSave(BaseDatasetPath, BaseDataSet, M_DEFAULT);
+		//生成PreParedUpdateDataSet、PreParedUpdateDataSet
+		MIL_UNIQUE_CLASS_ID PreParedUpdateDataSet = MclassAlloc(m_MilSystem, M_DATASET_IMAGES, M_DEFAULT, M_UNIQUE_ID);
+		m_MLClassCNN->PrepareDataset(DataContext, UpdateDataSet, PreParedUpdateDataSet, BaseDataDir, L"PreParedUpdateDataSet");
+		MIL_UNIQUE_CLASS_ID PreParedBaseDataSet = MclassAlloc(m_MilSystem, M_DATASET_IMAGES, M_DEFAULT, M_UNIQUE_ID);
+		m_MLClassCNN->PrepareDataset(DataContext, BaseDataSet, PreParedBaseDataSet, BaseDataDir, L"PreParedBaseDataSet");
 	}
+
 	else {
 
 		///以下内容生成BaseDataSet 、UpdateDataSet；UpdateDataSet==BaseDataSet
@@ -462,16 +494,77 @@ void MILTest::MILTestWKSPDataset()
 		MIL_STRING UpdateDatasetPath = BaseDataDir + MIL_TEXT("UpdateDataSet.mclassd");
 		MclassSave(BaseDatasetPath, BaseDataSet, M_DEFAULT);
 		MclassSave(UpdateDatasetPath, BaseDataSet, M_DEFAULT);
+		//生成PreParedUpdateDataSet、PreParedUpdateDataSet
+		MIL_UNIQUE_CLASS_ID PreParedBaseDataSet = MclassAlloc(m_MilSystem, M_DATASET_IMAGES, M_DEFAULT, M_UNIQUE_ID);
+		m_MLClassCNN->PrepareDataset(DataContext, BaseDataSet, PreParedBaseDataSet, BaseDataDir, L"PreParedBaseDataSet");
+		MclassSave(BaseDataDir + MIL_TEXT("PreParedUpdateDataSet.mclassd"), PreParedBaseDataSet, M_DEFAULT);
+		MclassExport(BaseDataDir + MIL_TEXT("PreParedUpdateDataSet_entries.csv"), M_FORMAT_CSV, PreParedBaseDataSet, M_DEFAULT, M_ENTRIES, M_DEFAULT);
 	}
-
-		
-
-
-
 
 }
 
+void MILTest::MILTestWKSPTrain()
+{
+	int MaxNumberOfEpoch = 20;			//模型训练次数
+	int MiniBatchSize = 64;				//模型训练单次迭代的张数
 
+	//////*******************************必须参数*******************************//
+	MIL_STRING PreparedPath = m_ClassifierWorkSpace + m_strProject + MIL_TEXT("/DataSet/PreParedBaseDataSet.mclassd");
+	MIL_UNIQUE_CLASS_ID PreparedDataset = MclassRestore(PreparedPath, m_MilSystem, M_DEFAULT, M_UNIQUE_ID);
+	MIL_UNIQUE_CLASS_ID TrainCtx = MclassAlloc(m_MilSystem, M_TRAIN_CNN, M_DEFAULT, M_UNIQUE_ID);
+	ClassifierParasStruct ClassifierParas;
+	ClassifierParas.TrainMode = 0;
+	ClassifierParas.TrainEngineUsed = 0;
+	ClassifierParas.MaxNumberOfEpoch = MaxNumberOfEpoch;
+	ClassifierParas.MiniBatchSize = MiniBatchSize;
+	ClassifierParas.SchedulerType = 0;
+	ClassifierParas.LearningRate = 0.0001 / 1; //normal:0.0001; 
+	ClassifierParas.LearningRateDecay = 0;
+	ClassifierParas.SplitPercent = 80.0;
+	ClassifierParas.TrainDstFolder = m_ClassifierWorkSpace + m_strProject + MIL_TEXT("/PreparedData/");
+	m_MLClassCNN->ConstructTrainCtx(ClassifierParas, TrainCtx);
+
+	MIL_UNIQUE_CLASS_ID TrainedClassifierCtx;
+	//MIL_STRING TrainedCtxFile = m_ClassifierWorkSpace + MIL_TEXT("FZ/PreparedData/") + L"FZ.mclass";
+	//MIL_UNIQUE_CLASS_ID PrevClassifierCtx = MclassRestore(TrainedCtxFile, m_MilSystem, M_DEFAULT, M_UNIQUE_ID);
+	MIL_UNIQUE_CLASS_ID PrevClassifierCtx;
+	MIL_STRING ClassifierDumpFile = ClassifierParas.TrainDstFolder + m_strProject + L".mclass";
+	m_MLClassCNN->TrainClassifier(PreparedDataset, TrainCtx, PrevClassifierCtx, TrainedClassifierCtx, ClassifierDumpFile);
+	return;
+
+}
+
+void MILTest::MILTestWKSPUpdate()
+{
+	int MaxNumberOfEpoch = 20;			//模型训练次数
+	int MiniBatchSize = 16;				//模型训练单次迭代的张数
+
+	//////*******************************必须参数*******************************//
+	MIL_STRING PreparedPath = m_ClassifierWorkSpace + m_strProject + MIL_TEXT("/DataSet/PreParedUpdateDataSet.mclassd");
+	MIL_UNIQUE_CLASS_ID PreparedDataset = MclassRestore(PreparedPath, m_MilSystem, M_DEFAULT, M_UNIQUE_ID);
+	MIL_UNIQUE_CLASS_ID TrainCtx = MclassAlloc(m_MilSystem, M_TRAIN_CNN, M_DEFAULT, M_UNIQUE_ID);
+	ClassifierParasStruct ClassifierParas;
+	ClassifierParas.TrainMode = 0;
+	ClassifierParas.TrainEngineUsed = 0;
+	ClassifierParas.MaxNumberOfEpoch = MaxNumberOfEpoch;
+	ClassifierParas.MiniBatchSize = MiniBatchSize;
+	ClassifierParas.SchedulerType = 0;
+	ClassifierParas.LearningRate = 0.001; //normal:0.0001; 
+	ClassifierParas.LearningRateDecay = 0;
+	ClassifierParas.SplitPercent = 80.0;
+	ClassifierParas.TrainDstFolder = m_ClassifierWorkSpace + m_strProject + MIL_TEXT("/PreparedData/");
+
+	m_MLClassCNN->ConstructTrainCtx(ClassifierParas, TrainCtx);
+
+	MIL_UNIQUE_CLASS_ID TrainedClassifierCtx;
+	MIL_STRING TrainedCtxFile = m_ClassifierWorkSpace + MIL_TEXT("FZ/PreparedData/") + L"FZ.mclass";
+	MIL_UNIQUE_CLASS_ID PrevClassifierCtx = MclassRestore(TrainedCtxFile, m_MilSystem, M_DEFAULT, M_UNIQUE_ID);
+	//MIL_UNIQUE_CLASS_ID PrevClassifierCtx;
+	MIL_STRING ClassifierDumpFile = ClassifierParas.TrainDstFolder + m_strProject + L".mclass";
+	m_MLClassCNN->TrainClassifier(PreparedDataset, TrainCtx, PrevClassifierCtx, TrainedClassifierCtx, ClassifierDumpFile);
+	return;
+
+}
 
 void MILTest::MILTestTrain()
 {
@@ -504,12 +597,12 @@ void MILTest::MILTestTrain()
 	return;
 }
 
-void MILTest::MILTestPredict() {
+void MILTest::MILTestPredict(MIL_STRING TagFolder) {
 	MIL_STRING PreClassifierName = m_ClassifierWorkSpace + m_strProject + MIL_TEXT("/PreparedData/") + m_strProject + L".mclass";
-	string	SrcImgDir = "G:/DefectDataCenter/ParseData/Classifier/SXX_GrayWave/Original_Gray3/91/";
-	m_DstImgDir = MIL_TEXT("G:/DefectDataCenter/ParseData/Classifier/SXX_GrayWave/Original_Gray3/MIL_ADD3_91/");
-	//string	SrcImgDir = "G:/DefectDataCenter/DeepLearningDataSet/Output/sct_asi_0401/FZ/10/";
-	//m_DstImgDir = MIL_TEXT("G:/DefectDataCenter/DeepLearningDataSet/Output/sct_asi_0401/FZ_ADD3_10/");
+	MIL_STRING	SrcImgDir = L"G:/DefectDataCenter/WorkSpace/Test/"+m_strProject+L"/" + TagFolder;
+	m_DstImgDir = L"G:/DefectDataCenter/WorkSpace/Test/" + m_strProject+L"/rst"+ TagFolder;
+
+
 	LARGE_INTEGER t1, t2, tc;
 	QueryPerformanceFrequency(&tc);
 	QueryPerformanceCounter(&t1);
@@ -520,7 +613,9 @@ void MILTest::MILTestPredict() {
 	MclassInquire(TestCtx, M_PREDICT_ENGINE_INDEX(0), M_PREDICT_ENGINE_DESCRIPTION, Description);
 	MosPrintf(MIL_TEXT("\nM_PREDICT_ENGINE_DESCRIPTION: %s \n"), Description.c_str());
 	
-	m_MLClassCNN->m_AIParse->getFilesInFolder(SrcImgDir, "bmp", m_FilesInFolder);
+	string strSrcImgDir;
+	m_MLClassCNN->m_AIParse->MIL_STRING2string(SrcImgDir, strSrcImgDir);
+	m_MLClassCNN->m_AIParse->getFilesInFolder(strSrcImgDir, "bmp", m_FilesInFolder);
 	int nFileNum = m_FilesInFolder.size();
 	vector<MIL_DOUBLE> ClassWeights(m_ClassesNum, 1.0);
 	m_MLClassCNN->FolderImgsPredict(m_FilesInFolder, ClassWeights, TestCtx, m_vecResults);
@@ -869,7 +964,6 @@ void MILTest::MILTestDetPredictMutiProcess(
 	cout << "\nOpen Process_" << Index <<" nFileNum: "<< nFileNum<< " average calc_time time(s) is = " << calc_time << "\n" << endl; //输出时间（单位：ｓ）
 }
 
-
 void MILTest::MILTestDetPredictCore(MIL_UNIQUE_CLASS_ID& TestCtx,
 	string SrcDir,
 	string DstRst, 
@@ -926,8 +1020,6 @@ void MILTest::MILTestDetPredictCore(MIL_UNIQUE_CLASS_ID& TestCtx,
 
 	ODNetResult.close();
 }
-
-
 
 void MILTest::mutiThreadPrepare()
 {
