@@ -362,47 +362,72 @@ bool isFileExists_ifstream(string& name) {
 
 //Check Tag_ClasssIcon == DataSet.mclassd ClassIcon
 
-void MILTest::isTagSameClass(MIL_UNIQUE_CLASS_ID& PreparedDataset,
-	const vector<MIL_STRING>& TagClassIcons,
-	map<MIL_STRING,int>& TagClassIconsIndex,
-	bool& isTagSameClass) {
-	isTagSameClass = TRUE;
-	MIL_INT nClassesNum;
-	MIL_STRING BaseClassIcon;
-	vector<MIL_STRING>BaseClassIcons;
-	MclassInquire(PreparedDataset, M_CONTEXT, M_NUMBER_OF_CLASSES + M_TYPE_MIL_INT, &nClassesNum);
-	for (int i = 0; i < nClassesNum; i++)
-	{	
-		MclassInquire(PreparedDataset, M_CLASS_INDEX(i), M_CLASS_NAME, BaseClassIcon);
-		BaseClassIcons.emplace_back(BaseClassIcon);
-	}
-	int Cont = 0;
-	for (int i = 0; i < TagClassIcons.size(); i++) {
-		if (std::find(BaseClassIcons.begin(), BaseClassIcons.end(), TagClassIcons[i]) == BaseClassIcons.end())
-		{
-			TagClassIconsIndex.insert(pair<MIL_STRING, int>(TagClassIcons[i], nClassesNum+ Cont));
-			isTagSameClass = FALSE;
-			Cont++;
-		}
-		else {
-			int index = distance(BaseClassIcons.begin(), find(BaseClassIcons.begin(), BaseClassIcons.end(), TagClassIcons[i]));
-			TagClassIconsIndex.insert(pair<MIL_STRING, int>(TagClassIcons[i],index));
-		}
-	}
+//void MILTest::isTagSameClass(MIL_UNIQUE_CLASS_ID& PreparedDataset,
+//	const vector<MIL_STRING>& TagClassIcons,
+//	map<MIL_STRING,int>& TagClassIconsIndex,
+//	bool& isTagSameClass) {
+//	isTagSameClass = TRUE;
+//	MIL_INT nClassesNum;
+//	MIL_STRING BaseClassIcon;
+//	vector<MIL_STRING>BaseClassIcons;
+//	MclassInquire(PreparedDataset, M_CONTEXT, M_NUMBER_OF_CLASSES + M_TYPE_MIL_INT, &nClassesNum);
+//	for (int i = 0; i < nClassesNum; i++)
+//	{	
+//		MclassInquire(PreparedDataset, M_CLASS_INDEX(i), M_CLASS_NAME, BaseClassIcon);
+//		BaseClassIcons.emplace_back(BaseClassIcon);
+//	}
+//	int Cont = 0;
+//	for (int i = 0; i < TagClassIcons.size(); i++) {
+//		if (std::find(BaseClassIcons.begin(), BaseClassIcons.end(), TagClassIcons[i]) == BaseClassIcons.end())
+//		{
+//			TagClassIconsIndex.insert(pair<MIL_STRING, int>(TagClassIcons[i], nClassesNum+ Cont));
+//			isTagSameClass = FALSE;
+//			Cont++;
+//		}
+//		else {
+//			int index = distance(BaseClassIcons.begin(), find(BaseClassIcons.begin(), BaseClassIcons.end(), TagClassIcons[i]));
+//			TagClassIconsIndex.insert(pair<MIL_STRING, int>(TagClassIcons[i],index));
+//		}
+//	}
+//
+//}
 
-}
+
+//void MILTest::isTagSameClass(
+//	vector<MIL_STRING>BaseClassIcons,
+//	const vector<MIL_STRING>& TagClassIcons,
+//	map<MIL_STRING, int>& TagClassIconsIndex) {
+//
+//	MIL_INT nClassesNum;
+//	MIL_STRING BaseClassIcon;
+//	vector<MIL_STRING>BaseClassIcons;
+//	
+//	int Cont = 0;
+//	for (int i = 0; i < TagClassIcons.size(); i++) {
+//		if (std::find(BaseClassIcons.begin(), BaseClassIcons.end(), TagClassIcons[i]) == BaseClassIcons.end())
+//		{
+//			TagClassIconsIndex.insert(pair<MIL_STRING, int>(TagClassIcons[i], nClassesNum + Cont));
+//			Cont++;
+//		}
+//		else {
+//			int index = distance(BaseClassIcons.begin(), find(BaseClassIcons.begin(), BaseClassIcons.end(), TagClassIcons[i]));
+//			TagClassIconsIndex.insert(pair<MIL_STRING, int>(TagClassIcons[i], index));
+//		}
+//	}
+//
+//}
 
 
 void MILTest::MILTestWKSPDataset(MIL_STRING TagFolder)
 {
 	MIL_DOUBLE ValRatio = 0.1;
+
 	MIL_STRING AuthorName = MIL_TEXT("AA");
 	MIL_STRING BaseDataDir = m_ClassifierWorkSpace + m_strProject + L"/DataSet/" + L"/";
 	MIL_STRING BaseDataPath = m_ClassifierWorkSpace + m_strProject + L"/DataSet/" + L"/BaseDataSet.mclassd";
 
 	m_MLClassCNN->CreateFolder(m_ClassifierWorkSpace + m_strProject + L"/DataSet/");
 
-	/*MIL_STRING TagFolder = L"3/";*/
 	MIL_STRING TagDataDir = m_TagDataDir + TagFolder;
 	string strBaseDataPath;
 	m_MLClassCNN->m_AIParse->MIL_STRING2string(BaseDataPath,strBaseDataPath);
@@ -434,50 +459,11 @@ void MILTest::MILTestWKSPDataset(MIL_STRING TagFolder)
 	DataCtxParas.AugParas.GaussNoiseDelta = 25; //25
 	DataCtxParas.PreparedDataFolder = m_ClassifierWorkSpace  + m_strProject + L"/DataSet/";
 	m_MLClassCNN->ConstructDataContext(DataCtxParas, DataContext);
+	MIL_DOUBLE dSampleRatio;
 
-
-	if (DataSetExist) {
-	
-		vector<MIL_STRING> DataSetClassName;
-		vector<MIL_STRING > TagClassIcons;
-		for (int i = 0; i < TagClassNames.size(); i++) {
-			TagClassIcons.emplace_back(TagDataDir + TagClassNames[i] + L".mim");
-		}
-		MIL_UNIQUE_CLASS_ID UpdateDataSet = MclassAlloc(m_MilSystem, M_DATASET_IMAGES, M_DEFAULT, M_UNIQUE_ID);
-		m_MLClassCNN->ConstructDataset(TagClassNames, TagClassIcons, AuthorName, TagDataDir, BaseDataDir, UpdateDataSet);
-		MclassControl(UpdateDataSet, M_CONTEXT, M_CONSOLIDATE_ENTRIES_INTO_FOLDER, BaseDataDir);
-		MIL_STRING UpdateDatasetPath = BaseDataDir + MIL_TEXT("UpdateDataSet.mclassd");
-		MclassSave(UpdateDatasetPath, UpdateDataSet, M_DEFAULT);
-
-
-		//汇总数据生成BaseDataSet
-		//汇总数据，然后再保存
-		MIL_STRING ImageDir = BaseDataDir + MIL_TEXT("Images\\");
-		MIL_STRING IconsDir = BaseDataDir + MIL_TEXT("Icons\\");
-		std::vector<MIL_STRING>ClassName_A;
-		std::vector<MIL_STRING>ClassIcon_A;
-		MIL_UNIQUE_CLASS_ID  BaseDataSet = MclassAlloc(m_MilSystem, M_DATASET_IMAGES, M_DEFAULT, M_UNIQUE_ID);
-
-		string strIconsDir;
-		m_MLClassCNN->m_AIParse->MIL_STRING2string(IconsDir,strIconsDir);
-		m_MLClassCNN->m_AIParse->getFilesInFolder(strIconsDir,"mim", ClassIcon_A);
-	
-		for (int i = 0; i < ClassIcon_A.size(); i++) {
-			MIL_STRING ClassIconPath = ClassIcon_A[i];
-			MIL_STRING::size_type iPos = ClassIconPath.find_last_of('\\') + 1;
-			MIL_STRING filename = ClassIconPath.substr(iPos, ClassIconPath.length() - iPos);
-			MIL_STRING::size_type iPosP = filename.find_last_of('.') + 1;
-			MIL_STRING ClassName = filename.substr(0, iPosP - 1);
-			ClassName_A.emplace_back(ClassName);
-		}
-		m_MLClassCNN->ConstructDataset(ClassName_A, ClassIcon_A, AuthorName, ImageDir, BaseDataDir, BaseDataSet);
-		MIL_STRING BaseDatasetPath = BaseDataDir + MIL_TEXT("BaseDataSet.mclassd");
-		MclassSave(BaseDatasetPath, BaseDataSet, M_DEFAULT);
-		//生成PreParedUpdateDataSet、PreParedUpdateDataSet
-		MIL_UNIQUE_CLASS_ID PreParedUpdateDataSet = MclassAlloc(m_MilSystem, M_DATASET_IMAGES, M_DEFAULT, M_UNIQUE_ID);
-		m_MLClassCNN->PrepareDataset(DataContext, UpdateDataSet, PreParedUpdateDataSet, BaseDataDir, L"PreParedUpdateDataSet");
-		MIL_UNIQUE_CLASS_ID PreParedBaseDataSet = MclassAlloc(m_MilSystem, M_DATASET_IMAGES, M_DEFAULT, M_UNIQUE_ID);
-		m_MLClassCNN->PrepareDataset(DataContext, BaseDataSet, PreParedBaseDataSet, BaseDataDir, L"PreParedBaseDataSet");
+	if (DataSetExist) {	
+		vector<MIL_DOUBLE>vecSampleRatio = {0.5,0.5};
+		m_MLClassCNN->ConstructMergeDataset(AuthorName,BaseDataDir,TagDataDir,vecSampleRatio);
 	}
 
 	else {

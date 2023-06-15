@@ -38,9 +38,10 @@ public:
 	
 	void FillImgs();
 
-	void isTagSameClass(MIL_UNIQUE_CLASS_ID& PreparedDataset, 
-		const vector<MIL_STRING>& TagClassIcons,
-		map<MIL_STRING, int>& TagClassIconsIndex, bool& isTagSameClass);
+	//void isTagSameClass(
+	//	vector<MIL_STRING>BaseClassIcons,
+	//	const vector<MIL_STRING>& TagClassIcons,
+	//	map<MIL_STRING, int>& TagClassIconsIndex);
 
 	void MILTestWKSPDataset(MIL_STRING TagFolder);
 

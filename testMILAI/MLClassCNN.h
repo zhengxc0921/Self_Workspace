@@ -24,7 +24,13 @@ public:
     CMLClassCNN(MIL_ID MilSystem, MIL_ID MilDisplay);
     ~CMLClassCNN() {};
 
+
+
     virtual MIL_INT CnnTrainEngineDLLInstalled(MIL_ID MilSystem);
+
+    bool isTagSameClass(
+        vector<MIL_STRING>BaseClsNames,
+        vector<MIL_STRING> TagClsNames);
 
     void InitClassWeights();
     //单个文件-->Dataset
@@ -36,13 +42,24 @@ public:
         const MIL_STRING& WorkingDataPath,
         MIL_UNIQUE_CLASS_ID& Dataset);
 
-    void ExpanDataset(
-        map<MIL_STRING, int>  ClassName,
+    void ConstructMergeDataset(
+        MIL_STRING AuthorName,
+        MIL_STRING BaseDataDir,
+        MIL_STRING TagDataDir,
+        vector<MIL_DOUBLE> vecSampleRatio
+ );
+
+    void ConstructPartialDataset(
+        vector<MIL_STRING> ClassName,
         vector<MIL_STRING> ClassIcon,
         MIL_STRING AuthorName,
         MIL_STRING OriginalDataPath,
         const MIL_STRING& WorkingDataPath,
-        MIL_UNIQUE_CLASS_ID& Dataset);
+        MIL_UNIQUE_CLASS_ID& Dataset,
+        vector<MIL_DOUBLE> vecDSampleRatio);
+
+
+
 
     //多个文件Dataset 汇总
     void GeneralDataset(
@@ -113,6 +130,16 @@ public:
         const MIL_STRING& ClassName,
         const MIL_STRING& AuthorName,
         MIL_ID            Dataset);
+
+    void AddClassToDataset(
+        MIL_INT           ClassIndex,
+        const MIL_STRING& DataPath,
+        const MIL_STRING& ClassName,
+        const MIL_STRING& AuthorName,
+        MIL_UNIQUE_CLASS_ID& PartialDataset,
+        MIL_UNIQUE_CLASS_ID& Dataset,
+        MIL_DOUBLE dSampleRatio);
+
 
 
 public:
