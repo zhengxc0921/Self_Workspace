@@ -19,13 +19,12 @@ int main(int argc, char* argv[]) {
 	
 
 	//将数据集和
-	MIL_STRING TagFolder = L"6/";
-	m_MILTestPtr->MILTestWKSPDataset(TagFolder);
-	m_MILTestPtr->MILTestWKSPTrain();
+	MIL_STRING TagFolder = L"5/";
+	//m_MILTestPtr->MILTestWKSPDataset(TagFolder);
+	//m_MILTestPtr->MILTestWKSPTrain();
 	//m_MILTestPtr->MILTestPredict(TagFolder);
-
 	//m_MILTestPtr->MILTestWKSPUpdate();
-	//m_MILTestPtr->MILTestPredict(TagFolder);
+	m_MILTestPtr->MILTestPredict(TagFolder);
 
 	//m_MILTestPtr->MILTestGenDataset();
 	//m_MILTestPtr->MILTestTrain(); 

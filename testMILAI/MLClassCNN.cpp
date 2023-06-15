@@ -232,7 +232,9 @@ void CMLClassCNN::ConstructMergeDataset(
     MIL_STRING AuthorName,
     MIL_STRING BaseDataDir, 
     MIL_STRING TagDataDir,
-    vector<MIL_DOUBLE> vecSampleRatio)
+    vector<MIL_DOUBLE> vecSampleRatio,
+    MIL_UNIQUE_CLASS_ID& BaseDataSet,
+    MIL_UNIQUE_CLASS_ID& TagDataSet)
 {
 
     //提取BaseData 中的类型和图片：1、部分提取；2、所有提取
@@ -276,7 +278,7 @@ void CMLClassCNN::ConstructMergeDataset(
         TagData.insert(pair<MIL_STRING, vector<MIL_STRING>>(BaseClsNames[i], TagClsImg));
     }
     //生成TagDataSet
-    MIL_UNIQUE_CLASS_ID TagDataSet = MclassAlloc(m_MilSystem, M_DATASET_IMAGES, M_DEFAULT, M_UNIQUE_ID);
+    //MIL_UNIQUE_CLASS_ID TagDataSet = MclassAlloc(m_MilSystem, M_DATASET_IMAGES, M_DEFAULT, M_UNIQUE_ID);
     MclassControl(TagDataSet, M_DEFAULT, M_AUTHOR_ADD, AuthorName);
     for (MIL_INT i = 0; i < TagClsNames.size(); i++)
     {
@@ -301,7 +303,7 @@ void CMLClassCNN::ConstructMergeDataset(
     //MIL_STRING TagDataSetPath = BaseDataDir + MIL_TEXT("TagDataSet.mclassd");
     //MclassSave(TagDataSetPath, TagDataSet, M_DEFAULT);
 
-    if (!bTagSameClass)
+    if (bTagSameClass)
     {
         //生成UpdateDataSet = PartBaseDataset+TagDataset
         for (MIL_INT i = 0; i < BaseClsNames.size(); i++)
@@ -324,7 +326,7 @@ void CMLClassCNN::ConstructMergeDataset(
        //生成BaseDataSet = AllData
         vector<MIL_STRING>NBaseClsNames;
         m_AIParse->getFoldersInFolder(strBaseImgDir, NBaseClsNames);
-        MIL_UNIQUE_CLASS_ID BaseDataSet = MclassAlloc(m_MilSystem, M_DATASET_IMAGES, M_DEFAULT, M_UNIQUE_ID);
+        //MIL_UNIQUE_CLASS_ID BaseDataSet = MclassAlloc(m_MilSystem, M_DATASET_IMAGES, M_DEFAULT, M_UNIQUE_ID);
         for (MIL_INT i = 0; i < NBaseClsNames.size(); i++)
         {
             //加入Icon
@@ -354,10 +356,10 @@ void CMLClassCNN::ConstructMergeDataset(
         MclassSave(BaseDataSetPath, BaseDataSet, M_DEFAULT);
     }
     else {
-        //生成UpdateDataSet = BaseDataSet = AllData
+        //生成 BaseDataSet = AllData
         vector<MIL_STRING>NBaseClsNames;
         m_AIParse->getFoldersInFolder(strBaseImgDir, NBaseClsNames);
-        MIL_UNIQUE_CLASS_ID BaseDataSet = MclassAlloc(m_MilSystem, M_DATASET_IMAGES, M_DEFAULT, M_UNIQUE_ID);
+        //MIL_UNIQUE_CLASS_ID BaseDataSet = MclassAlloc(m_MilSystem, M_DATASET_IMAGES, M_DEFAULT, M_UNIQUE_ID);
         for (MIL_INT i = 0; i < NBaseClsNames.size(); i++)
         {
             //加入Icon
@@ -386,7 +388,7 @@ void CMLClassCNN::ConstructMergeDataset(
         MIL_STRING BaseDataSetPath = BaseDataDir + MIL_TEXT("BaseDataSet.mclassd");
         MclassSave(BaseDataSetPath, BaseDataSet, M_DEFAULT);
         MIL_STRING UpdateDataSetPath = BaseDataDir + MIL_TEXT("UpdateDataSet.mclassd");
-        MclassSave(UpdateDataSetPath, BaseDataSet, M_DEFAULT);
+        MclassSave(UpdateDataSetPath, TagDataSet, M_DEFAULT);
 
     }
 
@@ -545,10 +547,11 @@ void CMLClassCNN::ConstructDataContext(DataContextParasStruct DataCtxParas, MIL_
 }
 
 void CMLClassCNN::PrepareDataset(MIL_UNIQUE_CLASS_ID& DatasetContext, 
-    MIL_UNIQUE_CLASS_ID& PrepareDataset, MIL_UNIQUE_CLASS_ID& PreparedDataset,
+    MIL_UNIQUE_CLASS_ID& PrepareDataset, 
     MIL_STRING WorkingDataDir,
     MIL_STRING DatasetName)
 {
+    MIL_UNIQUE_CLASS_ID PreparedDataset = MclassAlloc(m_MilSystem, M_DATASET_IMAGES, M_DEFAULT, M_UNIQUE_ID);
     MclassPreprocess(DatasetContext, M_DEFAULT);
     MclassPrepareData(DatasetContext, PrepareDataset, PreparedDataset, M_NULL, M_DEFAULT);
     MclassSave(WorkingDataDir + DatasetName+ MIL_TEXT(".mclassd"), PreparedDataset, M_DEFAULT);

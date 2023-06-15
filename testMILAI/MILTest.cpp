@@ -349,8 +349,8 @@ void MILTest::MILTestGenDataset()
 	
 	MIL_STRING DatasetName = L"/BaseDataSet.mclassd";
 	m_MLClassCNN->ConstructDataContext(DataCtxParas, DataContext);
-	MIL_UNIQUE_CLASS_ID PreparedDataset = MclassAlloc(m_MilSystem, M_DATASET_IMAGES, M_DEFAULT, M_UNIQUE_ID);
-	m_MLClassCNN->PrepareDataset(DataContext, Dataset, PreparedDataset, WorkingDataPath, DatasetName);
+	//MIL_UNIQUE_CLASS_ID PreparedDataset = MclassAlloc(m_MilSystem, M_DATASET_IMAGES, M_DEFAULT, M_UNIQUE_ID);
+	m_MLClassCNN->PrepareDataset(DataContext, Dataset, WorkingDataPath, DatasetName);
 
 }
 
@@ -459,13 +459,25 @@ void MILTest::MILTestWKSPDataset(MIL_STRING TagFolder)
 	DataCtxParas.AugParas.GaussNoiseDelta = 25; //25
 	DataCtxParas.PreparedDataFolder = m_ClassifierWorkSpace  + m_strProject + L"/DataSet/";
 	m_MLClassCNN->ConstructDataContext(DataCtxParas, DataContext);
-	MIL_DOUBLE dSampleRatio;
-
+	//MIL_DOUBLE dSampleRatio;
+	MIL_UNIQUE_CLASS_ID BaseDataSet = MclassAlloc(m_MilSystem, M_DATASET_IMAGES, M_DEFAULT, M_UNIQUE_ID);
+	MIL_UNIQUE_CLASS_ID UpdateDataSet = MclassAlloc(m_MilSystem, M_DATASET_IMAGES, M_DEFAULT, M_UNIQUE_ID);
 	if (DataSetExist) {	
 		vector<MIL_DOUBLE>vecSampleRatio = {0.5,0.5};
-		m_MLClassCNN->ConstructMergeDataset(AuthorName,BaseDataDir,TagDataDir,vecSampleRatio);
-	}
+		m_MLClassCNN->ConstructMergeDataset(AuthorName,BaseDataDir,TagDataDir,vecSampleRatio, BaseDataSet, UpdateDataSet);
+	
+		//生成PreParedUpdateDataSet、PreParedUpdateDataSet
+		
+		m_MLClassCNN->PrepareDataset(DataContext, BaseDataSet , BaseDataDir, L"PreParedBaseDataSet");
+		m_MLClassCNN->PrepareDataset(DataContext, UpdateDataSet, BaseDataDir, L"PreParedUpdateDataSet");
+	
+		/*MclassSave(BaseDataDir + MIL_TEXT("PreParedBaseDataSet.mclassd"), PreParedBaseDataSet, M_DEFAULT);
+		MclassExport(BaseDataDir + MIL_TEXT("PreParedBaseDataSet_entries.csv"), M_FORMAT_CSV, PreParedBaseDataSet, M_DEFAULT, M_ENTRIES, M_DEFAULT);
+		MclassSave(BaseDataDir + MIL_TEXT("PreParedUpdateDataSet.mclassd"), PreParedUpdateDataSet, M_DEFAULT);
+		MclassExport(BaseDataDir + MIL_TEXT("PreParedUpdateDataSet_entries.csv"), M_FORMAT_CSV, PreParedUpdateDataSet, M_DEFAULT, M_ENTRIES, M_DEFAULT);*/
 
+
+	}
 	else {
 
 		///以下内容生成BaseDataSet 、UpdateDataSet；UpdateDataSet==BaseDataSet
@@ -473,7 +485,7 @@ void MILTest::MILTestWKSPDataset(MIL_STRING TagFolder)
 		for (int i = 0; i < TagClassNames.size(); i++) {
 			TagClassIcons.emplace_back(TagDataDir + TagClassNames[i] + L".mim");
 		}
-		MIL_UNIQUE_CLASS_ID BaseDataSet = MclassAlloc(m_MilSystem, M_DATASET_IMAGES, M_DEFAULT, M_UNIQUE_ID);
+		//MIL_UNIQUE_CLASS_ID BaseDataSet = MclassAlloc(m_MilSystem, M_DATASET_IMAGES, M_DEFAULT, M_UNIQUE_ID);
 		m_MLClassCNN->ConstructDataset(TagClassNames, TagClassIcons, AuthorName, TagDataDir, BaseDataDir, BaseDataSet);
 		MclassControl(BaseDataSet, M_CONTEXT, M_CONSOLIDATE_ENTRIES_INTO_FOLDER, BaseDataDir);
 		MIL_STRING BaseDatasetPath = BaseDataDir + MIL_TEXT("BaseDataSet.mclassd");
@@ -481,12 +493,15 @@ void MILTest::MILTestWKSPDataset(MIL_STRING TagFolder)
 		MclassSave(BaseDatasetPath, BaseDataSet, M_DEFAULT);
 		MclassSave(UpdateDatasetPath, BaseDataSet, M_DEFAULT);
 		//生成PreParedUpdateDataSet、PreParedUpdateDataSet
-		MIL_UNIQUE_CLASS_ID PreParedBaseDataSet = MclassAlloc(m_MilSystem, M_DATASET_IMAGES, M_DEFAULT, M_UNIQUE_ID);
-		m_MLClassCNN->PrepareDataset(DataContext, BaseDataSet, PreParedBaseDataSet, BaseDataDir, L"PreParedBaseDataSet");
-		MclassSave(BaseDataDir + MIL_TEXT("PreParedUpdateDataSet.mclassd"), PreParedBaseDataSet, M_DEFAULT);
-		MclassExport(BaseDataDir + MIL_TEXT("PreParedUpdateDataSet_entries.csv"), M_FORMAT_CSV, PreParedBaseDataSet, M_DEFAULT, M_ENTRIES, M_DEFAULT);
+		//MIL_UNIQUE_CLASS_ID PreParedBaseDataSet = MclassAlloc(m_MilSystem, M_DATASET_IMAGES, M_DEFAULT, M_UNIQUE_ID);
+		m_MLClassCNN->PrepareDataset(DataContext, BaseDataSet, BaseDataDir, L"PreParedBaseDataSet");
+		//MclassSave(BaseDataDir + MIL_TEXT("PreParedUpdateDataSet.mclassd"), PreParedBaseDataSet, M_DEFAULT);
+		//MclassExport(BaseDataDir + MIL_TEXT("PreParedUpdateDataSet_entries.csv"), M_FORMAT_CSV, PreParedBaseDataSet, M_DEFAULT, M_ENTRIES, M_DEFAULT);
+
+		
 	}
 
+	
 }
 
 void MILTest::MILTestWKSPTrain()

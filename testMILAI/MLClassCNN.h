@@ -46,7 +46,9 @@ public:
         MIL_STRING AuthorName,
         MIL_STRING BaseDataDir,
         MIL_STRING TagDataDir,
-        vector<MIL_DOUBLE> vecSampleRatio
+        vector<MIL_DOUBLE> vecSampleRatio,
+        MIL_UNIQUE_CLASS_ID& BaseDataSet,
+        MIL_UNIQUE_CLASS_ID& TagDataSet
  );
 
     void ConstructPartialDataset(
@@ -77,7 +79,6 @@ public:
     void PrepareDataset(
         MIL_UNIQUE_CLASS_ID& DatasetContext,
         MIL_UNIQUE_CLASS_ID& PrepareDataset,
-        MIL_UNIQUE_CLASS_ID& PreparedDataset,
         MIL_STRING WorkingDataDir,
         MIL_STRING DatasetName);
 
