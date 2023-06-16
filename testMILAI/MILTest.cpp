@@ -440,7 +440,8 @@ void MILTest::MILTestWKSPDataset(MIL_STRING TagFolder)
 
 	//PrePared DataContext
 		////*******************************必须参数*******************************//
-	MIL_UNIQUE_CLASS_ID DataContext = MclassAlloc(m_MilSystem, M_PREPARE_IMAGES_CNN, M_DEFAULT, M_UNIQUE_ID);
+	MIL_UNIQUE_CLASS_ID BaseDataContext = MclassAlloc(m_MilSystem, M_PREPARE_IMAGES_CNN, M_DEFAULT, M_UNIQUE_ID);
+	MIL_UNIQUE_CLASS_ID UpdateDataContext = MclassAlloc(m_MilSystem, M_PREPARE_IMAGES_CNN, M_DEFAULT, M_UNIQUE_ID);
 	DataContextParasStruct DataCtxParas;
 	DataCtxParas.ImageSizeX = 128;
 	DataCtxParas.ImageSizeY = 128;
@@ -457,48 +458,35 @@ void MILTest::MILTestWKSPDataset(MIL_STRING TagFolder)
 	DataCtxParas.AugParas.SmoothnessMin = 0.5; //0.5 {0<x<100}
 	DataCtxParas.AugParas.GaussNoiseStdev = 25; //25
 	DataCtxParas.AugParas.GaussNoiseDelta = 25; //25
-	DataCtxParas.PreparedDataFolder = m_ClassifierWorkSpace  + m_strProject + L"/DataSet/";
-	m_MLClassCNN->ConstructDataContext(DataCtxParas, DataContext);
+	DataCtxParas.PreparedDataFolder = m_ClassifierWorkSpace  + m_strProject + L"/DataSet/preparedBaseData/";
+	m_MLClassCNN->ConstructDataContext(DataCtxParas, BaseDataContext);
+
+	DataCtxParas.PreparedDataFolder = m_ClassifierWorkSpace + m_strProject + L"/DataSet/preparedUpdateData/";
+	m_MLClassCNN->ConstructDataContext(DataCtxParas, UpdateDataContext);
 	//MIL_DOUBLE dSampleRatio;
 	MIL_UNIQUE_CLASS_ID BaseDataSet = MclassAlloc(m_MilSystem, M_DATASET_IMAGES, M_DEFAULT, M_UNIQUE_ID);
 	MIL_UNIQUE_CLASS_ID UpdateDataSet = MclassAlloc(m_MilSystem, M_DATASET_IMAGES, M_DEFAULT, M_UNIQUE_ID);
 	if (DataSetExist) {	
-		vector<MIL_DOUBLE>vecSampleRatio = {0.5,0.5};
+		vector<MIL_DOUBLE>vecSampleRatio = {0.25,0.25};
 		m_MLClassCNN->ConstructMergeDataset(AuthorName,BaseDataDir,TagDataDir,vecSampleRatio, BaseDataSet, UpdateDataSet);
-	
 		//生成PreParedUpdateDataSet、PreParedUpdateDataSet
-		
-		m_MLClassCNN->PrepareDataset(DataContext, BaseDataSet , BaseDataDir, L"PreParedBaseDataSet");
-		m_MLClassCNN->PrepareDataset(DataContext, UpdateDataSet, BaseDataDir, L"PreParedUpdateDataSet");
-	
-		/*MclassSave(BaseDataDir + MIL_TEXT("PreParedBaseDataSet.mclassd"), PreParedBaseDataSet, M_DEFAULT);
-		MclassExport(BaseDataDir + MIL_TEXT("PreParedBaseDataSet_entries.csv"), M_FORMAT_CSV, PreParedBaseDataSet, M_DEFAULT, M_ENTRIES, M_DEFAULT);
-		MclassSave(BaseDataDir + MIL_TEXT("PreParedUpdateDataSet.mclassd"), PreParedUpdateDataSet, M_DEFAULT);
-		MclassExport(BaseDataDir + MIL_TEXT("PreParedUpdateDataSet_entries.csv"), M_FORMAT_CSV, PreParedUpdateDataSet, M_DEFAULT, M_ENTRIES, M_DEFAULT);*/
-
-
+		m_MLClassCNN->PrepareDataset(BaseDataContext, BaseDataSet , BaseDataDir, L"PreParedBaseDataSet");
+		m_MLClassCNN->PrepareDataset(UpdateDataContext, UpdateDataSet, BaseDataDir, L"PreParedUpdateDataSet");
 	}
 	else {
 
-		///以下内容生成BaseDataSet 、UpdateDataSet；UpdateDataSet==BaseDataSet
+		//以下内容生成BaseDataSet 、UpdateDataSet；UpdateDataSet==BaseDataSet
 		vector<MIL_STRING > TagClassIcons;
 		for (int i = 0; i < TagClassNames.size(); i++) {
 			TagClassIcons.emplace_back(TagDataDir + TagClassNames[i] + L".mim");
 		}
-		//MIL_UNIQUE_CLASS_ID BaseDataSet = MclassAlloc(m_MilSystem, M_DATASET_IMAGES, M_DEFAULT, M_UNIQUE_ID);
 		m_MLClassCNN->ConstructDataset(TagClassNames, TagClassIcons, AuthorName, TagDataDir, BaseDataDir, BaseDataSet);
 		MclassControl(BaseDataSet, M_CONTEXT, M_CONSOLIDATE_ENTRIES_INTO_FOLDER, BaseDataDir);
 		MIL_STRING BaseDatasetPath = BaseDataDir + MIL_TEXT("BaseDataSet.mclassd");
 		MIL_STRING UpdateDatasetPath = BaseDataDir + MIL_TEXT("UpdateDataSet.mclassd");
 		MclassSave(BaseDatasetPath, BaseDataSet, M_DEFAULT);
 		MclassSave(UpdateDatasetPath, BaseDataSet, M_DEFAULT);
-		//生成PreParedUpdateDataSet、PreParedUpdateDataSet
-		//MIL_UNIQUE_CLASS_ID PreParedBaseDataSet = MclassAlloc(m_MilSystem, M_DATASET_IMAGES, M_DEFAULT, M_UNIQUE_ID);
-		m_MLClassCNN->PrepareDataset(DataContext, BaseDataSet, BaseDataDir, L"PreParedBaseDataSet");
-		//MclassSave(BaseDataDir + MIL_TEXT("PreParedUpdateDataSet.mclassd"), PreParedBaseDataSet, M_DEFAULT);
-		//MclassExport(BaseDataDir + MIL_TEXT("PreParedUpdateDataSet_entries.csv"), M_FORMAT_CSV, PreParedBaseDataSet, M_DEFAULT, M_ENTRIES, M_DEFAULT);
-
-		
+		m_MLClassCNN->PrepareDataset(BaseDataContext, BaseDataSet, BaseDataDir, L"PreParedBaseDataSet");
 	}
 
 	

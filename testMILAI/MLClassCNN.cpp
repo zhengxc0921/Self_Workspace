@@ -302,7 +302,6 @@ void CMLClassCNN::ConstructMergeDataset(
     MclassControl(TagDataSet, M_CONTEXT, M_CONSOLIDATE_ENTRIES_INTO_FOLDER, BaseDataDir);
     //MIL_STRING TagDataSetPath = BaseDataDir + MIL_TEXT("TagDataSet.mclassd");
     //MclassSave(TagDataSetPath, TagDataSet, M_DEFAULT);
-
     if (bTagSameClass)
     {
         //生成UpdateDataSet = PartBaseDataset+TagDataset
@@ -322,7 +321,6 @@ void CMLClassCNN::ConstructMergeDataset(
     }
         MIL_STRING UpdateDataSetPath = BaseDataDir + MIL_TEXT("UpdateDataSet.mclassd");
         MclassSave(UpdateDataSetPath, TagDataSet, M_DEFAULT);
- 
        //生成BaseDataSet = AllData
         vector<MIL_STRING>NBaseClsNames;
         m_AIParse->getFoldersInFolder(strBaseImgDir, NBaseClsNames);
@@ -340,7 +338,6 @@ void CMLClassCNN::ConstructMergeDataset(
             m_AIParse->MIL_STRING2string(BaseFolderDir, strFolderDir);
             vector<MIL_STRING>BaseClsImg;
             m_AIParse->getFilesInFolder(strFolderDir, "bmp", BaseClsImg);
-
             MIL_INT ClassIndex = i;
             MIL_INT NbEntries;
             MclassInquire(BaseDataSet, M_DEFAULT, M_NUMBER_OF_ENTRIES + M_TYPE_MIL_INT, &NbEntries);
@@ -373,7 +370,6 @@ void CMLClassCNN::ConstructMergeDataset(
             m_AIParse->MIL_STRING2string(BaseFolderDir, strFolderDir);
             vector<MIL_STRING>BaseClsImg;
             m_AIParse->getFilesInFolder(strFolderDir, "bmp", BaseClsImg);
-
             MIL_INT ClassIndex = i;
             MIL_INT NbEntries;
             MclassInquire(BaseDataSet, M_DEFAULT, M_NUMBER_OF_ENTRIES + M_TYPE_MIL_INT, &NbEntries);
@@ -389,9 +385,7 @@ void CMLClassCNN::ConstructMergeDataset(
         MclassSave(BaseDataSetPath, BaseDataSet, M_DEFAULT);
         MIL_STRING UpdateDataSetPath = BaseDataDir + MIL_TEXT("UpdateDataSet.mclassd");
         MclassSave(UpdateDataSetPath, TagDataSet, M_DEFAULT);
-
     }
-
 }
 
 
