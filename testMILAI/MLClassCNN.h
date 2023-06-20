@@ -44,12 +44,40 @@ public:
 
     void ConstructMergeDataset(
         MIL_STRING AuthorName,
+        
         MIL_STRING BaseDataDir,
         MIL_STRING TagDataDir,
         vector<MIL_DOUBLE> vecSampleRatio,
         MIL_UNIQUE_CLASS_ID& BaseDataSet,
         MIL_UNIQUE_CLASS_ID& TagDataSet
  );
+
+    void MergeTagData2BaseSet(MIL_STRING BaseDataDir,
+        MIL_STRING BaseSetName,
+        vector<MIL_STRING> BaseClsNames,
+        MIL_STRING TagDataDir,
+        vector<MIL_DOUBLE>vecSampleRatio,
+        MIL_UNIQUE_CLASS_ID& MergeSet,
+        MIL_UNIQUE_CLASS_ID& BaseSet);
+
+    void ConstructMergeRCDataset(
+        MIL_STRING AuthorName,
+        MIL_STRING strProject,
+        MIL_STRING BaseDataDir,
+        MIL_STRING TagDataDir,
+        vector<MIL_DOUBLE> vecSampleRatio,
+        MIL_UNIQUE_CLASS_ID& BaseDataSet,
+        MIL_UNIQUE_CLASS_ID& TagDataSet
+    );
+
+    void InitializeMergeRCDataset(
+        MIL_STRING AuthorName,
+        MIL_STRING BaseDataDir,
+        MIL_STRING TagDataDir,
+        vector<MIL_STRING>TagClassNames,
+        MIL_UNIQUE_CLASS_ID& BaseDataSet,
+        MIL_UNIQUE_CLASS_ID& TagDataSet
+    );
 
     void ConstructPartialDataset(
         vector<MIL_STRING> ClassName,

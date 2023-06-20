@@ -45,6 +45,8 @@ public:
 
 	void MILTestWKSPDataset(MIL_STRING TagFolder);
 
+	void MILTestWKSPRCDataset(MIL_STRING TagFolder);
+
 	void MILTestWKSPTrain();
 
 	void MILTestWKSPUpdate();

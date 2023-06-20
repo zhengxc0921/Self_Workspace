@@ -418,6 +418,100 @@ bool isFileExists_ifstream(string& name) {
 //}
 
 
+void MILTest::MILTestWKSPRCDataset(MIL_STRING TagFolder)
+{
+	MIL_DOUBLE ValRatio = 0.1;
+
+	MIL_STRING AuthorName = MIL_TEXT("AA");
+	MIL_STRING BaseDataDir = m_ClassifierWorkSpace + m_strProject + L"/DataSet/" + L"/";
+	m_MLClassCNN->CreateFolder(m_ClassifierWorkSpace + m_strProject + L"/DataSet/");
+	MIL_STRING TagDataDir = m_TagDataDir + TagFolder;
+	MIL_STRING BaseData_RPath = m_ClassifierWorkSpace + m_strProject + L"/DataSet/" + L"/BaseSet_R.mclassd";
+	string strBaseData_RPath;
+	m_MLClassCNN->m_AIParse->MIL_STRING2string(BaseData_RPath, strBaseData_RPath);
+	MIL_STRING BaseData_CPath = m_ClassifierWorkSpace + m_strProject + L"/DataSet/" + L"/BaseSet_C.mclassd";
+	string strBaseData_CPath;
+	m_MLClassCNN->m_AIParse->MIL_STRING2string(BaseData_CPath, strBaseData_CPath);
+	bool DataSetExist = isFileExists_ifstream(strBaseData_RPath)|| isFileExists_ifstream(strBaseData_CPath);
+
+	//获取BaseClsNames
+	vector<MIL_STRING> BaseClsNames;
+	string strBaseImgDir;
+	m_MLClassCNN->m_AIParse->MIL_STRING2string(BaseDataDir+L"Images", strBaseImgDir);
+	m_MLClassCNN->m_AIParse->getFoldersInFolder(strBaseImgDir, BaseClsNames);
+
+	//获取TagClassNames
+	vector<MIL_STRING> TagClassNames;
+	string  strTagImgDir;
+	m_MLClassCNN->m_AIParse->MIL_STRING2string(TagDataDir+L"/R", strTagImgDir);
+	m_MLClassCNN->m_AIParse->getFoldersInFolder(strTagImgDir, TagClassNames);
+
+	//PrePared DataContext
+		////*******************************必须参数*******************************//
+	MIL_UNIQUE_CLASS_ID BaseSetRContext = MclassAlloc(m_MilSystem, M_PREPARE_IMAGES_CNN, M_DEFAULT, M_UNIQUE_ID);
+	MIL_UNIQUE_CLASS_ID BaseSetCContext = MclassAlloc(m_MilSystem, M_PREPARE_IMAGES_CNN, M_DEFAULT, M_UNIQUE_ID);
+
+	MIL_UNIQUE_CLASS_ID UpdateSetRContext = MclassAlloc(m_MilSystem, M_PREPARE_IMAGES_CNN, M_DEFAULT, M_UNIQUE_ID);
+	MIL_UNIQUE_CLASS_ID UpdateSetCContext = MclassAlloc(m_MilSystem, M_PREPARE_IMAGES_CNN, M_DEFAULT, M_UNIQUE_ID);
+	DataContextParasStruct DataCtxParas;
+	DataCtxParas.ImageSizeX = 128;
+	DataCtxParas.ImageSizeY = 128;
+	memset(&DataCtxParas.AugParas, 0, sizeof(AugmentationParasStruct));
+	DataCtxParas.AugParas.AugmentationNumPerImage = 1;
+	
+	DataCtxParas.AugParas.ScaleFactorMax = 1.03; //1.03
+	DataCtxParas.AugParas.ScaleFactorMin = 0.97; //0.97
+	DataCtxParas.AugParas.RotateAngleDelta = 10; //10
+	DataCtxParas.AugParas.IntyDeltaAdd = 32;  //32
+	DataCtxParas.AugParas.DirIntyMax = 1.2; //1.2
+	DataCtxParas.AugParas.DirIntyMin = 0.8; //0.8
+	DataCtxParas.AugParas.SmoothnessMax = 50; //50 {0<x<100}
+	DataCtxParas.AugParas.SmoothnessMin = 0.5; //0.5 {0<x<100}
+	DataCtxParas.AugParas.GaussNoiseStdev = 25; //25
+	DataCtxParas.AugParas.GaussNoiseDelta = 25; //25
+
+
+	DataCtxParas.ResizeModel = 1;
+	DataCtxParas.PreparedDataFolder = m_ClassifierWorkSpace + m_strProject + L"/DataSet/preparedBaseData/";
+	m_MLClassCNN->ConstructDataContext(DataCtxParas, BaseSetRContext);
+	DataCtxParas.ResizeModel = 0;
+	m_MLClassCNN->ConstructDataContext(DataCtxParas, BaseSetCContext);
+
+	DataCtxParas.PreparedDataFolder = m_ClassifierWorkSpace + m_strProject + L"/DataSet/preparedUpdateData/";
+	m_MLClassCNN->ConstructDataContext(DataCtxParas, UpdateSetCContext);
+	DataCtxParas.ResizeModel = 1;
+	m_MLClassCNN->ConstructDataContext(DataCtxParas, UpdateSetRContext);
+
+	//MIL_DOUBLE dSampleRatio;
+	MIL_UNIQUE_CLASS_ID BaseDataSet = MclassAlloc(m_MilSystem, M_DATASET_IMAGES, M_DEFAULT, M_UNIQUE_ID);
+	MIL_UNIQUE_CLASS_ID UpdateDataSet = MclassAlloc(m_MilSystem, M_DATASET_IMAGES, M_DEFAULT, M_UNIQUE_ID);
+	if (DataSetExist) {
+		vector<MIL_DOUBLE>vecSampleRatio = { 0.25,0.25 };
+		MIL_STRING CDataSetType = L"C";
+		MIL_UNIQUE_CLASS_ID MergeSet_C = MclassAlloc(m_MilSystem, M_DATASET_IMAGES, M_DEFAULT, M_UNIQUE_ID);
+		MIL_UNIQUE_CLASS_ID BaseSet_C;
+		m_MLClassCNN->MergeTagData2BaseSet(BaseDataDir, CDataSetType,BaseClsNames,TagDataDir,vecSampleRatio,MergeSet_C, BaseSet_C);
+
+		MIL_STRING RDataSetType = L"R";
+		MIL_UNIQUE_CLASS_ID MergeSet_R = MclassAlloc(m_MilSystem, M_DATASET_IMAGES, M_DEFAULT, M_UNIQUE_ID);
+		MIL_UNIQUE_CLASS_ID BaseSet_R;
+		m_MLClassCNN->MergeTagData2BaseSet(BaseDataDir, RDataSetType, BaseClsNames, TagDataDir, vecSampleRatio, MergeSet_R, BaseSet_R);
+		//生成BaseSet_R、BaseSet_C
+		m_MLClassCNN->PrepareDataset(BaseSetRContext, BaseSet_R, BaseDataDir, L"PPdBaseSet_R");
+		m_MLClassCNN->PrepareDataset(BaseSetCContext, BaseSet_C, BaseDataDir, L"PPdBaseSet_C");
+		//生成MergeSet_C、MergeSet_R
+		m_MLClassCNN->PrepareDataset(UpdateSetRContext, MergeSet_R, BaseDataDir, L"PPdSpBaseSet_R");
+		m_MLClassCNN->PrepareDataset(UpdateSetCContext, MergeSet_C, BaseDataDir, L"PPdSpBaseSet_C");
+	}
+	else {
+		MIL_STRING AuthorName = L"aa";
+		MIL_UNIQUE_CLASS_ID TagDataSet, BaseDataSet;
+		m_MLClassCNN->InitializeMergeRCDataset(AuthorName,BaseDataDir,TagDataDir, TagClassNames,BaseDataSet,TagDataSet);
+	}
+
+
+}
+
 void MILTest::MILTestWKSPDataset(MIL_STRING TagFolder)
 {
 	MIL_DOUBLE ValRatio = 0.1;
@@ -446,11 +540,11 @@ void MILTest::MILTestWKSPDataset(MIL_STRING TagFolder)
 	DataCtxParas.ImageSizeX = 128;
 	DataCtxParas.ImageSizeY = 128;
 	memset(&DataCtxParas.AugParas, 0, sizeof(AugmentationParasStruct));
-	DataCtxParas.AugParas.AugmentationNumPerImage = 0;
+	DataCtxParas.AugParas.AugmentationNumPerImage = 1;
 	DataCtxParas.ResizeModel = 1;
 	DataCtxParas.AugParas.ScaleFactorMax = 1.03; //1.03
 	DataCtxParas.AugParas.ScaleFactorMin = 0.97; //0.97
-	DataCtxParas.AugParas.RotateAngleDelta = 20; //10
+	DataCtxParas.AugParas.RotateAngleDelta = 10; //10
 	DataCtxParas.AugParas.IntyDeltaAdd = 32;  //32
 	DataCtxParas.AugParas.DirIntyMax = 1.2; //1.2
 	DataCtxParas.AugParas.DirIntyMin = 0.8; //0.8

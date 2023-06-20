@@ -42,7 +42,9 @@ public:
 	void getFoldersInFolder(string Path, vector<MIL_STRING>& Folders);
 
 	void getFilesInFolder(string Path, string FileType, vector<MIL_STRING>& Files);
+	void getFilesInFolder(MIL_STRING MPath, string FileType, vector<MIL_STRING>& Files);
 	void getFilesInFolder(string Path, string FileType, vector<string>& Files);
+	void getFoldersInFolder(MIL_STRING MPath, vector<MIL_STRING>& Folders);
 
 	void readBlob2Vector(string file, vector<int>& blob_px, vector<int>& blob_py);
 	void readClasses2Vector(string file, vector<MIL_STRING>& vecImgPaths);
