@@ -396,57 +396,83 @@ void CMLClassCNN::MergeTagData2BaseSet(
     vector<MIL_DOUBLE>vecSampleRatio,
     MIL_UNIQUE_CLASS_ID& MergeSet,
     MIL_UNIQUE_CLASS_ID& BaseSet)
-{
-    //要求Tag Folder必须包含所有
-    //MIL_STRING DataSetType = L"C";
-    MIL_STRING BaseSetPreName = L"BaseSet_";
+{  
+    MergeSet = MclassAlloc(m_MilSystem, M_DATASET_IMAGES, M_DEFAULT, M_UNIQUE_ID);
+    MIL_STRING BaseSetPreName = L"COMPSet";
+    MIL_STRING MergeSetPreName = L"SimplSet";
+
     MIL_INT NbEntries = 0;
     MIL_STRING BaseSetPath = BaseDataDir + BaseSetPreName+ DataSetType+L".mclassd";
-    BaseSet = MclassRestore(BaseSetPath, m_MilSystem, M_DEFAULT, M_UNIQUE_ID);
-    MclassInquire(BaseSet, M_DEFAULT, M_NUMBER_OF_ENTRIES + M_TYPE_MIL_INT, &NbEntries);
+    //BaseSet = MclassRestore(BaseSetPath, m_MilSystem, M_DEFAULT, M_UNIQUE_ID);
+    //MclassInquire(BaseSet, M_DEFAULT, M_NUMBER_OF_ENTRIES + M_TYPE_MIL_INT, &NbEntries);
+    
+    //获取已有vecBaseData内容
     vector<vector<MIL_STRING>> vecBaseData, vecTagData, vecTagBaseData, vecPBaseData;
 
-    //获取已有vecBaseData内容
     m_ClassesNum = BaseClsNames.size();
     vecBaseData.resize(m_ClassesNum);
     vecTagData.resize(m_ClassesNum);
     vecTagBaseData.resize(m_ClassesNum);
     vecPBaseData.resize(m_ClassesNum);
+    GetVecData4Set(BaseSetPath, vecBaseData,BaseSet);
+    //for (int i = 0; i < NbEntries; i++) {
+    //    MIL_STRING P;
+    //    std::vector<MIL_INT> GTIdx;
+    //    MclassInquireEntry(BaseSet, i, M_DEFAULT_KEY, M_DEFAULT, M_ENTRY_IMAGE_PATH_ABS, P);
+    //    MclassInquireEntry(BaseSet, i, M_DEFAULT_KEY, M_REGION_INDEX(0), M_CLASS_INDEX_GROUND_TRUTH, GTIdx);
+    //    vecBaseData[GTIdx[0]].emplace_back(P);
+    //}
+    for (int i = 0; i < m_ClassesNum; i++)
+    {
+        MIL_STRING ClassIconPrefix = TagDataDir + DataSetType +L"//" + BaseClsNames[i];
+        int nFileNum = ceil(vecBaseData[i].size() * vecSampleRatio[i]);
+        random_shuffle(vecBaseData[i].begin(), vecBaseData[i].end());
+        vecPBaseData[i].assign(vecBaseData[i].begin(), vecBaseData[i].begin()+ nFileNum);
+        vector<MIL_STRING>vecTagImg;
+        m_AIParse->getFilesInFolder(ClassIconPrefix,"bmp", vecTagImg);
+        vecTagData[i].assign(vecTagImg.begin(), vecTagImg.end());
+    }
+    GenralMergeSet(BaseDataDir,TagDataDir,BaseClsNames,vecTagData,MergeSet);
+    MergeVecData2Set(MergeSet,vecPBaseData);
+    MergeVecData2Set(BaseSet, vecTagData);
+    BaseSetPath = BaseDataDir + BaseSetPreName + DataSetType +L".mclassd";
+    MclassSave(BaseSetPath, BaseSet, M_DEFAULT);
+    MIL_STRING SpBaseSetPath = BaseDataDir + MergeSetPreName + DataSetType + L".mclassd";
+    MclassSave(SpBaseSetPath, MergeSet, M_DEFAULT);
 
-    for (int i = 0; i < NbEntries; i++) {
+}
+
+void CMLClassCNN::GetVecData4Set(MIL_STRING SetPath,vector<vector<MIL_STRING>>&vecData, MIL_UNIQUE_CLASS_ID& BaseSet) {
+
+    BaseSet = MclassRestore(SetPath, m_MilSystem, M_DEFAULT, M_UNIQUE_ID);
+    MIL_INT ClsNb1, Nb;
+    MclassInquire(BaseSet, M_CONTEXT, M_NUMBER_OF_CLASSES + M_TYPE_MIL_INT, &ClsNb1);
+    MclassInquire(BaseSet, M_DEFAULT, M_NUMBER_OF_ENTRIES + M_TYPE_MIL_INT, &Nb);
+
+    for (int i = 0; i < Nb; i++) {
         MIL_STRING P;
         std::vector<MIL_INT> GTIdx;
         MclassInquireEntry(BaseSet, i, M_DEFAULT_KEY, M_DEFAULT, M_ENTRY_IMAGE_PATH_ABS, P);
         MclassInquireEntry(BaseSet, i, M_DEFAULT_KEY, M_REGION_INDEX(0), M_CLASS_INDEX_GROUND_TRUTH, GTIdx);
-        vecBaseData[GTIdx[0]].emplace_back(P);
+        vecData[GTIdx[0]].emplace_back(P);
     }
+}
 
-    for (int i = 0; i < m_ClassesNum; i++)
-    {
-        ////MergeSet step1：加入Icon 到MergeSet 
-        //MclassControl(MergeSet, M_DEFAULT, M_CLASS_ADD, BaseClsNames[i]);
-        MIL_STRING ClassIconPrefix = TagDataDir + DataSetType +L"//" + BaseClsNames[i];
-        //MIL_STRING ClassIconPath = TagDataDir  + BaseClsNames[i] + L".mim";
-        //MIL_UNIQUE_BUF_ID IconImageId = MbufRestore(ClassIconPath, m_MilSystem, M_UNIQUE_ID);
-        //MclassControl(MergeSet, M_CLASS_INDEX(i), M_CLASS_ICON_ID, IconImageId);
 
-        //MergeSet准备：获取vecPBaseData 、vecTagData
-        int nFileNum = ceil(vecBaseData[i].size() * vecSampleRatio[i]);
-        random_shuffle(vecBaseData[i].begin(), vecBaseData[i].end());
-        vecPBaseData[i].assign(vecBaseData[i].begin(), vecBaseData[i].begin()+ nFileNum);
- 
-        vector<MIL_STRING>vecTagImg;
-        m_AIParse->getFilesInFolder(ClassIconPrefix,"bmp", vecTagImg);
-        vecTagData[i].assign(vecTagImg.begin(), vecTagImg.end());
-        //vecPBaseData.insert(vecPBaseData.end(), vecTagImg.begin(), vecTagImg.end());
-        //vecPTagBaseData[i].assign(vecPBaseData.begin(), vecPBaseData.end());
-    }
+void CMLClassCNN::GenralMergeSet(
+    MIL_STRING BaseDataDir,
+    MIL_STRING TagDataDir,
+    vector<MIL_STRING> BaseClsNames, 
+    vector<vector<MIL_STRING>>  vecTagData,
+    MIL_UNIQUE_CLASS_ID& MergeSet ) {
+
+    MIL_INT m_ClassesNum = BaseClsNames.size();
 
     for (MIL_INT i = 0; i < m_ClassesNum; i++)
     {
         //MergeSet step1：加入Icon 到MergeSet 
         MclassControl(MergeSet, M_DEFAULT, M_CLASS_ADD, BaseClsNames[i]);
-        MIL_STRING ClassIconPrefix = TagDataDir + DataSetType + L"//" + BaseClsNames[i];
+        //MIL_STRING ClassIconPrefix = TagDataDir + DataSetType + L"//" + BaseClsNames[i];
         MIL_STRING ClassIconPath = TagDataDir + BaseClsNames[i] + L".mim";
         MIL_UNIQUE_BUF_ID IconImageId = MbufRestore(ClassIconPath, m_MilSystem, M_UNIQUE_ID);
         MclassControl(MergeSet, M_CLASS_INDEX(i), M_CLASS_ICON_ID, IconImageId);
@@ -461,36 +487,28 @@ void CMLClassCNN::MergeTagData2BaseSet(
             MclassControlEntry(MergeSet, MergeNb_1 + j, M_DEFAULT_KEY, M_DEFAULT, M_ENTRY_IMAGE_PATH, M_DEFAULT, TagDataImgs[j], M_DEFAULT);
         }
     }
-        MclassControl(MergeSet, M_CONTEXT, M_CONSOLIDATE_ENTRIES_INTO_FOLDER, BaseDataDir);
 
-    for (MIL_INT i = 0; i < m_ClassesNum; i++)
-        {
-        //MergeSet step3：加入PBaseImgs 到MergeSet
-        MIL_INT MergeNb_2;
-        MclassInquire(MergeSet, M_DEFAULT, M_NUMBER_OF_ENTRIES + M_TYPE_MIL_INT, &MergeNb_2);
-        vector<MIL_STRING> PBaseImgs = vecPBaseData[i];
-        for (int k = 0; k < PBaseImgs.size(); k++) {
+    MclassControl(MergeSet, M_CONTEXT, M_CONSOLIDATE_ENTRIES_INTO_FOLDER, BaseDataDir);
+}
+
+
+void CMLClassCNN::MergeVecData2Set(
+    MIL_UNIQUE_CLASS_ID& MergeSet,
+    vector<vector<MIL_STRING>> vecData)
+{
+    MIL_INT ClsNb1;
+    MclassInquire(MergeSet, M_CONTEXT, M_NUMBER_OF_CLASSES + M_TYPE_MIL_INT, &ClsNb1);
+    for (MIL_INT i = 0; i < ClsNb1; i++)
+    {
+        MIL_INT MergeNb;
+        vector<MIL_STRING> Imgs = vecData[i];
+        MclassInquire(MergeSet, M_DEFAULT, M_NUMBER_OF_ENTRIES + M_TYPE_MIL_INT, &MergeNb);
+        for (int k = 0; k < Imgs.size(); k++) {
             MclassControl(MergeSet, M_DEFAULT, M_ENTRY_ADD, M_DEFAULT);
-            MclassControlEntry(MergeSet, MergeNb_2 + k, M_DEFAULT_KEY, M_REGION_INDEX(0), M_CLASS_INDEX_GROUND_TRUTH, i, M_NULL, M_DEFAULT);
-            MclassControlEntry(MergeSet, MergeNb_2 + k, M_DEFAULT_KEY, M_DEFAULT, M_ENTRY_IMAGE_PATH, M_DEFAULT, PBaseImgs[k], M_DEFAULT);
+            MclassControlEntry(MergeSet, MergeNb + k, M_DEFAULT_KEY, M_REGION_INDEX(0), M_CLASS_INDEX_GROUND_TRUTH, i, M_NULL, M_DEFAULT);
+            MclassControlEntry(MergeSet, MergeNb + k, M_DEFAULT_KEY, M_DEFAULT, M_ENTRY_IMAGE_PATH, M_DEFAULT, Imgs[k], M_DEFAULT);
         }
-        //BaseSet ：加入vecTagData， BaseSet = BaseSet+ TagData
-        MIL_INT BaseNb;
-        MclassInquire(BaseSet, M_DEFAULT, M_NUMBER_OF_ENTRIES + M_TYPE_MIL_INT, &BaseNb);
-        vector<MIL_STRING> TagImgs = vecTagData[i];
-        for (int k = 0; k < TagImgs.size(); k++) {
-            MclassControl(BaseSet, M_DEFAULT, M_ENTRY_ADD, M_DEFAULT);
-            MclassControlEntry(BaseSet, BaseNb + k, M_DEFAULT_KEY, M_REGION_INDEX(0), M_CLASS_INDEX_GROUND_TRUTH, i, M_NULL, M_DEFAULT);
-            MclassControlEntry(BaseSet, BaseNb + k, M_DEFAULT_KEY, M_DEFAULT, M_ENTRY_IMAGE_PATH, M_DEFAULT, TagImgs[k], M_DEFAULT);
-        }
-       
     }
-
-    BaseSetPath = BaseDataDir + BaseSetPreName + DataSetType +L".mclassd";
-    MclassSave(BaseSetPath, BaseSet, M_DEFAULT);
-    MIL_STRING SpBaseSetPath = BaseDataDir + L"Sp"+ BaseSetPreName + DataSetType + L".mclassd";
-    MclassSave(SpBaseSetPath, MergeSet, M_DEFAULT);
-
 }
 
 
@@ -764,13 +782,14 @@ void CMLClassCNN::InitializeMergeRCDataset(MIL_STRING AuthorName,
     MIL_UNIQUE_CLASS_ID BaseDataSet_C = MclassAlloc(m_MilSystem, M_DATASET_IMAGES, M_DEFAULT, M_UNIQUE_ID);
     ConstructDataset(TagClassNames, TagClassIcons, AuthorName, TagDataDir_C, BaseDataDir, BaseDataSet_C);
     MclassControl(BaseDataSet_C, M_CONTEXT, M_CONSOLIDATE_ENTRIES_INTO_FOLDER, BaseDataDir);
-    MIL_STRING CropBaseDatasetPath = BaseDataDir + MIL_TEXT("BaseSet_C.mclassd");
+    MIL_STRING CropBaseDatasetPath = BaseDataDir + MIL_TEXT("COMPSetC.mclassd");
     MclassSave(CropBaseDatasetPath, BaseDataSet_C, M_DEFAULT);
+
 
     MIL_UNIQUE_CLASS_ID BaseDataSet_R = MclassAlloc(m_MilSystem, M_DATASET_IMAGES, M_DEFAULT, M_UNIQUE_ID);
     ConstructDataset(TagClassNames, TagClassIcons, AuthorName, TagDataDir_R, BaseDataDir, BaseDataSet_R);
     MclassControl(BaseDataSet_R, M_CONTEXT, M_CONSOLIDATE_ENTRIES_INTO_FOLDER, BaseDataDir);
-    MIL_STRING BaseDataset_RPath = BaseDataDir + MIL_TEXT("BaseSet_R.mclassd");
+    MIL_STRING BaseDataset_RPath = BaseDataDir + MIL_TEXT("COMPSetR.mclassd");
     MclassSave(BaseDataset_RPath, BaseDataSet_R, M_DEFAULT);
 
 }

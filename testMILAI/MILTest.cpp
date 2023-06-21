@@ -421,15 +421,17 @@ bool isFileExists_ifstream(string& name) {
 void MILTest::MILTestWKSPRCDataset(MIL_STRING TagFolder)
 {
 	MIL_DOUBLE ValRatio = 0.1;
+	MIL_STRING PPdCOMPSet = L"PPdCOMPSet";
+	MIL_STRING PPdSimplSet = L"PPdSimplSet";
 
 	MIL_STRING AuthorName = MIL_TEXT("AA");
 	MIL_STRING BaseDataDir = m_ClassifierWorkSpace + m_strProject + L"/DataSet/" + L"/";
 	m_MLClassCNN->CreateFolder(m_ClassifierWorkSpace + m_strProject + L"/DataSet/");
 	MIL_STRING TagDataDir = m_TagDataDir + TagFolder;
-	MIL_STRING BaseData_RPath = m_ClassifierWorkSpace + m_strProject + L"/DataSet/" + L"/BaseSet_R.mclassd";
+	MIL_STRING BaseData_RPath = m_ClassifierWorkSpace + m_strProject + L"/DataSet/" + L"/COMPSetR.mclassd";
 	string strBaseData_RPath;
 	m_MLClassCNN->m_AIParse->MIL_STRING2string(BaseData_RPath, strBaseData_RPath);
-	MIL_STRING BaseData_CPath = m_ClassifierWorkSpace + m_strProject + L"/DataSet/" + L"/BaseSet_C.mclassd";
+	MIL_STRING BaseData_CPath = m_ClassifierWorkSpace + m_strProject + L"/DataSet/" + L"/COMPSetC.mclassd";
 	string strBaseData_CPath;
 	m_MLClassCNN->m_AIParse->MIL_STRING2string(BaseData_CPath, strBaseData_CPath);
 	bool DataSetExist = isFileExists_ifstream(strBaseData_RPath)|| isFileExists_ifstream(strBaseData_CPath);
@@ -447,10 +449,9 @@ void MILTest::MILTestWKSPRCDataset(MIL_STRING TagFolder)
 	m_MLClassCNN->m_AIParse->getFoldersInFolder(strTagImgDir, TagClassNames);
 
 	//PrePared DataContext
-		////*******************************必须参数*******************************//
+	//*******************************必须参数*******************************//
 	MIL_UNIQUE_CLASS_ID BaseSetRContext = MclassAlloc(m_MilSystem, M_PREPARE_IMAGES_CNN, M_DEFAULT, M_UNIQUE_ID);
 	MIL_UNIQUE_CLASS_ID BaseSetCContext = MclassAlloc(m_MilSystem, M_PREPARE_IMAGES_CNN, M_DEFAULT, M_UNIQUE_ID);
-
 	MIL_UNIQUE_CLASS_ID UpdateSetRContext = MclassAlloc(m_MilSystem, M_PREPARE_IMAGES_CNN, M_DEFAULT, M_UNIQUE_ID);
 	MIL_UNIQUE_CLASS_ID UpdateSetCContext = MclassAlloc(m_MilSystem, M_PREPARE_IMAGES_CNN, M_DEFAULT, M_UNIQUE_ID);
 	DataContextParasStruct DataCtxParas;
@@ -483,42 +484,28 @@ void MILTest::MILTestWKSPRCDataset(MIL_STRING TagFolder)
 	DataCtxParas.ResizeModel = 1;
 	m_MLClassCNN->ConstructDataContext(DataCtxParas, UpdateSetRContext);
 
-	//MIL_DOUBLE dSampleRatio;
-	MIL_UNIQUE_CLASS_ID BaseDataSet = MclassAlloc(m_MilSystem, M_DATASET_IMAGES, M_DEFAULT, M_UNIQUE_ID);
-	MIL_UNIQUE_CLASS_ID UpdateDataSet = MclassAlloc(m_MilSystem, M_DATASET_IMAGES, M_DEFAULT, M_UNIQUE_ID);
 	if (DataSetExist) {
 		vector<MIL_DOUBLE>vecSampleRatio = { 0.25,0.25 };
-		MIL_STRING CDataSetType = L"C";
-		MIL_UNIQUE_CLASS_ID MergeSet_C = MclassAlloc(m_MilSystem, M_DATASET_IMAGES, M_DEFAULT, M_UNIQUE_ID);
-		MIL_UNIQUE_CLASS_ID BaseSet_C;
-		m_MLClassCNN->MergeTagData2BaseSet(BaseDataDir, CDataSetType,BaseClsNames,TagDataDir,vecSampleRatio,MergeSet_C, BaseSet_C);
+		MIL_STRING CSetType = L"C";
+		MIL_UNIQUE_CLASS_ID COMPSet_C, SimplSet_C, PPdCOMPSet_C, PPdSimplSet_C;
+		m_MLClassCNN->MergeTagData2BaseSet(BaseDataDir, CSetType, BaseClsNames, TagDataDir, vecSampleRatio, SimplSet_C, COMPSet_C);
+		m_MLClassCNN->PrepareDataset(BaseSetCContext, COMPSet_C, PPdCOMPSet_C, BaseDataDir, PPdCOMPSet + CSetType);
+		m_MLClassCNN->PrepareDataset(UpdateSetCContext, SimplSet_C, PPdSimplSet_C, BaseDataDir, PPdSimplSet + CSetType);
 
-		MIL_STRING RDataSetType = L"R";
-		MIL_UNIQUE_CLASS_ID MergeSet_R = MclassAlloc(m_MilSystem, M_DATASET_IMAGES, M_DEFAULT, M_UNIQUE_ID);
-		MIL_UNIQUE_CLASS_ID BaseSet_R;
-		m_MLClassCNN->MergeTagData2BaseSet(BaseDataDir, RDataSetType, BaseClsNames, TagDataDir, vecSampleRatio, MergeSet_R, BaseSet_R);
-		//生成BaseSet_R、BaseSet_C	,并合并生成BaseSet
-		MIL_UNIQUE_CLASS_ID PPdBaseSet_C,PPdBaseSet_R;
-		m_MLClassCNN->PrepareDataset(BaseSetRContext, BaseSet_R, PPdBaseSet_R,BaseDataDir, L"PPdBaseSet_R");
-		m_MLClassCNN->PrepareDataset(BaseSetCContext, BaseSet_C, PPdBaseSet_C, BaseDataDir, L"PPdBaseSet_C");
-		MIL_STRING PPdBaseSetName = L"PPdBaseSet";
-		m_MLClassCNN->Merge2Set(PPdBaseSet_R,PPdBaseSet_C,BaseDataDir,PPdBaseSetName);
-
-		//生成MergeSet_C、MergeSet_R ,并合并生成MergeSet
-		MIL_UNIQUE_CLASS_ID PPdMergeSet_C, PPdMergeSet_R;
-		MIL_STRING PPdMergeSetName = L"PPdSpBaseSet";
-		m_MLClassCNN->PrepareDataset(UpdateSetRContext, MergeSet_R, PPdMergeSet_R, BaseDataDir, L"PPdSpBaseSet_R");
-		m_MLClassCNN->PrepareDataset(UpdateSetCContext, MergeSet_C, PPdMergeSet_C, BaseDataDir, L"PPdSpBaseSet_C");
-		m_MLClassCNN->Merge2Set(PPdMergeSet_R,PPdMergeSet_C,BaseDataDir,PPdMergeSetName);
-
+		MIL_STRING RSetType = L"R";
+		MIL_UNIQUE_CLASS_ID COMPSet_R, SimplSet_R,PPdCOMPSet_R, PPdSimplSet_R;
+		m_MLClassCNN->MergeTagData2BaseSet(BaseDataDir, RSetType, BaseClsNames, TagDataDir, vecSampleRatio, SimplSet_R, COMPSet_R);
+		m_MLClassCNN->PrepareDataset(BaseSetRContext, COMPSet_R, PPdCOMPSet_R, BaseDataDir, PPdCOMPSet + RSetType);
+		m_MLClassCNN->PrepareDataset(UpdateSetRContext, SimplSet_R, PPdSimplSet_R, BaseDataDir, PPdSimplSet + RSetType);
+		//生成R/C并合
+		m_MLClassCNN->Merge2Set(PPdCOMPSet_R, PPdCOMPSet_C, BaseDataDir, PPdCOMPSet);
+		m_MLClassCNN->Merge2Set(PPdSimplSet_R, PPdSimplSet_C, BaseDataDir, PPdSimplSet);
 	}
 	else {
 		MIL_STRING AuthorName = L"aa";
 		MIL_UNIQUE_CLASS_ID TagDataSet, BaseDataSet;
 		m_MLClassCNN->InitializeMergeRCDataset(AuthorName,BaseDataDir,TagDataDir, TagClassNames,BaseDataSet,TagDataSet);
 	}
-
-
 }
 
 void MILTest::MILTestWKSPDataset(MIL_STRING TagFolder)
@@ -593,8 +580,6 @@ void MILTest::MILTestWKSPDataset(MIL_STRING TagFolder)
 		MIL_UNIQUE_CLASS_ID PreparedDataset;
 		m_MLClassCNN->PrepareDataset(BaseDataContext, BaseDataSet, PreparedDataset, BaseDataDir, L"PreParedBaseDataSet");
 	}
-
-	
 }
 
 void MILTest::MILTestWKSPTrain()
@@ -603,7 +588,7 @@ void MILTest::MILTestWKSPTrain()
 	int MiniBatchSize = 64;				//模型训练单次迭代的张数
 
 	//////*******************************必须参数*******************************//
-	MIL_STRING PreparedPath = m_ClassifierWorkSpace + m_strProject + MIL_TEXT("/DataSet/PreParedBaseDataSet.mclassd");
+	MIL_STRING PreparedPath = m_ClassifierWorkSpace + m_strProject + MIL_TEXT("/DataSet/PPdMergeSet.mclassd");
 	MIL_UNIQUE_CLASS_ID PreparedDataset = MclassRestore(PreparedPath, m_MilSystem, M_DEFAULT, M_UNIQUE_ID);
 	MIL_UNIQUE_CLASS_ID TrainCtx = MclassAlloc(m_MilSystem, M_TRAIN_CNN, M_DEFAULT, M_UNIQUE_ID);
 	ClassifierParasStruct ClassifierParas;

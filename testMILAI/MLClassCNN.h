@@ -60,6 +60,18 @@ public:
         MIL_UNIQUE_CLASS_ID& MergeSet,
         MIL_UNIQUE_CLASS_ID& BaseSet);
 
+    void GetVecData4Set(MIL_STRING SetPath, vector<vector<MIL_STRING>>&vecTagData, MIL_UNIQUE_CLASS_ID& BaseSet);
+
+    void GenralMergeSet(
+        MIL_STRING BaseDataDir,
+        MIL_STRING TagDataDir,
+        vector<MIL_STRING> BaseClsNames,
+        vector<vector<MIL_STRING>>  vecTagData,
+        MIL_UNIQUE_CLASS_ID& MergeSet);
+    void MergeVecData2Set(
+        MIL_UNIQUE_CLASS_ID& MergeSet,
+        vector<vector<MIL_STRING>> vecData);
+
     void Merge2Set(
         MIL_UNIQUE_CLASS_ID& BaseSet1,
         MIL_UNIQUE_CLASS_ID& BaseSet2,
