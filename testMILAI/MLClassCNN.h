@@ -60,6 +60,12 @@ public:
         MIL_UNIQUE_CLASS_ID& MergeSet,
         MIL_UNIQUE_CLASS_ID& BaseSet);
 
+    void Merge2Set(
+        MIL_UNIQUE_CLASS_ID& BaseSet1,
+        MIL_UNIQUE_CLASS_ID& BaseSet2,
+        MIL_STRING BaseDataDir,
+        MIL_STRING MergeSetName);
+
     void ConstructMergeRCDataset(
         MIL_STRING AuthorName,
         MIL_STRING strProject,
@@ -107,6 +113,7 @@ public:
     void PrepareDataset(
         MIL_UNIQUE_CLASS_ID& DatasetContext,
         MIL_UNIQUE_CLASS_ID& PrepareDataset,
+        MIL_UNIQUE_CLASS_ID& PreparedDataset,
         MIL_STRING WorkingDataDir,
         MIL_STRING DatasetName);
 
