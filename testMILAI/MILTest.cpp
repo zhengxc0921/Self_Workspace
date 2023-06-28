@@ -354,6 +354,116 @@ void MILTest::MILTestGenDataset()
 
 }
 
+//MILTest::MILTestGenDataset(MIL_STRING TagFolder)
+//{
+//}
+
+void MILTest::ReduceSimilarityImg()
+{
+	//数据源文件
+	MIL_STRING srcImgDir = L"G:/DefectDataCenter/ReduceSrcImg/";
+	MIL_STRING BaseImgDir = L"G:/DefectDataCenter/ReduceSrcImg1/";
+	//MIL_STRING BaseImgDir = L"G:/DefectDataCenter/ParseData/Classifier/SXX_GrayWave/Original_Gray1/45/";
+	MIL_STRING DstImgDir = L"G:/DefectDataCenter/ReduceSrcImg_Dst/";
+	vector<MIL_STRING>vecSrcImg;
+	m_MLClassCNN->m_AIParse->getFilesInFolder(srcImgDir,"bmp", vecSrcImg);
+	vector<MIL_STRING>vecBaseImg;
+	m_MLClassCNN->m_AIParse->getFilesInFolder(BaseImgDir, "bmp", vecBaseImg);
+	
+	for (int si = 0; si < vecSrcImg.size(); si++)
+	{
+
+
+		MIL_ID srcImage = MbufRestore(vecSrcImg[si], m_MilSystem, M_NULL);
+		MIL_INT ImgSizeX = MbufInquire(srcImage, M_SIZE_X, M_NULL);
+		MIL_INT ImgSizeY = MbufInquire(srcImage, M_SIZE_Y, M_NULL);
+		const MIL_INT SizeBAND = MbufInquire(srcImage, M_SIZE_BAND, M_NULL);
+		MIL_ID BaseImage = MbufAlloc2d(m_MilSystem, ImgSizeX, ImgSizeY,8 + M_UNSIGNED,M_IMAGE + M_PROC,M_NULL);
+		MIL_ID DstImage = MbufAlloc2d(m_MilSystem, ImgSizeX, ImgSizeY, 8 + M_UNSIGNED, M_IMAGE + M_PROC, M_NULL);
+		MbufClear(BaseImage, 0);
+		for (int j = 0; j < vecBaseImg.size(); j++) {
+			/*MIL_STRING BaseImgPath = BaseImgDir + vecBaseImg[j];*/
+			MIL_ID baseImg = MbufRestore(vecBaseImg[j], m_MilSystem, M_NULL);
+			MIL_INT bSizeX = MbufInquire(baseImg, M_SIZE_X, M_NULL);
+			MIL_INT bSizeY = MbufInquire(baseImg, M_SIZE_Y, M_NULL);
+
+			MimResize(baseImg, BaseImage, M_FILL_DESTINATION, M_FILL_DESTINATION, M_DEFAULT);
+
+			if (SizeBAND == 1) {
+				//MIL_ID MonoImage = MbufAlloc2d(m_MilSystem, SImgW, SImgH, 8 + M_UNSIGNED, M_IMAGE + M_PROC, M_NULL);
+				MIL_UINT8 Value1 = 0;
+				std::unique_ptr<BYTE[]> ScaledImage = std::make_unique<BYTE[]>(SImgW * SImgH);
+				if (SizeY >= SizeX) {
+					for (int y = 0; y < SImgH; ++y)
+					{
+						MbufGet2d(RawImage, 0, y, 1, 1, &Value1);
+
+						for (int x = 0; x < SImgW; ++x)
+						{
+							MIL_INT DstIndex = y * SImgW + x;
+							ScaledImage[DstIndex] = Value1;
+						}
+					}
+					MbufPut2d(MonoImage, 0, 0, SImgW, SImgH, ScaledImage.get());
+					//MbufCopyColor2d(RawImage, MonoImage, M_ALL_BANDS, 0, 0, M_ALL_BANDS, SizeY - SizeX, 0, SizeX, SizeY);
+				}
+				//else {
+				//	for (int x = 0; x < SImgW; ++x)
+				//	{
+				//		MbufGet2d(RawImage, x, 0, 1, 1, &Value1);
+				//		for (int y = 0; y < SImgH; ++y)
+				//		{
+				//			MIL_INT DstIndex = y * SImgW + x;
+				//			ScaledImage[DstIndex] = Value1;
+				//		}
+				//	}
+				//	MbufPut2d(MonoImage, 0, 0, SImgW, SImgH, ScaledImage.get());
+				//	MbufCopyColor2d(RawImage, MonoImage, M_ALL_BANDS, 0, 0, M_ALL_BANDS, 0, SizeX - SizeY, SizeX, SizeY);
+				//}
+			}
+			else if (SizeBAND == 3) {
+
+				MIL_ID MonoImage = MbufAllocColor(m_MilSystem, SizeBAND, SImgW, SImgH, 8 + M_UNSIGNED, M_IMAGE + M_PROC, M_NULL);
+				MIL_UINT8 Value1 = 0;
+				std::unique_ptr<BYTE[]> ScaledImage = std::make_unique<BYTE[]>(SizeBAND * SImgW * SImgH);
+				for (int b = 0; b < SizeBAND; b++) {
+					for (int y = 0; y < SImgH; ++y)
+					{
+						MbufGetColor2d(RawImage, M_SINGLE_BAND, b, 0, y, 1, 1, &Value1);
+
+						cout << "SizeBAND:" << SizeBAND << "Value1" << Value1 << endl;
+						for (int x = 0; x < SImgW; ++x)
+						{
+							MIL_INT DstIndex = b * SImgH * SImgW + y * SImgW + x;
+							ScaledImage[DstIndex] = Value1;
+						}
+					}
+				}
+
+				MbufPutColor2d(MonoImage, M_PACKED + M_BGR24, M_ALL_BANDS, 0, 0, SImgW, SImgH, ScaledImage.get());
+				//MbufExport(L"G:/DefectDataCenter/TImg/A1.bmp", M_BMP, MonoImage);
+				MbufCopyColor2d(RawImage, MonoImage, M_ALL_BANDS, 0, 0, M_ALL_BANDS, SizeY - SizeX, 0, SizeX, SizeY);
+				//MbufExport(DstRootPath, M_BMP, MonoImage);
+			}
+
+
+
+
+
+			MimArith(srcImage,BaseImage, DstImage, M_MIN_ABS + M_SOURCE_VALUE);
+			MIL_STRING DstRootPath = DstImgDir + m_MLClassCNN->m_AIParse->string2MIL_STRING(to_string(j))+L".bmp";
+			MbufExport(DstRootPath, M_BMP, DstImage);
+
+		}
+
+
+
+	}
+	
+
+
+}
+
 /// MILTestWKSPDataset
 bool isFileExists_ifstream(string& name) {
 	ifstream f(name.c_str());

@@ -38,6 +38,7 @@ public:
 	
 	void FillImgs();
 
+	void ReduceSimilarityImg();
 	//void isTagSameClass(
 	//	vector<MIL_STRING>BaseClassIcons,
 	//	const vector<MIL_STRING>& TagClassIcons,
