@@ -8,7 +8,7 @@
 #include "MLClassCNN.h"
 #include "MLDetCNN.h"
 #include <thread>
-
+#include"dbscan.h"
 using namespace cv;
 
 class MILTest;
