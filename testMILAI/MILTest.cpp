@@ -447,16 +447,27 @@ void MILTest::Pytest()
 			cout << "Can't find  Img_Cluster" << endl;
 			std::system("pause");
 		}
-		PyObject*  pFunc = PyObject_GetAttrString(pModule, "pt1");//这里是要调用的函数名
-		
-		//调用pt1函数
-		PyObject* pyParams = PyTuple_New(2); //定义两个变量
-		string pn = "SPA9000";
-		float Eeps = 1.0;
-		PyTuple_SetItem(pyParams, 0, Py_BuildValue("s", pn));// 变量格式转换成python格式
-		PyTuple_SetItem(pyParams, 1, Py_BuildValue("f", Eeps));// 变量格式转换成python格式
+
+		////调用pt1函数
+		PyObject* pFunc = PyObject_GetAttrString(pModule, "pt1");//这里是要调用的函数名
+		PyObject* pyParams = PyTuple_New(4); //定义两个变量
+		const char* Csrc_dir = "G:/DefectDataCenter/Test/Src/90";
+		const char* dst_dir = "G:/DefectDataCenter/Test/ImgCluster";
+		float	Eeps = 1.2;
+		const char* pn = "SPA90";
+		PyTuple_SetItem(pyParams, 0, Py_BuildValue("s", Csrc_dir));// 变量格式转换成python格式
+		PyTuple_SetItem(pyParams, 1, Py_BuildValue("s", dst_dir));// 变量格式转换成python格式
+		PyTuple_SetItem(pyParams, 2, Py_BuildValue("f", Eeps));// 变量格式转换成python格式
+		PyTuple_SetItem(pyParams, 3, Py_BuildValue("s", pn));// 变量格式转换成python格式
 		PyEval_CallObject(pFunc, pyParams);//调用函数
+		
+
+
+		//PyObject* pFunc = PyObject_GetAttrString(pModule, "pt2");//这里是要调用的函数名
+		//PyEval_CallObject(pFunc, NULL);//调用函数
 		//销毁python相关
+		//Py_DECREF(pyParams);
+		//Py_DECREF(pFunc);
 		Py_DECREF(pModule);
 		Py_Finalize();
 }
