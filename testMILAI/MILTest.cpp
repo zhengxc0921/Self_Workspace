@@ -441,7 +441,7 @@ void MILTest::Pytest()
 
 		PyRun_SimpleString("import sys");
 		PyRun_SimpleString("sys.path.append('D:/Anaconda3/envs/AI_cpu/Lib/site-packages')");
-		PyRun_SimpleString("sys.path.append('I:/MIL_AI/Python/auxiliary')");
+		PyRun_SimpleString("sys.path.append('I:/MIL_AI/testMILAI')");
 		PyObject* pModule = PyImport_Import(PyUnicode_FromString("Img_Cluster"));
 		if (!pModule) {
 			cout << "Can't find  Img_Cluster" << endl;
