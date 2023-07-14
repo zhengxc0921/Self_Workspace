@@ -1,4 +1,6 @@
 #pragma once
+#include<iostream>
+#include<Python.h>
 
 #include <opencv2/opencv.hpp>
 #include <opencv2/highgui.hpp>
@@ -9,6 +11,8 @@
 #include "MLDetCNN.h"
 #include <thread>
 #include"dbscan.h"
+
+
 using namespace cv;
 
 class MILTest;
@@ -37,6 +41,8 @@ public:
 	void FillImgs();
 
 	void ReduceSimilarityImg();
+
+	void Pytest();
 	//void isTagSameClass(
 	//	vector<MIL_STRING>BaseClassIcons,
 	//	const vector<MIL_STRING>& TagClassIcons,

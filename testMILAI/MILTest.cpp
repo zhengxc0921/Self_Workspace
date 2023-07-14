@@ -358,11 +358,12 @@ void MILTest::MILTestGenDataset()
 
 void MILTest::ReduceSimilarityImg()
 {
-	clock_t start, end;
+	clock_t start, end, end1;
 	start = clock();
 	//数据源文件
-	MIL_STRING BaseImgDir = L"G:/DefectDataCenter/DeepLearningDataSet/Input/GAT/normal/";
-	MIL_STRING DstDir = L"G:/DefectDataCenter/Test/MIL_ImgCluster/";
+	MIL_STRING BaseImgDir = L"G:/DefectDataCenter/原始_现场分类数据/LJX/TrainingDatsSet/SPA_ASI_Reclass_DataSet/Images/45";
+	//MIL_STRING BaseImgDir = L"G:/DefectDataCenter/原始_现场分类数据/LJX/TrainingDatsSet/PO1_ASI_ReClass_DataSet/Images/91";
+	MIL_STRING DstDir = L"G:/DefectDataCenter/Test/MIL_ImgCluster/SPA_ASI_Reclass_DataSet45/";
 
 	vector<MIL_STRING>vecBaseImg;
 	m_MLClassCNN->m_AIParse->getFilesInFolder(BaseImgDir, "bmp", vecBaseImg);
@@ -373,13 +374,19 @@ void MILTest::ReduceSimilarityImg()
 		MIL_ID BaseImage = MbufAlloc2d(m_MilSystem, ImgSizeX, ImgSizeY,8 + M_UNSIGNED,M_IMAGE + M_PROC,M_NULL);
 		MbufClear(BaseImage, 0);
 		vector<DBPoint>vecImgPixels;
-		for (int j = 0; j < vecBaseImg.size(); j++) {
+		//vecBaseImg.size()
+		int TNum = vecBaseImg.size();
+		for (int j = 0; j < TNum; j++) {
 			DBPoint DBpoint;
 			MIL_ID baseImg = MbufRestore(vecBaseImg[j], m_MilSystem, M_NULL);
 			MIL_INT bSizeX = MbufInquire(baseImg, M_SIZE_X, M_NULL);
 			MIL_INT bSizeY = MbufInquire(baseImg, M_SIZE_Y, M_NULL);
 
 			MimResize(baseImg, BaseImage, M_FILL_DESTINATION, M_FILL_DESTINATION, M_DEFAULT);
+
+			//MIL_STRING DstRootPath = L"G:/DefectDataCenter/Test/Resize/a.bmp";
+			//MbufExport(DstRootPath, M_BMP, BaseImage);
+
 			vector<MIL_UINT8>ImgPixels;
 			ImgPixels.resize(ImgSizeX* ImgSizeY* SizeBAND);
 			MbufGet2d(BaseImage, 0, 0, ImgSizeX, ImgSizeY, &ImgPixels[0]);
@@ -391,16 +398,21 @@ void MILTest::ReduceSimilarityImg()
 		unsigned int minPts = 15;
 		float eps = 13;
 		DBSCAN ds(minPts, eps, vecImgPixels);
-		ds.run();
+		ds.run2();
+
+		end1 = clock();
+		cout << "TIME(SEC) " << static_cast<double>(end1 - start) / CLOCKS_PER_SEC << "\n";
 
 		vector<MIL_STRING>DstFolder;
+		m_MLClassCNN->CreateFolder(DstDir);
 		for (int i = -1; i < ds.m_ClassNum; i++) {
 			MIL_STRING Dst_folder = DstDir + m_MLClassCNN->m_AIParse->string2MIL_STRING(to_string(i))+L"//";
 			m_MLClassCNN->CreateFolder(Dst_folder);
 			DstFolder.emplace_back(Dst_folder);
 		}
 
-		for (int i = 0; i < vecBaseImg.size(); i++) {
+
+		for (int i = 0; i < TNum; i++) {
 			int fi = ds.m_points[i].clusterID+2;
 			MIL_STRING dst_path = DstFolder[fi]+ m_MLClassCNN->m_AIParse->string2MIL_STRING(to_string(i))+L".BMP";
 
@@ -417,6 +429,36 @@ void MILTest::ReduceSimilarityImg()
 		end = clock();
 		cout << "TIME(SEC) " << static_cast<double>(end - start) / CLOCKS_PER_SEC << "\n";
 
+}
+
+void MILTest::Pytest()
+{
+		Py_Initialize(); //初始化python解释器
+		if (!Py_IsInitialized()) {
+			std::system("pause");
+			//return -99;
+		} //查看python解释器是否成功初始化
+
+		PyRun_SimpleString("import sys");
+		PyRun_SimpleString("sys.path.append('D:/Anaconda3/envs/AI_cpu/Lib/site-packages')");
+		PyRun_SimpleString("sys.path.append('I:/MIL_AI/Python/auxiliary')");
+		PyObject* pModule = PyImport_Import(PyUnicode_FromString("Img_Cluster"));
+		if (!pModule) {
+			cout << "Can't find  Img_Cluster" << endl;
+			std::system("pause");
+		}
+		PyObject*  pFunc = PyObject_GetAttrString(pModule, "pt1");//这里是要调用的函数名
+		
+		//调用pt1函数
+		PyObject* pyParams = PyTuple_New(2); //定义两个变量
+		string pn = "SPA9000";
+		float Eeps = 1.0;
+		PyTuple_SetItem(pyParams, 0, Py_BuildValue("s", pn));// 变量格式转换成python格式
+		PyTuple_SetItem(pyParams, 1, Py_BuildValue("f", Eeps));// 变量格式转换成python格式
+		PyEval_CallObject(pFunc, pyParams);//调用函数
+		//销毁python相关
+		Py_DECREF(pModule);
+		Py_Finalize();
 }
 
 /// MILTestWKSPDataset
