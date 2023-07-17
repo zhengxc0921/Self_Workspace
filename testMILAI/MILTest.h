@@ -43,6 +43,9 @@ public:
 	void ReduceSimilarityImg();
 
 	void Pytest();
+	void Python_yolo4tiny_predict();
+
+
 	//void isTagSameClass(
 	//	vector<MIL_STRING>BaseClassIcons,
 	//	const vector<MIL_STRING>& TagClassIcons,

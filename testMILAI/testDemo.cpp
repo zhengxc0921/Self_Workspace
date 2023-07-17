@@ -19,8 +19,9 @@ int main(int argc, char* argv[]) {
 	
 
 	//将数据集和
-	MIL_STRING TagFolder = L"Resize_Crop/";  // L"Resize_Crop/",Resize_Crop_1;
 	m_MILTestPtr->Pytest();
+	//m_MILTestPtr->Python_yolo4tiny_predict();
+	//MIL_STRING TagFolder = L"Resize_Crop/";  // L"Resize_Crop/",Resize_Crop_1;
 	//m_MILTestPtr->ReduceSimilarityImg();
 	//m_MILTestPtr->MILTestWKSPRCDataset(TagFolder);
 

@@ -439,17 +439,9 @@ void MILTest::Pytest()
 			//return -99;
 		} //查看python解释器是否成功初始化
 		
-	
 		PyRun_SimpleString("import sys");
 		PyRun_SimpleString("sys.path.append('I:/MIL_AI/testMILAI')");
 		PyRun_SimpleString("sys.path.append('I:/MIL_AI/testMILAI/site-packages')");
-
-		//PyRun_SimpleString("sys.path.append('D:/Anaconda3/envs/ForCpp/Lib/site-packages')");
-		
-		//string m = "I:/MIL_AI/testMILAI";
-		//string l= "sys.path.append('" + m + "')";
-		//PyRun_SimpleString(l.c_str());
-
 		PyObject* pModule = PyImport_Import(PyUnicode_FromString("Img_Cluster"));
 		if (!pModule) {
 			cout << "Can't find  Img_Cluster" << endl;
@@ -469,9 +461,7 @@ void MILTest::Pytest()
 		PyTuple_SetItem(pyParams, 2, Py_BuildValue("f", Eeps));// 变量格式转换成python格式
 		PyTuple_SetItem(pyParams, 3, Py_BuildValue("s", pn.c_str()));// 变量格式转换成python格式
 		PyEval_CallObject(pFunc, pyParams);//调用函数
-		
-
-
+	
 		//PyObject* pFunc = PyObject_GetAttrString(pModule, "pt2");//这里是要调用的函数名
 		//PyEval_CallObject(pFunc, NULL);//调用函数
 		//销毁python相关
@@ -480,6 +470,78 @@ void MILTest::Pytest()
 		Py_DECREF(pModule);
 		Py_Finalize();
 }
+
+void MILTest::Python_yolo4tiny_predict()
+{
+	Py_Initialize(); //初始化python解释器
+	if (!Py_IsInitialized()) {
+		std::system("pause");
+		//return -99;
+	} //查看python解释器是否成功初始化
+
+	PyRun_SimpleString("import sys");
+	PyRun_SimpleString("sys.path.append('I:/MIL_AI/testMILAI')");
+	PyRun_SimpleString("sys.path.append('D:/Anaconda3/envs/AI_gpu/Lib/site-packages')");
+	//PyRun_SimpleString("sys.path.append('I:/MIL_AI/Python/yolov4-tiny-pytorch')");
+
+	PyObject* pModule2 = PyImport_Import(PyUnicode_FromString("yolo4tiny_predict"));
+	if (!pModule2) {
+		cout << "Can't find  Hello" << endl;
+		std::system("pause");
+	}
+	PyObject* pFunc2 = PyObject_GetAttrString(pModule2, "Predict");//这里是要调用的函数名
+
+	PyEval_CallObject(pFunc2, NULL);//调用函数
+	//销毁python相关
+	//Py_DECREF(pyParams);
+	//Py_DECREF(pFunc);
+	//Py_DECREF(pModule);
+	Py_DECREF(pModule2);
+	Py_Finalize();
+}
+
+//void MILTest::Python_yolo4tiny_predict()
+//{
+//
+//	Py_Initialize(); //初始化python解释器
+//	if (!Py_IsInitialized()) {
+//		std::system("pause");
+//		//return -99;
+//	} //查看python解释器是否成功初始化
+//
+//	PyRun_SimpleString("import sys");
+//	PyRun_SimpleString("sys.path.append('./')");
+//	PyRun_SimpleString("sys.path.append('I:/MIL_AI/testMILAI/x64')");
+//
+//	//PyRun_SimpleString("sys.path.append('I:/MIL_AI/Python/yolov4-tiny-pytorch')");
+//	PyRun_SimpleString("sys.path.append('D:/Anaconda3/envs/AI_gpu/Lib/site-packages')");
+//
+//	PyObject* pModule = PyImport_Import(PyUnicode_FromString("hello_t"));
+//	if (!pModule) {
+//		cout << "Can't find  train" << endl;
+//		std::system("pause");
+//	}
+//	PyObject* pFunc = PyObject_GetAttrString(pModule, "hello_t");//这里是要调用的函数名
+//	PyEval_CallObject(pFunc, NULL);//调用函数
+//	//////调用pt1函数
+//	//PyObject* pFunc = PyObject_GetAttrString(pModule, "pt1");//这里是要调用的函数名
+//	//PyObject* pyParams = PyTuple_New(4); //定义两个变量
+//	//string Csrc_dir = "G:/DefectDataCenter/Test/Src/90";
+//	//string dst_dir = "G:/DefectDataCenter/Test/ImgCluster";
+//	//float	Eeps = 1.2;
+//	//string pn = "SPA90";
+//	//PyTuple_SetItem(pyParams, 0, Py_BuildValue("s", Csrc_dir.c_str()));// 变量格式转换成python格式
+//	//PyTuple_SetItem(pyParams, 1, Py_BuildValue("s", dst_dir.c_str()));// 变量格式转换成python格式
+//	//PyTuple_SetItem(pyParams, 2, Py_BuildValue("f", Eeps));// 变量格式转换成python格式
+//	//PyTuple_SetItem(pyParams, 3, Py_BuildValue("s", pn.c_str()));// 变量格式转换成python格式
+//	//PyEval_CallObject(pFunc, pyParams);//调用函数
+//	//销毁python相关
+//	//Py_DECREF(pyParams);
+//	//Py_DECREF(pFunc);
+//	Py_DECREF(pModule);
+//	Py_Finalize();
+//
+//}
 
 /// MILTestWKSPDataset
 bool isFileExists_ifstream(string& name) {
@@ -775,6 +837,8 @@ void MILTest::MILTestPredict(MIL_STRING TagFolder) {
 		savePredictedImg();
 	}
 }
+
+
 
 void MILTest::MILTestPredictWithBlob()
 {
