@@ -438,10 +438,18 @@ void MILTest::Pytest()
 			std::system("pause");
 			//return -99;
 		} //查看python解释器是否成功初始化
-
+		
+	
 		PyRun_SimpleString("import sys");
-		PyRun_SimpleString("sys.path.append('D:/Anaconda3/envs/AI_cpu/Lib/site-packages')");
 		PyRun_SimpleString("sys.path.append('I:/MIL_AI/testMILAI')");
+		PyRun_SimpleString("sys.path.append('I:/MIL_AI/testMILAI/site-packages')");
+
+		//PyRun_SimpleString("sys.path.append('D:/Anaconda3/envs/ForCpp/Lib/site-packages')");
+		
+		//string m = "I:/MIL_AI/testMILAI";
+		//string l= "sys.path.append('" + m + "')";
+		//PyRun_SimpleString(l.c_str());
+
 		PyObject* pModule = PyImport_Import(PyUnicode_FromString("Img_Cluster"));
 		if (!pModule) {
 			cout << "Can't find  Img_Cluster" << endl;
@@ -451,14 +459,15 @@ void MILTest::Pytest()
 		////调用pt1函数
 		PyObject* pFunc = PyObject_GetAttrString(pModule, "pt1");//这里是要调用的函数名
 		PyObject* pyParams = PyTuple_New(4); //定义两个变量
-		const char* Csrc_dir = "G:/DefectDataCenter/Test/Src/90";
-		const char* dst_dir = "G:/DefectDataCenter/Test/ImgCluster";
+		string Csrc_dir = "G:/DefectDataCenter/Test/Src/90";
+		string dst_dir = "G:/DefectDataCenter/Test/ImgCluster";
 		float	Eeps = 1.2;
-		const char* pn = "SPA90";
-		PyTuple_SetItem(pyParams, 0, Py_BuildValue("s", Csrc_dir));// 变量格式转换成python格式
-		PyTuple_SetItem(pyParams, 1, Py_BuildValue("s", dst_dir));// 变量格式转换成python格式
+		//const char* pn = "SPA90";
+		string pn = "SPA90";
+		PyTuple_SetItem(pyParams, 0, Py_BuildValue("s", Csrc_dir.c_str()));// 变量格式转换成python格式
+		PyTuple_SetItem(pyParams, 1, Py_BuildValue("s", dst_dir.c_str()));// 变量格式转换成python格式
 		PyTuple_SetItem(pyParams, 2, Py_BuildValue("f", Eeps));// 变量格式转换成python格式
-		PyTuple_SetItem(pyParams, 3, Py_BuildValue("s", pn));// 变量格式转换成python格式
+		PyTuple_SetItem(pyParams, 3, Py_BuildValue("s", pn.c_str()));// 变量格式转换成python格式
 		PyEval_CallObject(pFunc, pyParams);//调用函数
 		
 
