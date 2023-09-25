@@ -9,47 +9,47 @@ typedef struct DET_DATASET_PARAS_STRUCT {
 
     //Src Data info
     string          ClassesPath;
-    string          IconDir ;               //ClassesIcon :include Classes.bmp
-    string          TrainDataInfoPath;      //ImgBoxes_train.txt :include img_path box gt_label...
-    string          ValDataInfoPath;        //ImgBoxes_val.txt :include img_path box gt_label...
+    string IconDir ;                //ClassesIcon :include Classes.bmp
+    string TrainDataInfoPath;       //ImgBoxes_train.txt :include img_path box gt_label...
+    string ValDataInfoPath;         //ImgBoxes_val.txt :include img_path box gt_label...
     
     //MIL WorkSpaceInfo                                 
-    string          WorkingDataDir;         //Dataset.mclassd saved Dir
-    string          PreparedDataDir;        //PreparedData  saved Dir
+    string WorkingDataDir;    //Dataset.mclassd saved Dir
+    string PreparedDataDir;     //PreparedData  saved Dir
 
     //Related to Model Training
-    int             ImageSizeX;			    //进入模型训练的图片的尺寸宽
-    int             ImageSizeY;			    //进入模型训练的图片的尺寸高
-    int             AugFreq;	            //进入模型训练的图片的扩充倍数
-    MIL_DOUBLE      TestDataRatio;          //划分到测试数据集的比例
+    int ImageSizeX = 1120;			//进入模型训练的图片的尺寸宽
+    int ImageSizeY = 224;			//进入模型训练的图片的尺寸高
+    int AugFreq = 0;	            //进入模型训练的图片的扩充倍数
+    MIL_DOUBLE TestDataRatio = 10;       //
 
 }DET_DATASET_PARAS_STRUCT;
 
 typedef struct DET_TRAIN_STRUCT {
-    MIL_INT         TrainMode;             //0:complete train, 1:fine tuning, 2:transfer learning
-    MIL_INT         TrainEngineUsed;       //0:CPU, 1:GPU
-    MIL_INT         MaxNumberOfEpoch;      //max epoch number
-    MIL_INT         MiniBatchSize;         //mini batch size
-    MIL_INT         SchedulerType;         //0:Cyclical Decay, 1:Decay
-    MIL_DOUBLE      LearningRate;          //learning rate
-    MIL_DOUBLE      LearningRateDecay;     //learning rate decay
-    MIL_DOUBLE      SplitPercent;          //split percent for train dataset and development dataset
-    MIL_DOUBLE      ClassWeight;           //class weight strength when training with an inverse class frequency weight mode, default 50.0
+    MIL_INT    TrainMode;               //0:complete train, 1:fine tuning, 2:transfer learning
+    MIL_INT    TrainEngineUsed;         //0:CPU, 1:GPU
+    MIL_INT    MaxNumberOfEpoch;        //max epoch number
+    MIL_INT    MiniBatchSize;           //mini batch size
+    MIL_INT    SchedulerType;           //0:Cyclical Decay, 1:Decay
+    MIL_DOUBLE LearningRate;            //learning rate
+    MIL_DOUBLE LearningRateDecay;       //learning rate decay
+    MIL_DOUBLE SplitPercent;            //split percent for train dataset and development dataset
+    MIL_DOUBLE ClassWeight;             //class weight strength when training with an inverse class frequency weight mode, default 50.0
     
-    MIL_STRING      WorkSpaceDir;           
-    MIL_STRING      DataSetName;            //the name of training data
+    MIL_STRING  WorkSpaceDir;            //
+    MIL_STRING  DataSetName;            //the name of training data
 
-    MIL_STRING      TrainDstFolder;          //train destination folder
+    MIL_STRING TrainDstFolder;          //train destination folder
 }DET_TRAIN_STRUCT;
 
 typedef struct DET_RESULT_STRUCT {
 
-    MIL_INT         InstanceNum;
-    string          ImgPath;               //src Img path for predict
+    MIL_INT InstanceNum;
+    string ImgPath;                         //src Img path for predict
     vector<MIL_STRING> ClassName;
     vector<MIL_INT> ClassIndex;             //predict class
     vector<MIL_DOUBLE> Score;               //predict score
-    vector<Box>     Boxes;
+    vector<Box>Boxes;
 
 }DET_RESULT_STRUCT;
 
@@ -87,16 +87,15 @@ public:
         MIL_STRING& DetDumpFile);
 
     int TrainModel(DET_TRAIN_STRUCT DtParas);
- 
+    //针对离线测试：预测一个文件夹中的bmp图片
     int PredictFolderImgs(string SrcImgDir,
-                            MIL_STRING TdDetCtxPath,
-                            vector<DET_RESULT_STRUCT>&vecDetResults,
-                            bool SaveRst2file);
-
+        MIL_STRING TdDetCtxPath,
+        vector<DET_RESULT_STRUCT>&vecDetResults,
+        bool SaveRst2file);    
+    //针对在线测试：预测一个文件夹中的bmp图片 (暂定)
     void Predict(MIL_ID Image, MIL_UNIQUE_CLASS_ID& TrainedDetCtx,DET_RESULT_STRUCT& Result);
-    
+    void PredictBegin(MIL_UNIQUE_CLASS_ID& TrainedDetCtx, MIL_ID Image);
     void PrintControls();
-
     void CDatasetViewer(MIL_ID Dataset);
 
 private:

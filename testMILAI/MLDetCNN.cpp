@@ -76,14 +76,14 @@ void CMLDetCNN::readDetDataSetConfig(string DetDataSetConfigPath)
     m_DetDataSetPara.ClassesPath = std::string(wstrClassesPath.begin(), wstrClassesPath.end());
     m_DetDataSetPara.IconDir = std::string(wstrIconDir.begin(), wstrIconDir.end());
     m_DetDataSetPara.TrainDataInfoPath = std::string(wstrTrainDataInfoPath.begin(), wstrTrainDataInfoPath.end());
-    m_DetDataSetPara.ValDataInfoPath = std::string(wstrIconDir.begin(), wstrIconDir.end());   //在MIL中无效，Val自动从Train中分割出来
+    m_DetDataSetPara.ValDataInfoPath = std::string(wstrIconDir.begin(), wstrIconDir.end());
     m_DetDataSetPara.WorkingDataDir = std::string(wstrWorkingDataDir.begin(), wstrWorkingDataDir.end());
     m_DetDataSetPara.PreparedDataDir = std::string(wstrPreparedDataDir.begin(), wstrPreparedDataDir.end());
 
-    m_DetDataSetPara.ImageSizeX = GetPrivateProfileInt(L"COT_Resize", L"ImageSizeX", 0, lpPath);
-    m_DetDataSetPara.ImageSizeY = GetPrivateProfileInt(L"COT_Resize", L"ImageSizeY", 0, lpPath);
-    m_DetDataSetPara.TestDataRatio = GetPrivateProfileInt(L"COT_Resize", L"TestDataRatio", 0, lpPath);
-    m_DetDataSetPara.AugFreq = GetPrivateProfileInt(L"COT_Resize", L"AugFreq", 0, lpPath);
+    int ImageSizeX = GetPrivateProfileInt(L"COT_Resize", L"ImageSizeX", 0, lpPath);
+    int ImageSizeY = GetPrivateProfileInt(L"COT_Resize", L"ImageSizeY", 0, lpPath);
+    int TestDataRatio = GetPrivateProfileInt(L"COT_Resize", L"TestDataRatio", 0, lpPath);
+    int AugFreq = GetPrivateProfileInt(L"COT_Resize", L"AugFreq", 0, lpPath);
 
     delete[] lpPath;
 }
@@ -237,7 +237,7 @@ void CMLDetCNN::GenDataSet(string DetDataSetConfigPath)
     DataCtxParas.AugParas.AugmentationNumPerImage = m_DetDataSetPara.AugFreq;
     ConstructDataContext(DataCtxParas, DataContext);
     MIL_UNIQUE_CLASS_ID PreparedDataset = MclassAlloc(m_MilSystem, M_DATASET_IMAGES, M_DEFAULT, M_UNIQUE_ID);
-    PrepareDataset(DataContext, WorkingDataset, PreparedDataset, m_AIParse->string2MIL_STRING(m_DetDataSetPara.WorkingDataDir), m_DetDataSetPara.TestPtge);
+    PrepareDataset(DataContext, WorkingDataset, PreparedDataset, m_AIParse->string2MIL_STRING(m_DetDataSetPara.WorkingDataDir), m_DetDataSetPara.TestDataRatio);
 
 }
 
@@ -270,7 +270,7 @@ void CMLDetCNN::GenDataSet(DET_DATASET_PARAS_STRUCT DetDataSetPara)
     DataCtxParas.AugParas.AugmentationNumPerImage = m_DetDataSetPara.AugFreq;
     ConstructDataContext(DataCtxParas, DataContext);
     MIL_UNIQUE_CLASS_ID PreparedDataset = MclassAlloc(m_MilSystem, M_DATASET_IMAGES, M_DEFAULT, M_UNIQUE_ID);
-    PrepareDataset(DataContext, WorkingDataset, PreparedDataset, m_AIParse->string2MIL_STRING(m_DetDataSetPara.WorkingDataDir), m_DetDataSetPara.TestPtge);
+    PrepareDataset(DataContext, WorkingDataset, PreparedDataset, m_AIParse->string2MIL_STRING(m_DetDataSetPara.WorkingDataDir), m_DetDataSetPara.TestDataRatio);
 
 }
 
@@ -516,6 +516,7 @@ int CMLDetCNN::TrainModel(DET_TRAIN_STRUCT DtParas) {
          //WriteLog(LOG_INFO, "%s is not exit.",PreparedPath.c_str());
          return -1;
      }
+
     ConstructTrainCtx(DtParas, TrainCtx);
     MIL_UNIQUE_CLASS_ID PreparedDataset = MclassRestore(PreparedPath, m_MilSystem, M_DEFAULT, M_UNIQUE_ID);
     TrainClassifier(PreparedDataset, TrainCtx, TrainedDetCtx, DetDumpFile);
@@ -582,6 +583,7 @@ void CMLDetCNN::Predict(MIL_ID Image, MIL_UNIQUE_CLASS_ID& TrainedDetCtx, DET_RE
     Result.Score.resize(Result.InstanceNum);
     Result.ClassName.resize(Result.InstanceNum);
     for (int i = 0; i < Result.InstanceNum; i++) {
+
         MclassGetResult(ClassRes, M_INSTANCE_INDEX(i), M_CENTER_X + M_TYPE_MIL_DOUBLE, &Result.Boxes[i].CX);
         MclassGetResult(ClassRes, M_INSTANCE_INDEX(i), M_CENTER_Y + M_TYPE_MIL_DOUBLE, &Result.Boxes[i].CY);
         MclassGetResult(ClassRes, M_INSTANCE_INDEX(i), M_HEIGHT + M_TYPE_MIL_DOUBLE, &Result.Boxes[i].H);
@@ -608,7 +610,9 @@ void CMLDetCNN::PrintControls()
 }
 
 void CMLDetCNN::CDatasetViewer(MIL_ID Dataset)
+
 {
+
     MIL_UNIQUE_DISP_ID MilDisplay = MdispAlloc(m_MilSystem, M_DEFAULT, MIL_TEXT("M_DEFAULT"), M_DEFAULT, M_UNIQUE_ID);
     MIL_INT ImageSizeX = m_InputSizeX;
     MIL_INT ImageSizeY = m_InputSizeY;

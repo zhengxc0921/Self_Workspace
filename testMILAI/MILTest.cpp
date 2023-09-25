@@ -500,23 +500,20 @@ void MILTest::MILTestPredictEngine()
 
 void MILTest::MILTestGenDetDataset()
 {
-	//case1 :导入包含训练数据信息的ini文件
-	string DetDataSetConfigPath = "I:/MIL_AI/testMILAI/Config/COT_Resize_Para.ini";
+	string DetDataSetConfigPath = "G:/DefectDataCenter/ParseData/Detection/COT_Resize/raw_data/COT_Resize_Para.ini";
 	m_MLDetCNN->GenDataSet(DetDataSetConfigPath);
-	//case2:直接导入所需参数
-	DET_DATASET_PARAS_STRUCT DetDataSetPara;
-	DetDataSetPara.ClassesPath = "G:/DefectDataCenter/ParseData/Detection/COT_Resize/raw_data/Config/Classes.txt";
-	DetDataSetPara.IconDir = "G:/DefectDataCenter/ParseData/Detection/COT_Resize/raw_data/ClassesIcon/";
-	DetDataSetPara.TrainDataInfoPath = "G:/DefectDataCenter/ParseData/Detection/COT_Resize/raw_data/Config/ImgBoxes_MIL_train.txt";
-	
-	DetDataSetPara.WorkingDataDir = "G:/DefectDataCenter/ParseData/Detection/COT_Resize/MIL_Data/";
-	DetDataSetPara.PreparedDataDir = "G:/DefectDataCenter/ParseData/Detection/COT_Resize/MIL_Data/PreparedData";
-	DetDataSetPara.ImageSizeX = 1120;
-	DetDataSetPara.ImageSizeY = 224;
-	DetDataSetPara.TestDataRatio = 10;
-	DetDataSetPara.AugFreq = 0;
-	m_MLDetCNN->GenDataSet(DetDataSetPara);
-
+	//DET_DATASET_PARAS_STRUCT DetDataSetPara;
+//DetDataSetPara.ClassesPath = "G:/DefectDataCenter/ParseData/Detection/COT_Resize/raw_data/Config/Classes.txt";
+//DetDataSetPara.IconDir = "G:/DefectDataCenter/ParseData/Detection/COT_Resize/raw_data/ClassesIcon/";
+//DetDataSetPara.TrainDataInfoPath = "G:/DefectDataCenter/ParseData/Detection/COT_Resize/raw_data/Config/ImgBoxes_MIL_train.txt";
+//
+//DetDataSetPara.WorkingDataDir = "G:/DefectDataCenter/ParseData/Detection/COT_Resize/MIL_Data/";
+//DetDataSetPara.PreparedDataDir = "G:/DefectDataCenter/ParseData/Detection/COT_Resize/MIL_Data/PreparedData";
+//DetDataSetPara.ImageSizeX = 1120;
+//DetDataSetPara.ImageSizeY = 224;
+//DetDataSetPara.TestDataRatio = 10;
+//DetDataSetPara.AugFreq = 0;
+//m_MLDetCNN->GenDataSet(DetDataSetPara);
 }
 
 void MILTest::MILTestDetTrain()
@@ -530,8 +527,8 @@ void MILTest::MILTestDetTrain()
 	DtParas.LearningRate = 0.001;
 	DtParas.LearningRateDecay = 0.1;
 	DtParas.SplitPercent = 90.0;
-	DtParas.WorkSpaceDir = L"G:/DefectDataCenter/ParseData/Detection";   //工作根目录
-	DtParas.DataSetName = L"COT_Resize";								//项目名称
+	DtParas.WorkSpaceDir = L"G:/DefectDataCenter/ParseData/Detection";
+	DtParas.DataSetName = L"COT_Resize";
 	m_MLDetCNN->TrainModel( DtParas);
 	return;
 }
@@ -541,11 +538,81 @@ void MILTest::MILTestDetPredict()
 	string proj = "COT_Resize";
 	MIL_STRING Mproj = L"COT_Resize";
 	string	SrcImgDir = "G:/DefectDataCenter/ParseData/Detection/"+ proj+ "/raw_data/TImg";
+
 	MIL_STRING TdDetCtxPath = L"G:/DefectDataCenter/ParseData/Detection/"+ Mproj +L"/MIL_Data/"+ Mproj +L".mclass";
+
 	vector<DET_RESULT_STRUCT> vecDetResults;
 	bool SaveRst = TRUE;
 	m_MLDetCNN->PredictFolderImgs(SrcImgDir,TdDetCtxPath,vecDetResults,SaveRst);
 }
+
+//void MILTest::MILTestDetPredict()
+//{
+//	string ImgType = "bmp";
+//	string strProject = "COT_Resize";
+//	//string ImgType = "jpg";
+//	//string strProject = "VOC";
+//	string	SrcDir = "G:/DefectDataCenter/ParseData/Detection/" + strProject + "/raw_data/";
+//	string	SrcImgDir = SrcDir  + "TImg";
+//	MIL_STRING TdDetCtxName = m_DetectionWorkSpace + m_strProject + MIL_TEXT("/PreparedData/") + m_strProject + L".mclass";
+//	LARGE_INTEGER t1, t2, tc;
+//	QueryPerformanceFrequency(&tc);
+//	QueryPerformanceCounter(&t1);
+//	MIL_UNIQUE_CLASS_ID TestCtx = MclassRestore(TdDetCtxName, m_MilSystem, M_DEFAULT, M_UNIQUE_ID);
+//
+//	MclassInquire(TestCtx, M_DEFAULT_SOURCE_LAYER, M_SIZE_X + M_TYPE_MIL_INT, &m_InputSizeX);
+//	MclassInquire(TestCtx, M_DEFAULT_SOURCE_LAYER, M_SIZE_Y + M_TYPE_MIL_INT, &m_InputSizeY);
+//	MclassInquire(TestCtx, M_CONTEXT, M_NUMBER_OF_CLASSES + M_TYPE_MIL_INT, &m_ClassesNum);
+//
+//	//MclassControl(TestCtx, M_CONTEXT, M_DEFAULT_PREDICT_ENGINE_PRECISION, M_FP16);
+//	//设置ENGINE
+//	MIL_INT engine_index = 2;
+//	MIL_STRING Description;
+//	MclassControl(TestCtx, M_DEFAULT, M_PREDICT_ENGINE, engine_index);
+//	MclassInquire(TestCtx, M_PREDICT_ENGINE_INDEX(engine_index), M_PREDICT_ENGINE_DESCRIPTION, Description);
+//	MosPrintf(MIL_TEXT("\nM_PREDICT_ENGINE_DESCRIPTION: %s \n"), Description.c_str());
+//	vector<string>FilesInFolder;
+//	m_MLDetCNN->m_AIParse->getFilesInFolder(SrcImgDir, ImgType, m_FilesInFolder);
+//	m_MLDetCNN->m_AIParse->getFilesInFolder(SrcImgDir, ImgType, FilesInFolder);
+//	//读取到内存时间不计入
+//	int nFileNum = m_FilesInFolder.size();
+//	vector<DET_RESULT_STRUCT> vecDetResults;
+//	vector<MIL_ID>RawImageS;
+//	for (int i = 0; i < nFileNum; i++) {
+//		MIL_ID RawImage = MbufRestore(m_FilesInFolder[i], m_MilSystem, M_NULL);
+//		RawImageS.emplace_back(RawImage);
+//	}
+//	m_MLDetCNN->FolderImgsPredict(RawImageS, TestCtx, vecDetResults);
+//
+//	//释放内存
+//	for (int i = 0; i < RawImageS.size();i++) {
+//		MbufFree(RawImageS[i]);
+//	}
+//
+//	//将结果保存到txt文件
+//	ofstream ODNetResult;
+//	ODNetResult.open(SrcDir+"ODNetResult.txt", ios::out);
+//	for (int i = 0; i < nFileNum; i++) {
+//		string ImgInfo;
+//		ImgInfo = FilesInFolder[i];
+//		//写入图片路径、box、conf、classname
+//		DET_RESULT_STRUCT R_i = vecDetResults[i];
+//		for (int j = 0; j < R_i.Boxes.size(); j++) {
+//			string strClassName;
+//			m_MLDetCNN->m_AIParse->MIL_STRING2string(R_i.ClassName[j], strClassName);
+//			ImgInfo = ImgInfo + " " + to_string(R_i.Boxes[j].CX)
+//				+ " " + to_string(R_i.Boxes[j].CY)
+//				+ " " + to_string(R_i.Boxes[j].W)
+//				+ " " + to_string(R_i.Boxes[j].H)
+//				+ " " + to_string(R_i.Score[j])
+//				+ " " + strClassName
+//				;
+//		}
+//		ODNetResult << ImgInfo<<endl;
+//	}
+//
+//	ODNetResult.close();
+//}
 
 void MILTest::MILTestDetPredictMutiProcessSingle()
 {
@@ -716,6 +783,9 @@ void MILTest::MILTestDetPredictCore(MIL_UNIQUE_CLASS_ID& TestCtx,
 void MILTest::mutiThreadPrepare()
 {
 	//读取待图片路径测路径
+
+
+
 }
 
 void MILTest::MILTestDetPredictMutiThreadCore()
@@ -793,6 +863,7 @@ void MILTest::MILTestDetPredictMutiThreadCore()
 void MILTest::MILTestONNXPredict()
 {
 	MIL_STRING TdONNXCtxName = MIL_TEXT("I:/MIL_AI/testMILAI/yolov4_weights_LMK.onnx");
+
 	MIL_UNIQUE_CLASS_ID TestONNXCtx = MclassAlloc(m_MilSystem,M_CLASSIFIER_ONNX, M_DEFAULT, M_UNIQUE_ID);
 	MclassImport(TdONNXCtxName,M_ONNX_FILE, TestONNXCtx, M_DEFAULT, M_DEFAULT, M_DEFAULT);
 	MclassInquire(TestONNXCtx, M_DEFAULT_SOURCE_LAYER, M_SIZE_X + M_TYPE_MIL_INT, &m_InputSizeX);

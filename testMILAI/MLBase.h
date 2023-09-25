@@ -67,34 +67,34 @@ struct ClassificationResultStruct
     //std::vector<double>AS;
 };
 
-struct DetParas{
-    MIL_INT    TrainMode;               //0:complete train, 1:fine tuning, 2:transfer learning
-    MIL_INT    TrainEngineUsed;         //0:CPU, 1:GPU
-    MIL_INT    MaxNumberOfEpoch;        //max epoch number
-    MIL_INT    MiniBatchSize;           //mini batch size
-    MIL_INT    SchedulerType;           //0:Cyclical Decay, 1:Decay
-    MIL_DOUBLE LearningRate;            //learning rate
-    MIL_DOUBLE LearningRateDecay;       //learning rate decay
-    MIL_DOUBLE SplitPercent;            //split percent for train dataset and development dataset
-    MIL_DOUBLE ClassWeight;             //class weight strength when training with an inverse class frequency weight mode, default 50.0
-    MIL_STRING TrainDstFolder;          //train destination folder
-};
-
-struct DetResult {
-
-    MIL_INT InstanceNum;
-    string ImgPath; //src Img path for predict
-    vector<MIL_STRING> ClassName;
-    vector<MIL_INT> ClassIndex;               //predict class
-    vector<MIL_DOUBLE> Score;            //predict score
-    vector<Box>Boxes;
-
-    //MIL_INT GroundTruth;                //ground truth
-    //MIL_STRING RootPath;              //Root Path of the img
-
-    //std::vector<MIL_DOUBLE> AllScores;        //predict all class scores
-
-};
+//struct DetParas{
+//    MIL_INT    TrainMode;               //0:complete train, 1:fine tuning, 2:transfer learning
+//    MIL_INT    TrainEngineUsed;         //0:CPU, 1:GPU
+//    MIL_INT    MaxNumberOfEpoch;        //max epoch number
+//    MIL_INT    MiniBatchSize;           //mini batch size
+//    MIL_INT    SchedulerType;           //0:Cyclical Decay, 1:Decay
+//    MIL_DOUBLE LearningRate;            //learning rate
+//    MIL_DOUBLE LearningRateDecay;       //learning rate decay
+//    MIL_DOUBLE SplitPercent;            //split percent for train dataset and development dataset
+//    MIL_DOUBLE ClassWeight;             //class weight strength when training with an inverse class frequency weight mode, default 50.0
+//    MIL_STRING TrainDstFolder;          //train destination folder
+//};
+//
+//struct DetResult {
+//
+//    MIL_INT InstanceNum;
+//    string ImgPath; //src Img path for predict
+//    vector<MIL_STRING> ClassName;
+//    vector<MIL_INT> ClassIndex;               //predict class
+//    vector<MIL_DOUBLE> Score;            //predict score
+//    vector<Box>Boxes;
+//
+//    //MIL_INT GroundTruth;                //ground truth
+//    //MIL_STRING RootPath;              //Root Path of the img
+//
+//    //std::vector<MIL_DOUBLE> AllScores;        //predict all class scores
+//
+//};
 
 
 class CMLBase;
@@ -108,7 +108,7 @@ public:
 
 	MIL_INT IsTrainingSupportedOnPlatform(MIL_ID MilSystem);
 
-    virtual MIL_INT CnnTrainEngineDLLInstalled(MIL_ID MilSystem)=0;
+    //virtual MIL_INT CnnTrainEngineDLLInstalled(MIL_ID MilSystem)=0;
 
 
     void CreateFolder(const MIL_STRING& FolderPath);
