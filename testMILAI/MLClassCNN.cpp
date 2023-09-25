@@ -172,15 +172,15 @@ CMLClassCNN::CMLClassCNN(MIL_ID MilSystem, MIL_ID MilDisplay) :
     m_AIParse = CAIParsePtr(new CAIParse(MilSystem));
 }
 
-MIL_INT CMLClassCNN::CnnTrainEngineDLLInstalled(MIL_ID MilSystem)
-{
-
-    MIL_INT IsInstalled = M_FALSE;
-    MIL_UNIQUE_CLASS_ID TrainCtx = MclassAlloc(MilSystem, M_TRAIN_CNN, M_DEFAULT, M_UNIQUE_ID);
-    MclassInquire(TrainCtx, M_DEFAULT, M_TRAIN_ENGINE_IS_INSTALLED + M_TYPE_MIL_INT, &IsInstalled);
-    return IsInstalled;
-
-}
+//MIL_INT CMLClassCNN::CnnTrainEngineDLLInstalled(MIL_ID MilSystem)
+//{
+//
+//    MIL_INT IsInstalled = M_FALSE;
+//    MIL_UNIQUE_CLASS_ID TrainCtx = MclassAlloc(MilSystem, M_TRAIN_CNN, M_DEFAULT, M_UNIQUE_ID);
+//    MclassInquire(TrainCtx, M_DEFAULT, M_TRAIN_ENGINE_IS_INSTALLED + M_TYPE_MIL_INT, &IsInstalled);
+//    return IsInstalled;
+//
+//}
 
 void CMLClassCNN::InitClassWeights()
 {

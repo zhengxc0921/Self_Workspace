@@ -1,13 +1,7 @@
 #pragma once
 
-//#include <windows.h>
+
 #include <mil.h>
-//#include <string>
-//#include <algorithm>
-//#include <random>
-//#include <numeric>
-//#include <map>
-//#include <math.h>
 #include <boost/smart_ptr.hpp>
 
 // Dashboard for CNN

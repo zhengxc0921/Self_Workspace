@@ -24,7 +24,7 @@ public:
     CMLClassCNN(MIL_ID MilSystem, MIL_ID MilDisplay);
     ~CMLClassCNN() {};
 
-    virtual MIL_INT CnnTrainEngineDLLInstalled(MIL_ID MilSystem);
+    //virtual MIL_INT CnnTrainEngineDLLInstalled(MIL_ID MilSystem);
 
     void InitClassWeights();
     //单个文件-->Dataset

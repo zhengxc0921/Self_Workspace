@@ -30,12 +30,12 @@ MIL_INT CMLBase::IsTrainingSupportedOnPlatform(MIL_ID MilSystem)
         return M_FALSE;
     }
 
-    // If no train engine is installed on the MIL system then the train example cannot run.
-    if (CnnTrainEngineDLLInstalled(MilSystem) != M_TRUE)
-    {
-        MosPrintf(MIL_TEXT("\n***** No train engine installed, MclassTrain() cannot run! *****\n"));
-        return M_FALSE;
-    }
+    //// If no train engine is installed on the MIL system then the train example cannot run.
+    //if (CnnTrainEngineDLLInstalled(MilSystem) != M_TRUE)
+    //{
+    //    MosPrintf(MIL_TEXT("\n***** No train engine installed, MclassTrain() cannot run! *****\n"));
+    //    return M_FALSE;
+    //}
 
     return M_TRUE;
 }

@@ -22,7 +22,7 @@ public:
 
 	void savePredictedImg();
 
-	void predictBegin();
+	//void predictBegin();
 
 	void InitClassWeights();
 
@@ -104,7 +104,7 @@ public:
 	MIL_STRING m_DstImgDir;
 	MIL_UNIQUE_CLASS_ID m_TrainedCtx;
 	map<string,MIL_ID >m_PathRawImageMap;
-	vector<DetResult> m_vecDetResults;
+	vector<DET_RESULT_STRUCT> m_vecDetResults;
 
 
 };

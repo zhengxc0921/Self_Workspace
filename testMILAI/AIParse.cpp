@@ -47,7 +47,6 @@ void CAIParse::Split(const string& str, vector<string>& tokens, const string& de
 }
 
 
-
 void CAIParse::getFoldersInFolder(string Path, vector<string>& Folders)
 {
 	long long  hFile = 0;
@@ -67,7 +66,6 @@ void CAIParse::getFoldersInFolder(string Path, vector<string>& Folders)
 		_findclose(hFile);
 	}
 }
-
 
 
 void CAIParse::getFilesInFolder(string Path, string FileType, vector<MIL_STRING>& Files)

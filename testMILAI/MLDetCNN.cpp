@@ -1,5 +1,6 @@
 #include "MLDetCNN.h"
-
+//#include <Shlwapi.h>
+#include <fstream>
 
 
 CMLDetCNN::CMLDetCNN(MIL_ID MilSystem, MIL_ID MilDisplay):
@@ -13,83 +14,90 @@ CMLDetCNN::~CMLDetCNN()
 {
 }
 
-MIL_INT CMLDetCNN::CnnTrainEngineDLLInstalled(MIL_ID MilSystem)
+//MIL_INT CMLDetCNN::CnnTrainEngineDLLInstalled(MIL_ID MilSystem)
+//{
+//	MIL_INT IsInstalled = M_FALSE;
+//	MIL_UNIQUE_CLASS_ID TrainCtx = MclassAlloc(MilSystem, M_TRAIN_DET, M_DEFAULT, M_UNIQUE_ID);
+//	MclassInquire(TrainCtx, M_DEFAULT, M_TRAIN_ENGINE_IS_INSTALLED + M_TYPE_MIL_INT, &IsInstalled);
+//	return IsInstalled;
+//}
+
+void CMLDetCNN::CreateFolder(const MIL_STRING& FolderPath)
 {
-	MIL_INT IsInstalled = M_FALSE;
-	MIL_UNIQUE_CLASS_ID TrainCtx = MclassAlloc(MilSystem, M_TRAIN_DET, M_DEFAULT, M_UNIQUE_ID);
-	MclassInquire(TrainCtx, M_DEFAULT, M_TRAIN_ENGINE_IS_INSTALLED + M_TYPE_MIL_INT, &IsInstalled);
-	return IsInstalled;
+    MIL_INT FolderExists = M_NO;
+    MappFileOperation(M_DEFAULT, FolderPath, M_NULL, M_NULL, M_FILE_EXISTS, M_DEFAULT, &FolderExists);
+    if (FolderExists == M_NO)
+    {
+        MappFileOperation(M_DEFAULT, FolderPath, M_NULL, M_NULL, M_FILE_MAKE_DIR, M_DEFAULT, M_NULL);
+    }
 }
 
-void CMLDetCNN::ConstructDataset(string ClassesInfo,
-	//MIL_STRING IconDir, 
-	string ImgDataInfo, 
-	const MIL_STRING& WorkingDataPath)
+bool CMLDetCNN::isfileNotExist(string fileNmae) {
+    ifstream f(fileNmae);
+    return !f.good();
+};
+
+bool CMLDetCNN::isfileNotExist(MIL_STRING fileNmae) {
+    ifstream f(fileNmae.c_str());
+    return !f.good();
+};
+
+void CMLDetCNN::readDetDataSetConfig(string DetDataSetConfigPath)
 {
-	MIL_UNIQUE_CLASS_ID  Dataset = MclassAlloc(m_MilSystem, M_DATASET_IMAGES, M_DEFAULT, M_UNIQUE_ID);
-	MclassControl(Dataset, M_DEFAULT, M_AUTHOR_ADD, MIL_TEXT("ZXC"));
-	//step1:txt-->IconDataInfo
-	vector<MIL_STRING>vecClasses;
-	m_AIParse->readClasses2Vector(ClassesInfo, vecClasses);
-	for (int i = 0; i < vecClasses.size(); i++) {
-		//MIL_STRING ClassIcon = IconDir + vecClasses[i] + L".mim";
-		MclassControl(Dataset, M_DEFAULT, M_CLASS_ADD, vecClasses[i]);
-		//MIL_UNIQUE_BUF_ID IconImageId = MbufRestore(ClassIcon, m_MilSystem, M_UNIQUE_ID);
-		//MclassControl(Dataset, M_CLASS_INDEX(i), M_CLASS_ICON_ID, IconImageId);
-	}
+    int nWcharSize = 100;
 
-	//step2:txt-->ImgDataInfo
-	vector<MIL_STRING> vecImgPaths;
-	vector<vector<Box>> vec2Boxes;
-	vector<vector<int>> veclabels;
-	m_AIParse->readDataSet2Vector(ImgDataInfo, vecImgPaths, vec2Boxes, veclabels);
-	int nImgNum = vecImgPaths.size();
-	vecImgPaths.resize(nImgNum);
-	vec2Boxes.resize(nImgNum);
-	veclabels.resize(nImgNum);
-	for (int i = 0; i < nImgNum; i++) {
-		MclassControl(Dataset, M_DEFAULT, M_ENTRY_ADD, M_DEFAULT);
-		MclassControlEntry(Dataset, i, M_DEFAULT_KEY, M_DEFAULT, M_ENTRY_IMAGE_PATH, M_DEFAULT, vecImgPaths[i], M_DEFAULT);
-		vector<Box> tmpBoxes = vec2Boxes[i];
-		vector<int> tmplabels = veclabels[i];
-		int nTempLen = tmpBoxes.size();
-		for (int j = 0; j < nTempLen; j++) {
+    //lpPath : char* 转换成 LPCTSTR
+    const char* path = DetDataSetConfigPath.c_str();
+    int path_num = MultiByteToWideChar(0, 0, path, -1, NULL, 0);
+    LPTSTR lpPath = new wchar_t[path_num];
+    MultiByteToWideChar(0, 0, path, -1, lpPath, path_num);
 
-			MIL_UNIQUE_GRA_ID  MilGraphicList = MgraAllocList(m_MilSystem, M_DEFAULT, M_UNIQUE_ID);
-			MgraRect(M_DEFAULT, MilGraphicList, tmpBoxes[j].x1, tmpBoxes[j].y1, tmpBoxes[j].x2, tmpBoxes[j].y2);
-			MclassEntryAddRegion(Dataset, i, M_DEFAULT_KEY, M_DESCRIPTOR_TYPE_BOX, MilGraphicList, M_NULL, tmplabels[j], M_DEFAULT);
-		}
-	}
+    LPTSTR ClassesPathbuf = new wchar_t[nWcharSize];
+    LPTSTR IconDirbuf = new wchar_t[nWcharSize];
+    LPTSTR TrainDataInfoPathbuf = new wchar_t[nWcharSize];
+    LPTSTR ValDataInfoPathbuf = new wchar_t[nWcharSize];
+    LPTSTR WorkingDataDirbuf = new wchar_t[nWcharSize];
+    LPTSTR PreparedDataDirbuf = new wchar_t[nWcharSize];
 
+    GetPrivateProfileString(L"COT_Resize", L"ClassesPath", L"", ClassesPathbuf, nWcharSize, lpPath);
+    GetPrivateProfileString(L"COT_Resize", L"IconDir", L"", IconDirbuf, nWcharSize, lpPath);
+    GetPrivateProfileString(L"COT_Resize", L"TrainDataInfoPath", L"", TrainDataInfoPathbuf, nWcharSize, lpPath);
+    GetPrivateProfileString(L"COT_Resize", L"ValDataInfoPath", L"", ValDataInfoPathbuf, nWcharSize, lpPath);
+    GetPrivateProfileString(L"COT_Resize", L"WorkingDataDir", L"", WorkingDataDirbuf, nWcharSize, lpPath);
+    GetPrivateProfileString(L"COT_Resize", L"PreparedDataDir", L"", PreparedDataDirbuf, nWcharSize, lpPath);
 
-	CreateFolder(WorkingDataPath);
-	MclassControl(Dataset, M_CONTEXT, M_CONSOLIDATE_ENTRIES_INTO_FOLDER, WorkingDataPath);
-	MIL_STRING WorkDatasetPath = WorkingDataPath + MIL_TEXT("DataSet.mclassd");
-	MclassSave(WorkDatasetPath, Dataset, M_DEFAULT);
+    wstring wstrClassesPath(ClassesPathbuf);
+    wstring wstrIconDir(IconDirbuf);
+    wstring wstrTrainDataInfoPath(TrainDataInfoPathbuf);
+    wstring wstrValDataInfoPath(ValDataInfoPathbuf);
+    wstring wstrWorkingDataDir(WorkingDataDirbuf);
+    wstring wstrPreparedDataDir(PreparedDataDirbuf);
+
+    m_DetDataSetPara.ClassesPath = std::string(wstrClassesPath.begin(), wstrClassesPath.end());
+    m_DetDataSetPara.IconDir = std::string(wstrIconDir.begin(), wstrIconDir.end());
+    m_DetDataSetPara.TrainDataInfoPath = std::string(wstrTrainDataInfoPath.begin(), wstrTrainDataInfoPath.end());
+    m_DetDataSetPara.ValDataInfoPath = std::string(wstrIconDir.begin(), wstrIconDir.end());   //在MIL中无效，Val自动从Train中分割出来
+    m_DetDataSetPara.WorkingDataDir = std::string(wstrWorkingDataDir.begin(), wstrWorkingDataDir.end());
+    m_DetDataSetPara.PreparedDataDir = std::string(wstrPreparedDataDir.begin(), wstrPreparedDataDir.end());
+
+    m_DetDataSetPara.ImageSizeX = GetPrivateProfileInt(L"COT_Resize", L"ImageSizeX", 0, lpPath);
+    m_DetDataSetPara.ImageSizeY = GetPrivateProfileInt(L"COT_Resize", L"ImageSizeY", 0, lpPath);
+    m_DetDataSetPara.TestDataRatio = GetPrivateProfileInt(L"COT_Resize", L"TestDataRatio", 0, lpPath);
+    m_DetDataSetPara.AugFreq = GetPrivateProfileInt(L"COT_Resize", L"AugFreq", 0, lpPath);
+
+    delete[] lpPath;
 }
 
-void CMLDetCNN::ConstructDataset(string ClassesInfo,
-    string IconDir,
-    string ImgDataInfo,
-    MIL_STRING MStrWorkingDataPath,
-    string DataSetName,
-    MIL_UNIQUE_CLASS_ID& Dataset)
+void CMLDetCNN::addInfo2Dataset(MIL_UNIQUE_CLASS_ID& Dataset)
 {
-
-    MIL_STRING MStrIconDir = m_AIParse->string2MIL_STRING(IconDir);
-    //MIL_STRING MStrWorkingDataPath = m_AIParse->string2MIL_STRING(WorkingDataPath);
-    MIL_STRING MStrDataSetName = m_AIParse->string2MIL_STRING(DataSetName);
-    //m_AIParse->MIL_STRING2string(MStrIconDir, IconDir);
-    //m_AIParse->MIL_STRING2string(MStrWorkingDataPath, WorkingDataPath);
-
-
-    
+   MIL_STRING MStrIconDir = m_AIParse->string2MIL_STRING(m_DetDataSetPara.IconDir);
+    //m_AIParse->MIL_STRING2string(MStrWorkingDataPath, WorkingDataPath); 
     MclassControl(Dataset, M_DEFAULT, M_AUTHOR_ADD, MIL_TEXT("ZXC"));
     //step1:txt-->IconDataInfo
     vector<MIL_STRING>vecClasses;
-    m_AIParse->readClasses2Vector(ClassesInfo, vecClasses);
+    m_AIParse->readClasses2Vector(m_DetDataSetPara.ClassesPath, vecClasses);
     for (int i = 0; i < vecClasses.size(); i++) {
-        MIL_STRING ClassIcon = MStrIconDir + vecClasses[i] + L".bmp";
+        MIL_STRING ClassIcon = MStrIconDir + vecClasses[i] + L".BMP";
         MclassControl(Dataset, M_DEFAULT, M_CLASS_ADD, vecClasses[i]);
         MIL_UNIQUE_BUF_ID IconImageId = MbufRestore(ClassIcon, m_MilSystem, M_UNIQUE_ID);
         MclassControl(Dataset, M_CLASS_INDEX(i), M_CLASS_ICON_ID, IconImageId);
@@ -99,7 +107,7 @@ void CMLDetCNN::ConstructDataset(string ClassesInfo,
     vector<MIL_STRING> vecImgPaths;
     vector<vector<Box>> vec2Boxes;
     vector<vector<int>> veclabels;
-    m_AIParse->readDataSet2Vector(ImgDataInfo, vecImgPaths, vec2Boxes, veclabels);
+    m_AIParse->readDataSet2Vector(m_DetDataSetPara.TrainDataInfoPath, vecImgPaths, vec2Boxes, veclabels);
     int nImgNum = vecImgPaths.size();
     vecImgPaths.resize(nImgNum);
     vec2Boxes.resize(nImgNum);
@@ -116,13 +124,155 @@ void CMLDetCNN::ConstructDataset(string ClassesInfo,
             MclassEntryAddRegion(Dataset, i, M_DEFAULT_KEY, M_DESCRIPTOR_TYPE_BOX, MilGraphicList, M_NULL, tmplabels[j], M_DEFAULT);
         }
     }
+    MIL_STRING MStrWorkingDataDir = m_AIParse->string2MIL_STRING(m_DetDataSetPara.WorkingDataDir);
+    CreateFolder(MStrWorkingDataDir);
+ 
+}
 
+int CMLDetCNN::predictPrepare(MIL_STRING TdDetCtxPath) {
+    m_TrainedDetCtx = MclassRestore(TdDetCtxPath, m_MilSystem, M_DEFAULT, M_UNIQUE_ID);
+    //获取模型输入尺寸
+    MclassInquire(m_TrainedDetCtx, M_DEFAULT_SOURCE_LAYER, M_SIZE_X + M_TYPE_MIL_INT, &m_InputSizeX);
+    MclassInquire(m_TrainedDetCtx, M_DEFAULT_SOURCE_LAYER, M_SIZE_Y + M_TYPE_MIL_INT, &m_InputSizeY);
+    MclassInquire(m_TrainedDetCtx, M_CONTEXT, M_NUMBER_OF_CLASSES + M_TYPE_MIL_INT, &m_ClassesNum);
+    MclassInquire(m_TrainedDetCtx, M_DEFAULT_SOURCE_LAYER, M_SIZE_BAND + M_TYPE_MIL_INT, &m_InputSizeBand);
+    return 0;
+}
 
-    CreateFolder(MStrWorkingDataPath);
-    //MclassControl(Dataset, M_CONTEXT, M_CONSOLIDATE_ENTRIES_INTO_FOLDER, MStrWorkingDataPath);
+int CMLDetCNN::predictPrepare(MIL_UNIQUE_CLASS_ID& TrainedDetCtx) {
+
+    //获取模型输入尺寸
+    MclassInquire(TrainedDetCtx, M_DEFAULT_SOURCE_LAYER, M_SIZE_X + M_TYPE_MIL_INT, &m_InputSizeX);
+    MclassInquire(TrainedDetCtx, M_DEFAULT_SOURCE_LAYER, M_SIZE_Y + M_TYPE_MIL_INT, &m_InputSizeY);
+    MclassInquire(TrainedDetCtx, M_CONTEXT, M_NUMBER_OF_CLASSES + M_TYPE_MIL_INT, &m_ClassesNum);
+    MclassInquire(TrainedDetCtx, M_DEFAULT_SOURCE_LAYER, M_SIZE_BAND + M_TYPE_MIL_INT, &m_InputSizeBand);
+    m_ModelNotPrePared = FALSE;
+
+    return 0;
+}
+
+void CMLDetCNN::predict(MIL_ID Image, DET_RESULT_STRUCT& Result)
+{
+    MIL_ID ImageReduce;
+    if (m_InputSizeBand == 3) {
+        ImageReduce = MbufAllocColor(m_MilSystem, 3, m_InputSizeX, m_InputSizeY, 8 + M_UNSIGNED, M_IMAGE + M_PROC, M_NULL);
+    }
+    else {
+        ImageReduce = MbufAlloc2d(m_MilSystem, m_InputSizeX, m_InputSizeY, 8 + M_UNSIGNED, M_IMAGE + M_PROC, M_NULL);
+    }
+
+    MimResize(Image, ImageReduce, M_FILL_DESTINATION, M_FILL_DESTINATION, M_BILINEAR);
+
+    MIL_INT Status = M_FALSE;
+    MclassInquire(m_TrainedDetCtx, M_DEFAULT, M_PREPROCESSED + M_TYPE_MIL_INT, &Status);
+    if (M_FALSE == Status)
+    {
+        MclassPreprocess(m_TrainedDetCtx, M_DEFAULT);
+    }
+    MIL_UNIQUE_CLASS_ID ClassRes = MclassAllocResult(m_MilSystem, M_PREDICT_DET_RESULT, M_DEFAULT, M_UNIQUE_ID);
+    MclassPredict(m_TrainedDetCtx, ImageReduce, ClassRes, M_DEFAULT);
+
+    MbufFree(ImageReduce);
+    MclassGetResult(ClassRes, M_GENERAL, M_NUMBER_OF_INSTANCES + M_TYPE_MIL_INT, &Result.InstanceNum);
+    Result.Boxes.resize(Result.InstanceNum);
+    Result.ClassIndex.resize(Result.InstanceNum);
+    Result.Score.resize(Result.InstanceNum);
+    Result.ClassName.resize(Result.InstanceNum);
+    for (int i = 0; i < Result.InstanceNum; i++) {
+
+        MclassGetResult(ClassRes, M_INSTANCE_INDEX(i), M_CENTER_X + M_TYPE_MIL_DOUBLE, &Result.Boxes[i].CX);
+        MclassGetResult(ClassRes, M_INSTANCE_INDEX(i), M_CENTER_Y + M_TYPE_MIL_DOUBLE, &Result.Boxes[i].CY);
+        MclassGetResult(ClassRes, M_INSTANCE_INDEX(i), M_HEIGHT + M_TYPE_MIL_DOUBLE, &Result.Boxes[i].H);
+        MclassGetResult(ClassRes, M_INSTANCE_INDEX(i), M_WIDTH + M_TYPE_MIL_DOUBLE, &Result.Boxes[i].W);
+
+        MclassGetResult(ClassRes, M_INSTANCE_INDEX(i), M_BEST_CLASS_INDEX + M_TYPE_MIL_INT, &Result.ClassIndex[i]);
+        MclassGetResult(ClassRes, M_INSTANCE_INDEX(i), M_BEST_CLASS_SCORE + M_TYPE_MIL_DOUBLE, &Result.Score[i]);
+        MclassInquire(m_TrainedDetCtx, M_CLASS_INDEX(Result.ClassIndex[i]), M_CLASS_NAME, Result.ClassName[i]);
+    }
+}
+
+void CMLDetCNN::saveResult2File(string strFilePath, vector<MIL_STRING>FilesInFolder, vector<DET_RESULT_STRUCT> vecDetResults) {
+
+    //将结果保存到txt文件
+    ofstream ODNetResult;
+    int nFileNum = vecDetResults.size();
+    ODNetResult.open(strFilePath, ios::out);
+    for (int i = 0; i < nFileNum; i++) {
+        string ImgInfo;
+        m_AIParse->MIL_STRING2string(FilesInFolder[i], ImgInfo);
+        //写入图片路径、box、conf、classname
+        DET_RESULT_STRUCT R_i = vecDetResults[i];
+        for (int j = 0; j < R_i.Boxes.size(); j++) {
+            string strClassName;
+            m_AIParse->MIL_STRING2string(R_i.ClassName[j], strClassName);
+            ImgInfo = ImgInfo + " " + to_string(R_i.Boxes[j].CX)
+                + " " + to_string(R_i.Boxes[j].CY)
+                + " " + to_string(R_i.Boxes[j].W)
+                + " " + to_string(R_i.Boxes[j].H)
+                + " " + to_string(R_i.Score[j])
+                + " " + strClassName
+                ;
+        }
+        ODNetResult << ImgInfo << endl;
+    }
+
+    ODNetResult.close();
+}
+
+void CMLDetCNN::GenDataSet(string DetDataSetConfigPath)
+{
+    //读取 DetDataSetConfig
+    readDetDataSetConfig(DetDataSetConfigPath);
+    //写入WorkingDataset
+    MIL_UNIQUE_CLASS_ID  WorkingDataset = MclassAlloc(m_MilSystem, M_DATASET_IMAGES, M_DEFAULT, M_UNIQUE_ID);
+    addInfo2Dataset(WorkingDataset);
+    ////*******************************必须参数*******************************//
+    MIL_UNIQUE_CLASS_ID DataContext = MclassAlloc(m_MilSystem, M_PREPARE_IMAGES_DET, M_DEFAULT, M_UNIQUE_ID);
+    DataContextParasStruct DataCtxParas;
+    DataCtxParas.ImageSizeX = m_DetDataSetPara.ImageSizeX;
+    DataCtxParas.ImageSizeY = m_DetDataSetPara.ImageSizeY;
+    DataCtxParas.DstFolderMode = 1;
+    DataCtxParas.PreparedDataFolder = m_AIParse->string2MIL_STRING(m_DetDataSetPara.PreparedDataDir);
+    memset(&DataCtxParas.AugParas, 0, sizeof(AugmentationParasStruct));
+    DataCtxParas.AugParas.AugmentationNumPerImage = m_DetDataSetPara.AugFreq;
+    ConstructDataContext(DataCtxParas, DataContext);
+    MIL_UNIQUE_CLASS_ID PreparedDataset = MclassAlloc(m_MilSystem, M_DATASET_IMAGES, M_DEFAULT, M_UNIQUE_ID);
+    PrepareDataset(DataContext, WorkingDataset, PreparedDataset, m_AIParse->string2MIL_STRING(m_DetDataSetPara.WorkingDataDir), m_DetDataSetPara.TestPtge);
 
 }
 
+void CMLDetCNN::GenDataSet(DET_DATASET_PARAS_STRUCT DetDataSetPara)
+{
+    //赋值m_DetDataSetPara
+    m_DetDataSetPara.ClassesPath = DetDataSetPara.ClassesPath;
+    m_DetDataSetPara.IconDir = DetDataSetPara.IconDir;
+    m_DetDataSetPara.TrainDataInfoPath = DetDataSetPara.TrainDataInfoPath;
+    //m_DetDataSetPara.ValDataInfoPath = DetDataSetPara.ValDataInfoPath;   //在MIL中无效，Val自动从Train中分割出来
+    m_DetDataSetPara.WorkingDataDir = DetDataSetPara.WorkingDataDir;
+    m_DetDataSetPara.PreparedDataDir = DetDataSetPara.PreparedDataDir;
+    m_DetDataSetPara.ImageSizeX = DetDataSetPara.ImageSizeX;
+    m_DetDataSetPara.ImageSizeY = DetDataSetPara.ImageSizeY;
+    m_DetDataSetPara.TestDataRatio = DetDataSetPara.TestDataRatio;
+    m_DetDataSetPara.AugFreq = DetDataSetPara.AugFreq;
+
+
+    //写入WorkingDataset
+    MIL_UNIQUE_CLASS_ID  WorkingDataset = MclassAlloc(m_MilSystem, M_DATASET_IMAGES, M_DEFAULT, M_UNIQUE_ID);
+    addInfo2Dataset(WorkingDataset);
+    ////*******************************必须参数*******************************//
+    MIL_UNIQUE_CLASS_ID DataContext = MclassAlloc(m_MilSystem, M_PREPARE_IMAGES_DET, M_DEFAULT, M_UNIQUE_ID);
+    DataContextParasStruct DataCtxParas;
+    DataCtxParas.ImageSizeX = m_DetDataSetPara.ImageSizeX;
+    DataCtxParas.ImageSizeY = m_DetDataSetPara.ImageSizeY;
+    DataCtxParas.DstFolderMode = 1;
+    DataCtxParas.PreparedDataFolder = m_AIParse->string2MIL_STRING(m_DetDataSetPara.PreparedDataDir);
+    memset(&DataCtxParas.AugParas, 0, sizeof(AugmentationParasStruct));
+    DataCtxParas.AugParas.AugmentationNumPerImage = m_DetDataSetPara.AugFreq;
+    ConstructDataContext(DataCtxParas, DataContext);
+    MIL_UNIQUE_CLASS_ID PreparedDataset = MclassAlloc(m_MilSystem, M_DATASET_IMAGES, M_DEFAULT, M_UNIQUE_ID);
+    PrepareDataset(DataContext, WorkingDataset, PreparedDataset, m_AIParse->string2MIL_STRING(m_DetDataSetPara.WorkingDataDir), m_DetDataSetPara.TestPtge);
+
+}
 
 void CMLDetCNN::ConstructDataContext(DataContextParasStruct DataCtxParas, MIL_UNIQUE_CLASS_ID& PrepareDataCtx)
 {    
@@ -154,8 +304,6 @@ void CMLDetCNN::ConstructDataContext(DataContextParasStruct DataCtxParas, MIL_UN
     // Reproducibility.
     MclassControl(PrepareDataCtx, M_DEFAULT, M_SEED_MODE, M_USER_DEFINED);
     MclassControl(PrepareDataCtx, M_DEFAULT, M_SEED_VALUE, 16);
-
-
 
     //// Presets.
     MclassControl(PrepareDataCtx, M_DEFAULT, M_PRESET_TRANSLATION, M_ENABLE);
@@ -223,13 +371,9 @@ void CMLDetCNN::PrepareDataset(MIL_UNIQUE_CLASS_ID& DatasetContext,
     MclassExport(WorkingDataPath + MIL_TEXT("Test_entries"), M_IMAGE_DATASET_FOLDER, TestDataset, M_DEFAULT, M_COMPLETE, M_DEFAULT);
 }
 
-void CMLDetCNN::ConstructTrainCtx(DetParas ClassifierParas, MIL_UNIQUE_CLASS_ID& TrainCtx)
+void CMLDetCNN::ConstructTrainCtx(DET_TRAIN_STRUCT ClassifierParas, MIL_UNIQUE_CLASS_ID& TrainCtx)
 {
     MIL_DOUBLE MPF;
-    //MclassInquire(TrainCtx, M_GENERAL, M_PREDICT_ENGINE_PRECISION, MPF);
-
-    //MIL_STRING MPF2;
-    //MclassInquire(TrainCtx, M_GENERAL, M_PREDICT_ENGINE_PRECISION, MPF2);
     if (M_NULL == TrainCtx)
     {
         TrainCtx = MclassAlloc(m_MilSystem, M_TRAIN_DET, M_DEFAULT, M_UNIQUE_ID);
@@ -284,8 +428,6 @@ void CMLDetCNN::ConstructTrainCtx(DetParas ClassifierParas, MIL_UNIQUE_CLASS_ID&
         MclassControl(TrainCtx, M_CONTEXT, M_TRAIN_ENGINE, M_CPU);
     }
     MclassPreprocess(TrainCtx, M_DEFAULT);
-
-   
 
 }
 
@@ -358,36 +500,66 @@ void CMLDetCNN::TrainClassifier(MIL_UNIQUE_CLASS_ID& Dataset,
     }
 }
 
-void CMLDetCNN::PredictBegin(MIL_UNIQUE_CLASS_ID& TrainedCCtx, MIL_ID Image)
-{
 
-    //获取模型输入尺寸
-    MclassInquire(TrainedCCtx, M_DEFAULT_SOURCE_LAYER, M_SIZE_X + M_TYPE_MIL_INT, &m_InputSizeX);
-    MclassInquire(TrainedCCtx, M_DEFAULT_SOURCE_LAYER, M_SIZE_Y + M_TYPE_MIL_INT, &m_InputSizeY);
-    MclassInquire(TrainedCCtx, M_CONTEXT, M_NUMBER_OF_CLASSES + M_TYPE_MIL_INT, &m_ClassesNum);
-    MclassInquire(TrainedCCtx, M_DEFAULT_SOURCE_LAYER, M_SIZE_BAND + M_TYPE_MIL_INT, &m_InputSizeBand);
-    
-    m_ImageSizeX = MbufInquire(Image, M_SIZE_X, M_NULL);
-    m_ImageSizeY = MbufInquire(Image, M_SIZE_Y, M_NULL);
+int CMLDetCNN::TrainModel(DET_TRAIN_STRUCT DtParas) {
+    //WriteLog(LOG_INFO, "Enter.");
+    int RetVal = 0;
+    MIL_UNIQUE_CLASS_ID TrainedDetCtx;
+    MIL_UNIQUE_CLASS_ID TrainCtx = MclassAlloc(m_MilSystem, M_TRAIN_DET, M_DEFAULT, M_UNIQUE_ID);  
+
+    MIL_STRING WorkDataDir = DtParas.WorkSpaceDir + L"//" + DtParas.DataSetName+ MIL_TEXT("//MIL_Data/");
+    DtParas.TrainDstFolder = WorkDataDir + MIL_TEXT("//PreparedData/");
+    MIL_STRING DetDumpFile = WorkDataDir + L"//" + DtParas.DataSetName+ L".mclass";
+    MIL_STRING PreparedPath = WorkDataDir + MIL_TEXT("/WorkingDataset.mclassd");
+    //判断WorkingDataset是否存在
+     if (isfileNotExist(PreparedPath)) {
+         //WriteLog(LOG_INFO, "%s is not exit.",PreparedPath.c_str());
+         return -1;
+     }
+    ConstructTrainCtx(DtParas, TrainCtx);
+    MIL_UNIQUE_CLASS_ID PreparedDataset = MclassRestore(PreparedPath, m_MilSystem, M_DEFAULT, M_UNIQUE_ID);
+    TrainClassifier(PreparedDataset, TrainCtx, TrainedDetCtx, DetDumpFile);
+    //WriteLog(LOG_INFO, "Exit.");
+    return RetVal;
 
 }
 
-void CMLDetCNN::Predict(MIL_ID Image, MIL_UNIQUE_CLASS_ID& TrainedDetCtx, DetResult& Result)
+int CMLDetCNN::PredictFolderImgs(string SrcImgDir,
+    MIL_STRING TdDetCtxPath,
+    vector<DET_RESULT_STRUCT>& vecDetResults,
+    bool SaveRst)
 {
-    PredictBegin(TrainedDetCtx, Image);
-    MIL_ID ImageReduce;
+    predictPrepare(TdDetCtxPath);
+    vector<MIL_STRING>FilesInFolder;
+    m_AIParse->getFilesInFolder(SrcImgDir, "bmp", FilesInFolder);
+    for (int i = 0; i < FilesInFolder.size(); i++) {
+        DET_RESULT_STRUCT tmpRst;
+        MIL_ID RawImage = MbufRestore(FilesInFolder[i], m_MilSystem, M_NULL);
+        predict(RawImage, tmpRst);
+        MbufFree(RawImage);
+        vecDetResults.emplace_back(tmpRst);
+    }
+    if (SaveRst) {
+        string strFilePath = "ODNetResult.txt";
+        saveResult2File(strFilePath, FilesInFolder, vecDetResults);
+    }
+    return 0;
+}
 
+void CMLDetCNN::Predict(MIL_ID Image, MIL_UNIQUE_CLASS_ID& TrainedDetCtx, DET_RESULT_STRUCT& Result)
+{
+    //在线流程待确认 2023-9-22
+    if (m_ModelNotPrePared) {
+        predictPrepare(TrainedDetCtx);
+    }
+    MIL_ID ImageReduce;
     if (m_InputSizeBand == 3) {
         ImageReduce = MbufAllocColor(m_MilSystem, 3, m_InputSizeX, m_InputSizeY, 8 + M_UNSIGNED, M_IMAGE + M_PROC , M_NULL);
    }
     else {
         ImageReduce = MbufAlloc2d(m_MilSystem, m_InputSizeX, m_InputSizeY, 8 + M_UNSIGNED, M_IMAGE + M_PROC, M_NULL);
     }
-    
-   
-
     MimResize(Image, ImageReduce, M_FILL_DESTINATION, M_FILL_DESTINATION, M_BILINEAR);
-
     MIL_INT Status = M_FALSE;
     MclassInquire(TrainedDetCtx, M_DEFAULT, M_PREPROCESSED + M_TYPE_MIL_INT, &Status);
     if (M_FALSE == Status)
@@ -403,8 +575,6 @@ void CMLDetCNN::Predict(MIL_ID Image, MIL_UNIQUE_CLASS_ID& TrainedDetCtx, DetRes
     QueryPerformanceCounter(&t2);
     double time = (double)(t2.QuadPart - t1.QuadPart) / (double)tc.QuadPart ;
     //cout << "MclassPredict_time: " << time << endl;
-    
-
     MbufFree(ImageReduce);
     MclassGetResult(ClassRes, M_GENERAL, M_NUMBER_OF_INSTANCES + M_TYPE_MIL_INT, &Result.InstanceNum);
     Result.Boxes.resize(Result.InstanceNum);
@@ -412,30 +582,13 @@ void CMLDetCNN::Predict(MIL_ID Image, MIL_UNIQUE_CLASS_ID& TrainedDetCtx, DetRes
     Result.Score.resize(Result.InstanceNum);
     Result.ClassName.resize(Result.InstanceNum);
     for (int i = 0; i < Result.InstanceNum; i++) {
-
         MclassGetResult(ClassRes, M_INSTANCE_INDEX(i), M_CENTER_X + M_TYPE_MIL_DOUBLE, &Result.Boxes[i].CX);
         MclassGetResult(ClassRes, M_INSTANCE_INDEX(i), M_CENTER_Y + M_TYPE_MIL_DOUBLE, &Result.Boxes[i].CY);
         MclassGetResult(ClassRes, M_INSTANCE_INDEX(i), M_HEIGHT + M_TYPE_MIL_DOUBLE, &Result.Boxes[i].H);
         MclassGetResult(ClassRes, M_INSTANCE_INDEX(i), M_WIDTH + M_TYPE_MIL_DOUBLE, &Result.Boxes[i].W);
-       
         MclassGetResult(ClassRes, M_INSTANCE_INDEX(i), M_BEST_CLASS_INDEX + M_TYPE_MIL_INT, &Result.ClassIndex[i]);
         MclassGetResult(ClassRes, M_INSTANCE_INDEX(i), M_BEST_CLASS_SCORE + M_TYPE_MIL_DOUBLE, &Result.Score[i]);
         MclassInquire(TrainedDetCtx, M_CLASS_INDEX(Result.ClassIndex[i]), M_CLASS_NAME, Result.ClassName[i]);
-    }
-}
-
-void CMLDetCNN::FolderImgsPredict(vector<MIL_ID>& RawImageS,
-    MIL_UNIQUE_CLASS_ID& TrainedDetCtx,
-    vector<DetResult>& Result)
-{
-    int nFileNum = RawImageS.size();
-    DetResult Result_i;
-    for (int i = 0; i < nFileNum; i++) {
-        memset(&Result_i, 0, sizeof(Result_i));
-       /* MIL_ID RawImage = MbufRestore(FilesInFolder[i], m_MilSystem, M_NULL);*/
-        Predict(RawImageS[i], TrainedDetCtx, Result_i);
-        Result.emplace_back(Result_i);
-        //MbufFree(RawImage);
     }
 }
 
@@ -454,11 +607,8 @@ void CMLDetCNN::PrintControls()
     MosPrintf(MIL_TEXT("Select a dataset viewer control:\n"));
 }
 
-
 void CMLDetCNN::CDatasetViewer(MIL_ID Dataset)
-
 {
-
     MIL_UNIQUE_DISP_ID MilDisplay = MdispAlloc(m_MilSystem, M_DEFAULT, MIL_TEXT("M_DEFAULT"), M_DEFAULT, M_UNIQUE_ID);
     MIL_INT ImageSizeX = m_InputSizeX;
     MIL_INT ImageSizeY = m_InputSizeY;
