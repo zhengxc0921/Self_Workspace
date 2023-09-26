@@ -184,7 +184,12 @@ void CMLDetCNN::predict(MIL_ID Image, DET_RESULT_STRUCT& Result)
         MclassGetResult(ClassRes, M_INSTANCE_INDEX(i), M_CENTER_Y + M_TYPE_MIL_DOUBLE, &Result.Boxes[i].CY);
         MclassGetResult(ClassRes, M_INSTANCE_INDEX(i), M_HEIGHT + M_TYPE_MIL_DOUBLE, &Result.Boxes[i].H);
         MclassGetResult(ClassRes, M_INSTANCE_INDEX(i), M_WIDTH + M_TYPE_MIL_DOUBLE, &Result.Boxes[i].W);
-         
+
+        Result.Boxes[i].x1 = int(Result.Boxes[i].CX - Result.Boxes[i].W / 2);
+        Result.Boxes[i].x2 = int(Result.Boxes[i].CX + Result.Boxes[i].W / 2);
+        Result.Boxes[i].y1 = int(Result.Boxes[i].CY - Result.Boxes[i].H / 2);
+        Result.Boxes[i].y2 = int(Result.Boxes[i].CY + Result.Boxes[i].H / 2);
+
         MIL_INT tmpClassIndex;
         MclassGetResult(ClassRes, M_INSTANCE_INDEX(i), M_BEST_CLASS_INDEX + M_TYPE_MIL_INT, &tmpClassIndex);
         Result.ClassIndex[i] = int(tmpClassIndex);
@@ -241,7 +246,7 @@ vector<float>&Recalls)
             if (mapGTClassNums.find(tmplabel) == mapGTClassNums.end())
             {
                 mapGTClassNums.insert(pair<int, int>(tmplabel, 1));
-                mapGTClassNums.insert(pair<int, int>(tmplabel, 0));
+                mapTPClassNums.insert(pair<int, int>(tmplabel, 0));
                 mapFPClassNums.insert(pair<int, int>(tmplabel, 0));
             }
             else {
@@ -261,7 +266,7 @@ vector<float>&Recalls)
         //若被多次查找，需调整mapTPClassNums、mapFPClassNums
         vector<int>vecFindTimes(vecImgGTlabels.size(),0);
         //按照vecImgPdlabels去遍历查找vecImgGTlabels
-        for (int j = 0; i < vecImgPdlabels.size(); j++) {
+        for (int j = 0; j < vecImgPdlabels.size(); j++) {
             int pdlabel = vecImgPdlabels[j];
             Box pdBox = vecImgPdBoxes[j];
             //查找pdlabel在vecImgGTlabels中所有位置ids
@@ -279,7 +284,6 @@ vector<float>&Recalls)
                     else {
                         mapTPClassNums[pdlabel] += 1;
                     }      
-                    continue;
                 };
             }
             //Box pdBoxes = vecImgPdBoxes[j];          
@@ -301,7 +305,7 @@ vector<float>&Recalls)
     }
     for (int i = 0; i < GT.size(); i++) {
 
-        float precision = (float)TP[i] / (float)(TP[i] + FP[i]);
+        float precision = (float)TP[i] / max((float)(TP[i] + FP[i]),1.0);
         float recall = (float)TP[i] / (float)GT[i];
         Precisions.emplace_back(precision);
         Recalls.emplace_back(recall);
