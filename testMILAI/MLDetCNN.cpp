@@ -76,7 +76,7 @@ void CMLDetCNN::readDetDataSetConfig(string DetDataSetConfigPath)
     m_DetDataSetPara.ClassesPath = std::string(wstrClassesPath.begin(), wstrClassesPath.end());
     m_DetDataSetPara.IconDir = std::string(wstrIconDir.begin(), wstrIconDir.end());
     m_DetDataSetPara.TrainDataInfoPath = std::string(wstrTrainDataInfoPath.begin(), wstrTrainDataInfoPath.end());
-    m_DetDataSetPara.ValDataInfoPath = std::string(wstrIconDir.begin(), wstrIconDir.end());
+    m_DetDataSetPara.ValDataInfoPath = std::string(wstrValDataInfoPath.begin(), wstrValDataInfoPath.end());
     m_DetDataSetPara.WorkingDataDir = std::string(wstrWorkingDataDir.begin(), wstrWorkingDataDir.end());
     m_DetDataSetPara.PreparedDataDir = std::string(wstrPreparedDataDir.begin(), wstrPreparedDataDir.end());
 
@@ -217,6 +217,123 @@ void CMLDetCNN::saveResult2File(string strFilePath, vector<MIL_STRING>FilesInFol
     }
 
     ODNetResult.close();
+}
+
+void CMLDetCNN::calcAP4Vector(vector<vector<Box>> vecGTBoxes,
+    vector<vector<int>> vecGTlabels,
+    vector<vector<Box>> vecPdBoxes, 
+    vector<vector<int>> vecPdlabels,
+    vector<float>&Precisions,
+vector<float>&Recalls)
+{
+  
+    //step1:构建mapGTClassNums/mapTPClassNums/mapFPClassNums
+    //预测结果中TP/FP中的Class若不在GT中则不被考虑进去
+    map<int, int>mapGTClassNums;
+    map<int, int>mapTPClassNums;
+    map<int, int>mapFPClassNums;
+    for (int i = 0; i < vecGTlabels.size(); i++) {
+        for (int j = 0; j < vecGTlabels[i].size(); j++) {
+            int tmplabel = vecGTlabels[i][j];
+            if (mapGTClassNums.find(tmplabel) == mapGTClassNums.end())
+            {
+                mapGTClassNums.insert(pair<int, int>(tmplabel, 1));
+                mapGTClassNums.insert(pair<int, int>(tmplabel, 0));
+                mapFPClassNums.insert(pair<int, int>(tmplabel, 0));
+            }
+            else {
+                mapGTClassNums[tmplabel] += 1;
+            }
+        }
+    }
+    //step2:需保证4个vector的size一致，遍历统计每张图中的结果
+    for (int i = 0; i < vecGTlabels.size(); i++) {  
+        //map<int, int>mapTmpTPClassNums;
+        //map<int, int>mapTmpFPClassNums;
+        vector<Box>vecImgGTBoxes = vecGTBoxes[i];
+        vector<int>vecImgGTlabels = vecGTlabels[i];
+        vector<Box>vecImgPdBoxes = vecPdBoxes[i];
+        vector<int>vecImgPdlabels = vecPdlabels[i];
+        //记录某个GT被查找的次数，
+        //若被多次查找，需调整mapTPClassNums、mapFPClassNums
+        vector<int>vecFindTimes(vecImgGTlabels.size(),0);
+        //按照vecImgPdlabels去遍历查找vecImgGTlabels
+        for (int j = 0; i < vecImgPdlabels.size(); j++) {
+            int pdlabel = vecImgPdlabels[j];
+            Box pdBox = vecImgPdBoxes[j];
+            //查找pdlabel在vecImgGTlabels中所有位置ids
+            vector<int> ids;
+            findLabelIndexs(pdlabel, vecImgGTlabels, ids);
+            //找到对应ids的GTBoxes进行匹配
+            for (auto it = ids.begin(); it != ids.end(); it++) {
+                //若匹配成功，跳出该匹配循环，GT的*it处查找计数+1
+                if (matchTwoBoxes(pdBox, vecImgGTBoxes[*it])) {
+                    vecFindTimes[*it] += 1;
+                    //GT的*it处查找计数>1,说明该label为FP(和其他TP_box重合了,重复计算了)
+                    if (vecFindTimes[*it] > 1) {
+                        mapFPClassNums[pdlabel] += 1;
+                    }
+                    else {
+                        mapTPClassNums[pdlabel] += 1;
+                    }      
+                    continue;
+                };
+            }
+            //Box pdBoxes = vecImgPdBoxes[j];          
+        }
+    }
+    //step3:根据GT、TP、FP计算APs
+    vector<float>Precisions;
+    vector<float>Recalls;
+    vector<int>GT;
+    vector<int>TP;
+    vector<int>FP;
+    for (auto &it : mapGTClassNums) {
+        GT.emplace_back(it.second);
+    }
+    for (auto& it : mapTPClassNums) {
+        TP.emplace_back(it.second);
+    }
+    for (auto& it : mapFPClassNums) {
+        FP.emplace_back(it.second);
+    }
+    for (int i = 0; i < GT.size(); i++) {
+
+        float precision = (float)TP[i] / (float)(TP[i] + FP[i]);
+        float recall = (float)TP[i] / (float)GT[i];
+        Precisions.emplace_back(precision);
+        Recalls.emplace_back(recall);
+    }
+
+
+
+
+}
+
+void CMLDetCNN::findLabelIndexs(int label, vector<int> vecLabels, vector<int>& ids)
+{
+
+    for (auto it = vecLabels.begin(); it != vecLabels.end(); it++) {
+        if (*it == label) {
+            ids.emplace_back(distance(vecLabels.begin(),it));
+        }
+}
+
+}
+
+bool CMLDetCNN::matchTwoBoxes(Box bx1, Box bx2)
+{
+    int min_x = max(bx1.x1, bx2.x1);  // 找出左上角坐标哪个大
+    int max_x = min(bx1.x2, bx2.x2);  // 找出右上角坐标哪个小
+    int min_y = max(bx1.y1, bx2.y1);
+    int max_y = min(bx1.y2, bx2.y2);
+    if (min_x >= max_x || min_y >= max_y) // 如果没有重叠
+        return false;
+    float over_area = (max_x - min_x) * (max_y - min_y);  // 计算重叠面积
+    float area_a = (bx1.x2 - bx1.x1) * (bx1.y2 - bx1.y1);
+    float area_b = (bx2.x2 - bx2.x1) * (bx2.y2 - bx2.y1);
+    float iou = over_area / (area_a + area_b - over_area);
+    return iou>= m_IOU_threshold;
 }
 
 void CMLDetCNN::GenDataSet(string DetDataSetConfigPath)
@@ -547,11 +664,11 @@ int CMLDetCNN::PredictFolderImgs(string SrcImgDir,
     return 0;
 }
 
-void CMLDetCNN::Predict(MIL_ID Image, MIL_UNIQUE_CLASS_ID& TrainedDetCtx, DET_RESULT_STRUCT& Result)
+void CMLDetCNN::Predict(MIL_ID Image, MIL_UNIQUE_CLASS_ID& TdDetCtxPath, DET_RESULT_STRUCT& Result)
 {
     //在线流程待确认 2023-9-22
     if (m_ModelNotPrePared) {
-        predictPrepare(TrainedDetCtx);
+        predictPrepare(TdDetCtxPath);
     }
     MIL_ID ImageReduce;
     if (m_InputSizeBand == 3) {
@@ -562,17 +679,17 @@ void CMLDetCNN::Predict(MIL_ID Image, MIL_UNIQUE_CLASS_ID& TrainedDetCtx, DET_RE
     }
     MimResize(Image, ImageReduce, M_FILL_DESTINATION, M_FILL_DESTINATION, M_BILINEAR);
     MIL_INT Status = M_FALSE;
-    MclassInquire(TrainedDetCtx, M_DEFAULT, M_PREPROCESSED + M_TYPE_MIL_INT, &Status);
+    MclassInquire(TdDetCtxPath, M_DEFAULT, M_PREPROCESSED + M_TYPE_MIL_INT, &Status);
     if (M_FALSE == Status)
     {
-        MclassPreprocess(TrainedDetCtx, M_DEFAULT);
+        MclassPreprocess(TdDetCtxPath, M_DEFAULT);
     }
     MIL_UNIQUE_CLASS_ID ClassRes = MclassAllocResult(m_MilSystem, M_PREDICT_DET_RESULT, M_DEFAULT, M_UNIQUE_ID);
     
     LARGE_INTEGER t1, t2, tc;
     QueryPerformanceFrequency(&tc);
     QueryPerformanceCounter(&t1);
-    MclassPredict(TrainedDetCtx, ImageReduce, ClassRes, M_DEFAULT);
+    MclassPredict(TdDetCtxPath, ImageReduce, ClassRes, M_DEFAULT);
     QueryPerformanceCounter(&t2);
     double time = (double)(t2.QuadPart - t1.QuadPart) / (double)tc.QuadPart ;
     //cout << "MclassPredict_time: " << time << endl;
@@ -590,8 +707,58 @@ void CMLDetCNN::Predict(MIL_ID Image, MIL_UNIQUE_CLASS_ID& TrainedDetCtx, DET_RE
         MclassGetResult(ClassRes, M_INSTANCE_INDEX(i), M_WIDTH + M_TYPE_MIL_DOUBLE, &Result.Boxes[i].W);
         MclassGetResult(ClassRes, M_INSTANCE_INDEX(i), M_BEST_CLASS_INDEX + M_TYPE_MIL_INT, &Result.ClassIndex[i]);
         MclassGetResult(ClassRes, M_INSTANCE_INDEX(i), M_BEST_CLASS_SCORE + M_TYPE_MIL_DOUBLE, &Result.Score[i]);
-        MclassInquire(TrainedDetCtx, M_CLASS_INDEX(Result.ClassIndex[i]), M_CLASS_NAME, Result.ClassName[i]);
+        MclassInquire(TdDetCtxPath, M_CLASS_INDEX(Result.ClassIndex[i]), M_CLASS_NAME, Result.ClassName[i]);
     }
+}
+
+void CMLDetCNN::ValModel_AP_50(string ValDataInfoPath, MIL_STRING TdDetCtxPath)
+{
+    //预测准备
+    if (m_ModelNotPrePared) {
+        predictPrepare(TdDetCtxPath);
+    }
+    //读取ValDataInfoPath 中的信息
+    //step1:txt-->ImgDataInfo
+    vector<MIL_STRING> vecImgPaths;
+    vector<vector<Box>> vecGTBoxes;
+    vector<vector<int>> vecGTlabels;
+    m_AIParse->readDataSet2Vector(ValDataInfoPath, vecImgPaths, vecGTBoxes, vecGTlabels);
+
+    //step3：对图像进行预测
+    vector<vector<Box>> vecPdBoxes;
+    vector<vector<int>> vecPdlabels;
+    for (int i = 0; i < vecImgPaths.size(); i++) {
+        DET_RESULT_STRUCT tmpRst;
+        //vector<MIL_INT> ClassIndex;             //predict class
+        //vector<MIL_DOUBLE> Score;               //predict score
+        //vector<Box>Boxes;
+        MIL_ID RawImage = MbufRestore(vecImgPaths[i], m_MilSystem, M_NULL);
+        predict(RawImage, tmpRst);
+        MbufFree(RawImage);
+        vecPdBoxes.emplace_back(tmpRst.Boxes);
+        vecPdlabels.emplace_back(tmpRst.ClassIndex);
+    }
+    
+    //设置IOU_thes为定值0.5，计算AP50 
+    //按照MIL中score_thres=0.5 ，不刻画P-R曲线：
+    //计算AP
+    vector<float> Precisions;
+    vector<float> Recalls;
+    calcAP4Vector(vecGTBoxes,
+        vecGTlabels,
+        vecPdBoxes,
+        vecPdlabels,
+        Precisions,
+        Recalls);
+    //for (int j = 0; j < vec2PdBoxes.size(); j++) {
+    //    //计算单张图的TP/FP
+    //    vector<Box>gt_box_label = vec2GTBoxes[j];
+    //    vector<int> gt_labels = vecGTlabels[j];
+    //    vector<Box>pd_box_label = vec2PdBoxes[j];
+    //    vector<int> pd_labels = vecPdlabels[j];
+    //    
+    //}
+    
 }
 
 void CMLDetCNN::PrintControls()

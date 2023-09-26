@@ -502,18 +502,18 @@ void MILTest::MILTestGenDetDataset()
 {
 	string DetDataSetConfigPath = "G:/DefectDataCenter/ParseData/Detection/COT_Resize/raw_data/COT_Resize_Para.ini";
 	m_MLDetCNN->GenDataSet(DetDataSetConfigPath);
-	//DET_DATASET_PARAS_STRUCT DetDataSetPara;
-//DetDataSetPara.ClassesPath = "G:/DefectDataCenter/ParseData/Detection/COT_Resize/raw_data/Config/Classes.txt";
-//DetDataSetPara.IconDir = "G:/DefectDataCenter/ParseData/Detection/COT_Resize/raw_data/ClassesIcon/";
-//DetDataSetPara.TrainDataInfoPath = "G:/DefectDataCenter/ParseData/Detection/COT_Resize/raw_data/Config/ImgBoxes_MIL_train.txt";
-//
-//DetDataSetPara.WorkingDataDir = "G:/DefectDataCenter/ParseData/Detection/COT_Resize/MIL_Data/";
-//DetDataSetPara.PreparedDataDir = "G:/DefectDataCenter/ParseData/Detection/COT_Resize/MIL_Data/PreparedData";
-//DetDataSetPara.ImageSizeX = 1120;
-//DetDataSetPara.ImageSizeY = 224;
-//DetDataSetPara.TestDataRatio = 10;
-//DetDataSetPara.AugFreq = 0;
-//m_MLDetCNN->GenDataSet(DetDataSetPara);
+	DET_DATASET_PARAS_STRUCT DetDataSetPara;
+	DetDataSetPara.ClassesPath = "G:/DefectDataCenter/ParseData/Detection/COT_Resize/raw_data/Config/Classes.txt";
+	DetDataSetPara.IconDir = "G:/DefectDataCenter/ParseData/Detection/COT_Resize/raw_data/ClassesIcon/";
+	DetDataSetPara.TrainDataInfoPath = "G:/DefectDataCenter/ParseData/Detection/COT_Resize/raw_data/Config/ImgBoxes_MIL_train.txt";
+	DetDataSetPara.ValDataInfoPath = "G:/DefectDataCenter/ParseData/Detection/COT_Resize/raw_data/Config/ImgBoxes_val.txt";
+	DetDataSetPara.WorkingDataDir = "G:/DefectDataCenter/ParseData/Detection/COT_Resize/MIL_Data/";
+	DetDataSetPara.PreparedDataDir = "G:/DefectDataCenter/ParseData/Detection/COT_Resize/MIL_Data/PreparedData";
+	DetDataSetPara.ImageSizeX = 1120;
+	DetDataSetPara.ImageSizeY = 224;
+	DetDataSetPara.TestDataRatio = 10;
+	DetDataSetPara.AugFreq = 0;
+	m_MLDetCNN->GenDataSet(DetDataSetPara);
 }
 
 void MILTest::MILTestDetTrain()
@@ -538,12 +538,18 @@ void MILTest::MILTestDetPredict()
 	string proj = "COT_Resize";
 	MIL_STRING Mproj = L"COT_Resize";
 	string	SrcImgDir = "G:/DefectDataCenter/ParseData/Detection/"+ proj+ "/raw_data/TImg";
-
 	MIL_STRING TdDetCtxPath = L"G:/DefectDataCenter/ParseData/Detection/"+ Mproj +L"/MIL_Data/"+ Mproj +L".mclass";
-
 	vector<DET_RESULT_STRUCT> vecDetResults;
 	bool SaveRst = TRUE;
 	m_MLDetCNN->PredictFolderImgs(SrcImgDir,TdDetCtxPath,vecDetResults,SaveRst);
+}
+
+void MILTest::MILTestValDetModel()
+{
+	string ValDataInfoPath = "G:/DefectDataCenter/ParseData/Detection/COT_Resize/raw_data/ImgBoxes_val.txt";
+	MIL_STRING Mproj = L"COT_Resize";
+	MIL_STRING TdDetCtxPath = L"G:/DefectDataCenter/ParseData/Detection/" + Mproj + L"/MIL_Data/" + Mproj + L".mclass";
+	m_MLDetCNN->ValModel_AP_50( ValDataInfoPath, TdDetCtxPath);
 }
 
 //void MILTest::MILTestDetPredict()

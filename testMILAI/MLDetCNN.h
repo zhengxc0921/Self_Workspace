@@ -3,8 +3,6 @@
 #include "Dashboard.h"
 using namespace std;
 
-
-
 typedef struct DET_DATASET_PARAS_STRUCT {
 
     //Src Data info
@@ -55,7 +53,6 @@ typedef struct DET_RESULT_STRUCT {
 
 class CMLDetCNN;
 typedef boost::shared_ptr<CMLDetCNN>CMLDetCNNPtr;
-//class CMLDetCNN :public CMLBase {
 class CMLDetCNN {
 
 public:
@@ -93,8 +90,10 @@ public:
         vector<DET_RESULT_STRUCT>&vecDetResults,
         bool SaveRst2file);    
     //针对在线测试：预测一个文件夹中的bmp图片 (暂定)
-    void Predict(MIL_ID Image, MIL_UNIQUE_CLASS_ID& TrainedDetCtx,DET_RESULT_STRUCT& Result);
-    void PredictBegin(MIL_UNIQUE_CLASS_ID& TrainedDetCtx, MIL_ID Image);
+    void Predict(MIL_ID Image, MIL_UNIQUE_CLASS_ID& TdDetCtxPath,DET_RESULT_STRUCT& Result);
+    //void PredictBegin(MIL_UNIQUE_CLASS_ID& TrainedDetCtx, MIL_ID Image);
+    void ValModel_AP_50(string ValDataInfoPath, MIL_STRING TdDetCtxPath);
+
     void PrintControls();
     void CDatasetViewer(MIL_ID Dataset);
 
@@ -108,6 +107,15 @@ private:
     int predictPrepare(MIL_UNIQUE_CLASS_ID& TrainedDetCtx);
     void predict(MIL_ID Image, DET_RESULT_STRUCT& Result);
     void saveResult2File(string strFilePath, vector<MIL_STRING>FilesInFolder, vector<DET_RESULT_STRUCT> vecDetResults);
+
+    void calcAP4Vector(vector<vector<Box>>vecGTBoxes,
+        vector<vector<int>>vecGTlabels,
+        vector<vector<Box>>vecPdBoxes,
+        vector<vector<int>>vecPdlabels,
+        vector<float>& Precisions,
+        vector<float>& Recalls);
+    void findLabelIndexs(int label,vector<int>vecLabels,vector<int>&ids);
+    bool matchTwoBoxes(Box bx1,Box bx2);
 
 
 public:
@@ -134,4 +142,6 @@ public:
     
     //控制中间测试时间的输出次数
     int m_ON = 0;
+    
+    int m_IOU_threshold = 0.5;
 };

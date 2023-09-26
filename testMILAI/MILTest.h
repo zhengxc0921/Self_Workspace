@@ -46,6 +46,8 @@ public:
 
 	void MILTestDetPredict();
 
+	void MILTestValDetModel();
+
 	//多进程测试使用
 	void MILTestDetPredictMutiProcessSingle();
 
