@@ -16,10 +16,10 @@ typedef struct DET_DATASET_PARAS_STRUCT {
     string PreparedDataDir;     //PreparedData  saved Dir
 
     //Related to Model Training
-    int ImageSizeX = 1120;			//进入模型训练的图片的尺寸宽
-    int ImageSizeY = 224;			//进入模型训练的图片的尺寸高
-    int AugFreq = 0;	            //进入模型训练的图片的扩充倍数
-    MIL_DOUBLE TestDataRatio = 10;       //
+    int ImageSizeX;			//进入模型训练的图片的尺寸宽
+    int ImageSizeY;			//进入模型训练的图片的尺寸高
+    int AugFreq ;	            //进入模型训练的图片的扩充倍数
+    MIL_DOUBLE TestDataRatio;       //
 
 }DET_DATASET_PARAS_STRUCT;
 
@@ -60,7 +60,7 @@ public:
     CMLDetCNN(MIL_ID MilSystem, MIL_ID MilDisplay);
     ~CMLDetCNN();
     //virtual MIL_INT CnnTrainEngineDLLInstalled(MIL_ID MilSystem);
-    void GenDataSet(string DetDataSetConfigPath);
+    void GenDataSet(string DetDataSetConfigPath,string proj_n);
     void GenDataSet(DET_DATASET_PARAS_STRUCT DetDataSetPara);
 
     void ConstructDataContext(
@@ -102,7 +102,9 @@ private:
     void CreateFolder(const MIL_STRING& FolderPath);
     bool isfileNotExist(string fileNmae);
     bool isfileNotExist(MIL_STRING fileNmae);
-    void readDetDataSetConfig(string DetDataSetConfigPath);
+    //void string2LPCTSTR(string inString, LPTSTR outString);
+    LPTSTR string2LPCTSTR(string inString);
+    void readDetDataSetConfig(string DetDataSetConfigPath, string proj_n);
     void addInfo2Dataset(MIL_UNIQUE_CLASS_ID& Dataset);
     int predictPrepare(MIL_STRING TdDetCtxPath);
     int predictPrepare(MIL_UNIQUE_CLASS_ID& TrainedDetCtx);

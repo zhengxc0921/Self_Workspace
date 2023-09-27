@@ -500,20 +500,21 @@ void MILTest::MILTestPredictEngine()
 
 void MILTest::MILTestGenDetDataset()
 {
-	string DetDataSetConfigPath = "G:/DefectDataCenter/ParseData/Detection/COT_Resize/raw_data/COT_Resize_Para.ini";
-	m_MLDetCNN->GenDataSet(DetDataSetConfigPath);
-	DET_DATASET_PARAS_STRUCT DetDataSetPara;
-	DetDataSetPara.ClassesPath = "G:/DefectDataCenter/ParseData/Detection/COT_Resize/raw_data/Config/Classes.txt";
-	DetDataSetPara.IconDir = "G:/DefectDataCenter/ParseData/Detection/COT_Resize/raw_data/ClassesIcon/";
-	DetDataSetPara.TrainDataInfoPath = "G:/DefectDataCenter/ParseData/Detection/COT_Resize/raw_data/Config/ImgBoxes_MIL_train.txt";
-	DetDataSetPara.ValDataInfoPath = "G:/DefectDataCenter/ParseData/Detection/COT_Resize/raw_data/Config/ImgBoxes_val.txt";
-	DetDataSetPara.WorkingDataDir = "G:/DefectDataCenter/ParseData/Detection/COT_Resize/MIL_Data/";
-	DetDataSetPara.PreparedDataDir = "G:/DefectDataCenter/ParseData/Detection/COT_Resize/MIL_Data/PreparedData";
-	DetDataSetPara.ImageSizeX = 1120;
-	DetDataSetPara.ImageSizeY = 224;
-	DetDataSetPara.TestDataRatio = 10;
-	DetDataSetPara.AugFreq = 0;
-	m_MLDetCNN->GenDataSet(DetDataSetPara);
+	string proj_n = "COT_Raw";
+	string DetDataSetConfigPath = "G:/DefectDataCenter/ParseData/Detection/COT_Raw/raw_data/Config/COT_Raw_Para.ini";
+	m_MLDetCNN->GenDataSet(DetDataSetConfigPath, proj_n);
+	//DET_DATASET_PARAS_STRUCT DetDataSetPara;
+	//DetDataSetPara.ClassesPath = "G:/DefectDataCenter/ParseData/Detection/COT_Resize/raw_data/Config/Classes.txt";
+	//DetDataSetPara.IconDir = "G:/DefectDataCenter/ParseData/Detection/COT_Resize/raw_data/ClassesIcon/";
+	//DetDataSetPara.TrainDataInfoPath = "G:/DefectDataCenter/ParseData/Detection/COT_Resize/raw_data/Config/ImgBoxes_MIL_train.txt";
+	//DetDataSetPara.ValDataInfoPath = "G:/DefectDataCenter/ParseData/Detection/COT_Resize/raw_data/Config/ImgBoxes_val.txt";
+	//DetDataSetPara.WorkingDataDir = "G:/DefectDataCenter/ParseData/Detection/COT_Resize/MIL_Data/";
+	//DetDataSetPara.PreparedDataDir = "G:/DefectDataCenter/ParseData/Detection/COT_Resize/MIL_Data/PreparedData";
+	//DetDataSetPara.ImageSizeX = 1120;
+	//DetDataSetPara.ImageSizeY = 224;
+	//DetDataSetPara.TestDataRatio = 10;
+	//DetDataSetPara.AugFreq = 0;
+	//m_MLDetCNN->GenDataSet(DetDataSetPara);
 }
 
 void MILTest::MILTestDetTrain()
@@ -521,22 +522,22 @@ void MILTest::MILTestDetTrain()
 	DET_TRAIN_STRUCT DtParas;
 	DtParas.TrainMode = 0;
 	DtParas.TrainEngineUsed = 0;
-	DtParas.MaxNumberOfEpoch = 20;
-	DtParas.MiniBatchSize = 8;
+	DtParas.MaxNumberOfEpoch = 50;
+	DtParas.MiniBatchSize = 16;
 	DtParas.SchedulerType = 0;
 	DtParas.LearningRate = 0.001;
 	DtParas.LearningRateDecay = 0.1;
 	DtParas.SplitPercent = 90.0;
 	DtParas.WorkSpaceDir = L"G:/DefectDataCenter/ParseData/Detection";
-	DtParas.DataSetName = L"COT_Resize";
+	DtParas.DataSetName = L"COT_Raw";
 	m_MLDetCNN->TrainModel( DtParas);
 	return;
 }
 
 void MILTest::MILTestDetPredict()
 {
-	string proj = "COT_Resize";
-	MIL_STRING Mproj = L"COT_Resize";
+	string proj = "COT_Raw";
+	MIL_STRING Mproj = L"COT_Raw";
 	string	SrcImgDir = "G:/DefectDataCenter/ParseData/Detection/"+ proj+ "/raw_data/TImg";
 	MIL_STRING TdDetCtxPath = L"G:/DefectDataCenter/ParseData/Detection/"+ Mproj +L"/MIL_Data/"+ Mproj +L".mclass";
 	vector<DET_RESULT_STRUCT> vecDetResults;
@@ -546,8 +547,9 @@ void MILTest::MILTestDetPredict()
 
 void MILTest::MILTestValDetModel()
 {
-	string ValDataInfoPath = "G:/DefectDataCenter/ParseData/Detection/COT_Resize/raw_data/ImgBoxes_val.txt";
-	MIL_STRING Mproj = L"COT_Resize";
+	string proj = "COT_Raw";
+	string ValDataInfoPath = "G:/DefectDataCenter/ParseData/Detection/"+ proj+"/raw_data/Config/ImgBoxes_val.txt";
+	MIL_STRING Mproj = L"COT_Raw";
 	MIL_STRING TdDetCtxPath = L"G:/DefectDataCenter/ParseData/Detection/" + Mproj + L"/MIL_Data/" + Mproj + L".mclass";
 	m_MLDetCNN->ValModel_AP_50( ValDataInfoPath, TdDetCtxPath);
 }

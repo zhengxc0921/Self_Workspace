@@ -40,18 +40,37 @@ bool CMLDetCNN::isfileNotExist(string fileNmae) {
 bool CMLDetCNN::isfileNotExist(MIL_STRING fileNmae) {
     ifstream f(fileNmae.c_str());
     return !f.good();
-};
-
-void CMLDetCNN::readDetDataSetConfig(string DetDataSetConfigPath)
+}
+LPTSTR CMLDetCNN::string2LPCTSTR(string inString)
 {
-    int nWcharSize = 100;
+    const char* path = inString.c_str();
+    int path_num = MultiByteToWideChar(0, 0, path, -1, NULL, 0);
+    LPTSTR outString = new wchar_t[path_num];
+    MultiByteToWideChar(0, 0, path, -1, outString, path_num);
+
+    return  outString;
+
+}
+;
+
+void CMLDetCNN::readDetDataSetConfig(string DetDataSetConfigPath, string proj_n)
+{
+    
 
     //lpPath : char* 转换成 LPCTSTR
-    const char* path = DetDataSetConfigPath.c_str();
-    int path_num = MultiByteToWideChar(0, 0, path, -1, NULL, 0);
-    LPTSTR lpPath = new wchar_t[path_num];
-    MultiByteToWideChar(0, 0, path, -1, lpPath, path_num);
+    //const char* path = DetDataSetConfigPath.c_str();
+    //int path_num = MultiByteToWideChar(0, 0, path, -1, NULL, 0);
+    //LPTSTR lpPath = new wchar_t[path_num];
+    //MultiByteToWideChar(0, 0, path, -1, lpPath, path_num);
+    LPTSTR lpPath = string2LPCTSTR(DetDataSetConfigPath);
+    LPTSTR lpProj_n =  string2LPCTSTR(proj_n);
 
+    //const char* path = DetDataSetConfigPath.c_str();
+    //int path_num = MultiByteToWideChar(0, 0, path, -1, NULL, 0);
+    //LPTSTR lpPath = new wchar_t[path_num];
+    //MultiByteToWideChar(0, 0, path, -1, lpPath, path_num);
+
+    int nWcharSize = 100;
     LPTSTR ClassesPathbuf = new wchar_t[nWcharSize];
     LPTSTR IconDirbuf = new wchar_t[nWcharSize];
     LPTSTR TrainDataInfoPathbuf = new wchar_t[nWcharSize];
@@ -59,12 +78,12 @@ void CMLDetCNN::readDetDataSetConfig(string DetDataSetConfigPath)
     LPTSTR WorkingDataDirbuf = new wchar_t[nWcharSize];
     LPTSTR PreparedDataDirbuf = new wchar_t[nWcharSize];
 
-    GetPrivateProfileString(L"COT_Resize", L"ClassesPath", L"", ClassesPathbuf, nWcharSize, lpPath);
-    GetPrivateProfileString(L"COT_Resize", L"IconDir", L"", IconDirbuf, nWcharSize, lpPath);
-    GetPrivateProfileString(L"COT_Resize", L"TrainDataInfoPath", L"", TrainDataInfoPathbuf, nWcharSize, lpPath);
-    GetPrivateProfileString(L"COT_Resize", L"ValDataInfoPath", L"", ValDataInfoPathbuf, nWcharSize, lpPath);
-    GetPrivateProfileString(L"COT_Resize", L"WorkingDataDir", L"", WorkingDataDirbuf, nWcharSize, lpPath);
-    GetPrivateProfileString(L"COT_Resize", L"PreparedDataDir", L"", PreparedDataDirbuf, nWcharSize, lpPath);
+    GetPrivateProfileString(lpProj_n, L"ClassesPath", L"", ClassesPathbuf, nWcharSize, lpPath);
+    GetPrivateProfileString(lpProj_n, L"IconDir", L"", IconDirbuf, nWcharSize, lpPath);
+    GetPrivateProfileString(lpProj_n, L"TrainDataInfoPath", L"", TrainDataInfoPathbuf, nWcharSize, lpPath);
+    GetPrivateProfileString(lpProj_n, L"ValDataInfoPath", L"", ValDataInfoPathbuf, nWcharSize, lpPath);
+    GetPrivateProfileString(lpProj_n, L"WorkingDataDir", L"", WorkingDataDirbuf, nWcharSize, lpPath);
+    GetPrivateProfileString(lpProj_n, L"PreparedDataDir", L"", PreparedDataDirbuf, nWcharSize, lpPath);
 
     wstring wstrClassesPath(ClassesPathbuf);
     wstring wstrIconDir(IconDirbuf);
@@ -80,10 +99,10 @@ void CMLDetCNN::readDetDataSetConfig(string DetDataSetConfigPath)
     m_DetDataSetPara.WorkingDataDir = std::string(wstrWorkingDataDir.begin(), wstrWorkingDataDir.end());
     m_DetDataSetPara.PreparedDataDir = std::string(wstrPreparedDataDir.begin(), wstrPreparedDataDir.end());
 
-    int ImageSizeX = GetPrivateProfileInt(L"COT_Resize", L"ImageSizeX", 0, lpPath);
-    int ImageSizeY = GetPrivateProfileInt(L"COT_Resize", L"ImageSizeY", 0, lpPath);
-    int TestDataRatio = GetPrivateProfileInt(L"COT_Resize", L"TestDataRatio", 0, lpPath);
-    int AugFreq = GetPrivateProfileInt(L"COT_Resize", L"AugFreq", 0, lpPath);
+    m_DetDataSetPara.ImageSizeX = GetPrivateProfileInt(lpProj_n, L"ImageSizeX", 0, lpPath);
+    m_DetDataSetPara.ImageSizeY = GetPrivateProfileInt(lpProj_n, L"ImageSizeY", 0, lpPath);
+    m_DetDataSetPara.TestDataRatio = GetPrivateProfileInt(lpProj_n, L"TestDataRatio", 0, lpPath);
+    m_DetDataSetPara.AugFreq = GetPrivateProfileInt(lpProj_n, L"AugFreq", 0, lpPath);
 
     delete[] lpPath;
 }
@@ -310,10 +329,6 @@ vector<float>&Recalls)
         Precisions.emplace_back(precision);
         Recalls.emplace_back(recall);
     }
-
-
-
-
 }
 
 void CMLDetCNN::findLabelIndexs(int label, vector<int> vecLabels, vector<int>& ids)
@@ -342,10 +357,10 @@ bool CMLDetCNN::matchTwoBoxes(Box bx1, Box bx2)
     return iou>= m_IOU_threshold;
 }
 
-void CMLDetCNN::GenDataSet(string DetDataSetConfigPath)
+void CMLDetCNN::GenDataSet(string DetDataSetConfigPath,string proj_n)
 {
     //读取 DetDataSetConfig
-    readDetDataSetConfig(DetDataSetConfigPath);
+    readDetDataSetConfig(DetDataSetConfigPath,  proj_n);
     //写入WorkingDataset
     MIL_UNIQUE_CLASS_ID  WorkingDataset = MclassAlloc(m_MilSystem, M_DATASET_IMAGES, M_DEFAULT, M_UNIQUE_ID);
     addInfo2Dataset(WorkingDataset);
