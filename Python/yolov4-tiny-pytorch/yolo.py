@@ -208,21 +208,26 @@ class YOLO(object):
     def visualize_bbox(self,img, bbox,score, class_name, color=(255, 0, 0), thickness=2):
         """Visualizes a single bounding box on the image"""
         # x_min, y_min, w, h = bbox
-        y_min,x_min, y_max ,x_max=bbox
+        # y_min,x_min, y_max ,x_max=bbox
+        x_min, y_min, x_max, y_max = bbox
+
         img = np.ascontiguousarray(img)
-        cv2.rectangle(img, (int(x_min), int(y_min)), (int(x_max), int(y_max)), color=color, thickness=thickness)
+        cls_index = self.class_names.index(class_name)
+
+        cv2.rectangle(img, (int(x_min), int(y_min)), (int(x_max), int(y_max)), color=self.colors[cls_index], thickness=thickness)
 
         ((text_width, text_height), _) = cv2.getTextSize(class_name, cv2.FONT_HERSHEY_SIMPLEX, 0.35, 1)
         y_min_n =  y_min - int(1.3 * text_height)
         x_max_n = x_max + text_width
-        cv2.rectangle(img, (int(x_min),int(y_min_n)), (int(x_max), int(y_min)), color=color, thickness=-1)
+        cv2.rectangle(img, (int(x_min),int(y_min_n)), (int(x_max), int(y_min)), color=(255,255,255), thickness=-1)
+
         cv2.putText(
             img,
             text= '{} {:.2f}'.format(class_name, score),
             org=(int(x_min), int(y_min) - int(0.3 * text_height)),
             fontFace=cv2.FONT_HERSHEY_SIMPLEX,
             fontScale=0.35,
-            color=(255, 255, 255),
+            color=self.colors[cls_index],
             lineType=cv2.LINE_AA,
         )
         return img
@@ -275,7 +280,7 @@ class YOLO(object):
             #   将图像输入网络当中进行预测！
             # ---------------------------------------------------------#
             t1 = time.time()
-            N = 100
+            N = 1
             for i in range(N):
                 outputs = self.net(images)
                 outputs = self.bbox_util.decode_box(outputs)
@@ -288,10 +293,11 @@ class YOLO(object):
             t2 = time.time()
 
             t = (t2-t1)/N
-            print("predict time fps: ",t)
+            # print("predict time fps: ",t)
 
             if results[0] is None:
-                return image_raw
+                print("results[0] is None")
+                return image_raw," "
 
             top_label = np.array(results[0][:, 6], dtype='int32')
             top_conf = results[0][:, 4] * results[0][:, 5]
@@ -338,11 +344,7 @@ class YOLO(object):
         #     draw.text(text_origin, str(label, 'UTF-8'), fill=(0, 0, 0), font=font)
         #     del draw
 
-        return image
-
-
-
-
+        return image,results
 
     # def get_FPS(self, image, test_interval):
     #     image_shape = np.array(np.shape(image)[0:2])

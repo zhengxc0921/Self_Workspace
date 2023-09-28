@@ -57,6 +57,10 @@ def yolo_numpy_plot(numpy_array,img_id,boxes=None):
     img = imgs[img_id]
     c, h,w = img.shape
 
+    import matplotlib as mpl
+    import matplotlib.pyplot as plt
+    mpl.use('TkAgg')
+
     plt.figure()
     plt.imshow(np.transpose(img,(1,2,0)))
     if boxes is not None:
@@ -66,14 +70,17 @@ def yolo_numpy_plot(numpy_array,img_id,boxes=None):
             box_y = (boxes[i][j][1] - boxes[i][j][3] / 2)*h
             box_h =  boxes[i][j][3]*h
             box_w = boxes[i][j][2]*w
+
+
             plt.gca().add_patch(plt.Rectangle(xy=(box_x, box_y),
                                               height=box_h,
                                               width=box_w,
                                               fill=False, linewidth=2, edgecolor="red"))
 
-
+    os.makedirs('./img',exist_ok=True)
     filePath = './img/test_'+str(img_id)+'.png'
     plt.savefig(filePath)
+    plt.close()
     # plt.show()
 
 def tensor_plot(tensor_array,img_id=0,img_title='img',boxes=None,savepath=None):
@@ -154,3 +161,62 @@ def muti_batch_plot(muti_batch_imgs, boxes,batch_id=0):
                                               width=boxes[i][j][2] - boxes[i][j][0],
                                               fill=False, linewidth=2, edgecolor="red"))
     plt.show()
+
+
+##check_train_box
+
+
+
+def check_train_box( targets,img_paths,class_names):
+    import cv2 , colorsys,os
+    dst_dir = r'./img'
+    os.makedirs(dst_dir, exist_ok=True)
+
+    hsv_tuples = [(x / len(class_names), 1., 1.) for x in range(len(class_names))]
+    colors = list(map(lambda x: colorsys.hsv_to_rgb(*x), hsv_tuples))
+    colors = list(map(lambda x: (int(x[0] * 255), int(x[1] * 255), int(x[2] * 255)), colors))
+
+    def visualize_bbox(img, bbox, class_name, thickness=2):
+        """Visualizes a single bounding box on the image"""
+        # x_min, y_min, w, h = bbox
+        y_min, x_min, y_max, x_max = bbox
+        img = np.ascontiguousarray(img)
+        cls_index = class_names.index(class_name)
+
+        cv2.rectangle(img, (int(x_min), int(y_min)), (int(x_max), int(y_max)), color=colors[cls_index],
+                      thickness=thickness)
+
+        ((text_width, text_height), _) = cv2.getTextSize(class_name, cv2.FONT_HERSHEY_SIMPLEX, 0.35, 1)
+        y_min_n = y_min - int(1.3 * text_height)
+        x_max_n = x_max + text_width
+        cv2.rectangle(img, (int(x_min), int(y_min_n)), (int(x_max), int(y_min)), color=(255, 255, 255), thickness=-1)
+
+        cv2.putText(
+            img,
+            text='{}'.format(class_name),
+            org=(int(x_min), int(y_min) - int(0.3 * text_height)),
+            fontFace=cv2.FONT_HERSHEY_SIMPLEX,
+            fontScale=0.35,
+            color=colors[cls_index],
+            lineType=cv2.LINE_AA,
+        )
+        return img
+
+    def visualize(img, top_label , top_boxes):
+        for i, c in list(enumerate(top_label)):
+            class_name = class_names[int(c)]
+            bbox = top_boxes[i]
+            img = visualize_bbox(img, bbox, class_name)
+
+        return img
+    for i,img_p in enumerate(img_paths):
+        image = cv2.imdecode(np.fromfile(img_p, dtype=np.uint8), 1)
+        img_n = os.path.basename(img_p)
+        top_boxes = targets[i][:, :4]
+        top_label =  targets[i][:,4]
+        img = visualize(image, top_label, top_boxes)
+        dst_img_p = os.path.join(dst_dir,img_n)
+        cv2.imwrite(dst_img_p,img)
+
+    return
+

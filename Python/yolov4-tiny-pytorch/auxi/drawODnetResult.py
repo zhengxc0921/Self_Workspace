@@ -1,10 +1,25 @@
 import numpy as np
 import cv2,os
+from configparser import ConfigParser
 
+def get_input(config_path,proj):
+    cfg = ConfigParser()
+    cfg.read(config_path)
+    input_shape = (int(cfg.get(proj,'ImageSizeX')),int(cfg.get(proj,'ImageSizeY')))
+    return input_shape
 
+# proj = 'HW'
 proj = 'DSW'
-input_shape = (896,288)
-src_dir = 'G:/DefectDataCenter/ParseData/Detection/{}/raw_data/'.format(proj)
+# proj = 'DSW_random'
+# proj = 'COT_Resize'
+# proj = 'COT_Raw'
+
+
+src_dir = 'G:/DefectDataCenter/ParseData/Detection/{}/raw_data/Config/'.format(proj)
+config_path = 'G:/DefectDataCenter/ParseData/Detection/{}/raw_data/Config/{}_Para.ini'.format(proj,proj)
+
+input_shape = get_input(config_path,proj)
+
 dst_dir = src_dir+ "ODNetResult_show/"
 os.makedirs(dst_dir,exist_ok=True)
 
@@ -12,14 +27,10 @@ cns_file_path = src_dir+'Classes.txt'
 with open(cns_file_path,'r')as f:
     cns = [x.strip() for x in f.readlines()]
 
-
-
-
 rect_color_list = [(255,0,0),(0,255,0),(0,0,255)]
 cn_c = {}
 for i,cn in enumerate(cns):
     cn_c[cn] = rect_color_list[i%3]
-
 
 
 def visualize_bbox(img, bbox ,score, class_name, color=(255, 0, 0), thickness=2):
@@ -47,7 +58,6 @@ def visualize_bbox(img, bbox ,score, class_name, color=(255, 0, 0), thickness=2)
     )
     return img
 
-
 def visualize(image_path, class_names,top_conf, top_boxes):
     # img_d = np.transpose(img,(1,0,2))
     ##遍历所有图片
@@ -69,9 +79,6 @@ def visualize(image_path, class_names,top_conf, top_boxes):
             dst_path = dst_path.replace("mim","jpg")
         cv2.imwrite(dst_path, img)
     return
-
-
-
 
 # # ---------------------------------------------------------#
 # #   设置字体与边框厚度
@@ -119,7 +126,6 @@ def parse_ODNetResult():
 
     visualize(imgs_path, vec_cn, vec_conf, vec_boxes)
     return
-
 
 def parse_ODNetInput():
 
