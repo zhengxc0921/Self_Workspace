@@ -103,7 +103,6 @@ void MILTest::savePredictedImg()
 void MILTest::InitClassWeights()
 {
 	m_ClassWeights.resize(m_ClassesNum, 1.0);
-
 }
 
 void MILTest::CropImgs()
@@ -254,7 +253,6 @@ void MILTest::MILTestGenDataset()
 	for (int i = 0; i < ClassName.size(); i++) {
 		 ClassIcon .emplace_back(m_ClassifierSrcDataDir + m_strProject + L"//"+ ClassName[i]+L".mim");
 	}
-
 	MIL_UNIQUE_CLASS_ID  Dataset = MclassAlloc(m_MilSystem, M_DATASET_IMAGES, M_DEFAULT, M_UNIQUE_ID);
 	m_MLClassCNN->ConstructDataset(ClassName, ClassIcon, AuthorName, OriginalDataPath, WorkingDataPath, Dataset);
 	m_MLClassCNN->CreateFolder(WorkingDataPath);
@@ -294,7 +292,6 @@ void MILTest::MILTestTrain()
 
 	int MaxNumberOfEpoch = 5;			//模型训练次数
 	int MiniBatchSize = 64;				//模型训练单次迭代的张数
-
 	//////*******************************必须参数*******************************//
 	MIL_STRING PreparedPath = m_ClassifierWorkSpace +m_strProject+ MIL_TEXT("/PreparedDataset.mclassd");				
 	MIL_UNIQUE_CLASS_ID PreparedDataset = MclassRestore(PreparedPath, m_MilSystem, M_DEFAULT, M_UNIQUE_ID);
@@ -310,7 +307,6 @@ void MILTest::MILTestTrain()
 	ClassifierParas.SplitPercent = 90.0;
 	ClassifierParas.TrainDstFolder = m_ClassifierWorkSpace+L"//" + m_strProject + MIL_TEXT("/PreparedData/");
 	m_MLClassCNN->ConstructTrainCtx(ClassifierParas, TrainCtx);
-
 	MIL_UNIQUE_CLASS_ID TrainedClassifierCtx;
 	MIL_UNIQUE_CLASS_ID PrevClassifierCtx;
 	MIL_STRING ClassifierDumpFile = ClassifierParas.TrainDstFolder + m_strProject+L".mclass";
@@ -368,8 +364,6 @@ void MILTest::MILTestPredictWithBlob()
 		vector<MIL_ID> ClipImgs;
 		m_MLClassCNN->m_AIParse->blobClip(AugImg, img_name, blob_px, blob_py, ClipImgs, CropedImg);
 	}
-
-
 }
 
 void MILTest::MILTestPredictEngine()
@@ -379,8 +373,6 @@ void MILTest::MILTestPredictEngine()
 	MIL_STRING PreClassifierName = MIL_TEXT("G:/DefectDataCenter/zhjuzhiqiang_2023/2023/SXX/PreparedData/SXX.mclass");
 	MIL_UNIQUE_CLASS_ID TestCtx = MclassRestore(PreClassifierName, m_MilSystem, M_DEFAULT, M_UNIQUE_ID);
 	getModelInfo(TestCtx);
-
-
 	MIL_INT NbPredEngines = 0;
 	MclassInquire(TestCtx, M_DEFAULT, M_NUMBER_OF_PREDICT_ENGINES + M_TYPE_MIL_INT, &NbPredEngines);
 	for (int engine_index=0; engine_index< NbPredEngines; engine_index++){
@@ -399,7 +391,6 @@ void MILTest::MILTestPredictEngine()
 		m_MLClassCNN->FolderImgsPredict(m_FilesInFolder, ClassWeights, TestCtx, m_vecResults);
 		QueryPerformanceCounter(&t2);
 		double calc_time = (double)(t2.QuadPart - t1.QuadPart) / (double)tc.QuadPart;
-
 		MosPrintf(MIL_TEXT("\nM_PREDICT_ENGINE_DESCRIPTION: %s  calc time is %f\n"), Description.c_str(), calc_time);
 	}
 
@@ -460,8 +451,6 @@ void MILTest::MILTestPredictEngine()
 //	string ValImgDataInfo = strSrcDir + "ImgBoxes_val.txt";
 //	MIL_STRING WorkingDataPath = m_DetectionWorkSpace + m_strProject + L"//";
 //
-//
-//
 ////string strProject = "VOC/";
 ////	string strSrcDir = "I:/MIL_Detection_Dataset/" + strProject;
 ////	string IconInfo = strSrcDir +"Classes.txt";
@@ -497,11 +486,12 @@ void MILTest::MILTestPredictEngine()
 //	m_MLDetCNN->PrepareDataset(DataContext, WorkingDataset, PreparedDataset, WorkingDataPath, TestDatasetPercentage);
 //}
 
-
 void MILTest::MILTestGenDetDataset()
 {
-	string proj_n = "COT_Raw";
-	string DetDataSetConfigPath = "G:/DefectDataCenter/ParseData/Detection/COT_Raw/raw_data/Config/COT_Raw_Para.ini";
+	string proj_n = "DSW";
+	//string proj_n = "HW";
+	//string proj_n = "COT_Raw";
+	string DetDataSetConfigPath = "G:/DefectDataCenter/ParseData/Detection/"+proj_n+"/raw_data/Config/"+proj_n+"_Para.ini";
 	m_MLDetCNN->GenDataSet(DetDataSetConfigPath, proj_n);
 	//DET_DATASET_PARAS_STRUCT DetDataSetPara;
 	//DetDataSetPara.ClassesPath = "G:/DefectDataCenter/ParseData/Detection/COT_Resize/raw_data/Config/Classes.txt";
@@ -529,16 +519,17 @@ void MILTest::MILTestDetTrain()
 	DtParas.LearningRateDecay = 0.1;
 	DtParas.SplitPercent = 90.0;
 	DtParas.WorkSpaceDir = L"G:/DefectDataCenter/ParseData/Detection";
-	DtParas.DataSetName = L"COT_Raw";
+	DtParas.DataSetName = L"DSW";
 	m_MLDetCNN->TrainModel( DtParas);
 	return;
 }
 
 void MILTest::MILTestDetPredict()
 {
-	string proj = "COT_Raw";
-	MIL_STRING Mproj = L"COT_Raw";
+	string proj = "DSW";
+	MIL_STRING Mproj = L"DSW";
 	string	SrcImgDir = "G:/DefectDataCenter/ParseData/Detection/"+ proj+ "/raw_data/TImg";
+	m_MLDetCNN->m_DetDataSetPara.WorkingDataDir = "G:/DefectDataCenter/ParseData/Detection/" + proj + "/MIL_Data/";
 	MIL_STRING TdDetCtxPath = L"G:/DefectDataCenter/ParseData/Detection/"+ Mproj +L"/MIL_Data/"+ Mproj +L".mclass";
 	vector<DET_RESULT_STRUCT> vecDetResults;
 	bool SaveRst = TRUE;
@@ -547,11 +538,12 @@ void MILTest::MILTestDetPredict()
 
 void MILTest::MILTestValDetModel()
 {
-	string proj = "COT_Raw";
-	string ValDataInfoPath = "G:/DefectDataCenter/ParseData/Detection/"+ proj+"/raw_data/Config/ImgBoxes_val.txt";
-	MIL_STRING Mproj = L"COT_Raw";
+	string proj = "DSW"; //COT_Raw
+	string ValDataInfoPath = "G:/DefectDataCenter/ParseData/Detection/"+ proj+"/raw_data/Config/Val.txt";
+	MIL_STRING Mproj = L"DSW";
 	MIL_STRING TdDetCtxPath = L"G:/DefectDataCenter/ParseData/Detection/" + Mproj + L"/MIL_Data/" + Mproj + L".mclass";
-	m_MLDetCNN->ValModel_AP_50( ValDataInfoPath, TdDetCtxPath);
+	string strPRResultPath = "G:/DefectDataCenter/ParseData/Detection/" + proj + "/MIL_Data/PresionRecall.txt";
+	m_MLDetCNN->ValModel_AP_50( ValDataInfoPath, TdDetCtxPath, strPRResultPath);
 }
 
 //void MILTest::MILTestDetPredict()
@@ -732,7 +724,6 @@ void MILTest::MILTestDetPredictCore(MIL_UNIQUE_CLASS_ID& TestCtx,
 	string DstRst, 
 	double& calc_time)
 {
-	
 	//读取到内存时间不计入
 	int nFileNum = m_FilesInFolder.size();
 	vector<DET_RESULT_STRUCT> vecDetResults;
@@ -744,11 +735,9 @@ void MILTest::MILTestDetPredictCore(MIL_UNIQUE_CLASS_ID& TestCtx,
 
 	for (int i = 0; i < nFileNum; i++) {
 		MIL_ID RawImage = MbufRestore(m_FilesInFolder[i], m_MilSystem, M_NULL);
-
 		m_MLDetCNN->Predict(RawImage, TestCtx, vecDetResults[i]);
 		//RawImageS.emplace_back(RawImage);
 	}
-
 	//int CirN = 1;
 	//for (int j = 0; j < CirN; j++) {
 	//	m_MLDetCNN->FolderImgsPredict(RawImageS, TestCtx, vecDetResults);
@@ -909,3 +898,144 @@ void MILTest::MILTestONNXPredict()
 
 }
 
+void MILTest::MILTestKTtreedbscan()
+{
+	clock_t start, finish;
+	double  duration;
+	start = clock();
+
+	MulDimPointCloud<double> cloud;
+	//针对黑白图的DBSCAN
+	double AspectRatioTHD = 3;
+	MIL_INT InSizeX = 16;
+	MIL_INT InSizeY = 16;
+	string ImgDir = "G:/DefectDataCenter/Test/Src/90";
+	vector<MIL_STRING> ImgPaths;
+	m_MLClassCNN->m_AIParse->getFilesInFolder(ImgDir,  "bmp", ImgPaths);
+	//分割出长宽比过大的图为非法图片，不参与训练
+	vector<MIL_STRING> unefftImgPaths;
+	vector<MIL_STRING> efftImgPaths;
+	for (auto iter = ImgPaths.begin(); iter != ImgPaths.end(); iter++) {
+
+		MIL_ID Image = MbufRestore(*iter, m_MilSystem, M_NULL);
+		MIL_INT ImageSizeX = MbufInquire(Image, M_SIZE_X, M_NULL);
+		MIL_INT ImageSizeY = MbufInquire(Image, M_SIZE_Y, M_NULL);
+		MIL_INT ImageBand = MbufInquire(Image, M_SIZE_BAND, M_NULL);
+
+		bool illegalImg = (double)max(ImageSizeX, ImageSizeY) / (double)min(ImageSizeX, ImageSizeY) > AspectRatioTHD;
+		if (illegalImg || ImageBand>2) {
+			unefftImgPaths.emplace_back(*iter);
+			continue;
+		}
+		efftImgPaths.emplace_back(*iter);
+		MIL_ID ImageReduce = MbufAlloc2d(m_MilSystem, InSizeX, InSizeY, 8 + M_UNSIGNED, M_IMAGE + M_PROC, M_NULL);
+		MimResize(Image, ImageReduce, M_FILL_DESTINATION, M_FILL_DESTINATION, M_BILINEAR);
+
+		vector<MIL_UINT8>ImgPixels;
+		ImgPixels.resize(InSizeX * InSizeY * ImageBand);
+		MbufGet2d(ImageReduce, 0, 0, InSizeX, InSizeY, &ImgPixels[0]);
+		MulDimPointCloud<double>::DBPoint TmpPts;
+		for (int i = 0; i < ImgPixels.size(); i++) {
+			TmpPts.Array[i] = ImgPixels[i] / 1.0;
+		}
+		cloud.pts.emplace_back(TmpPts);
+	}
+
+	double radius = 1.2;
+	int m_minPoints = 60;
+	int clusterNum;
+	vector<vector<int>> Labels;
+	kdtree_dbscan<double>(cloud,radius, m_minPoints, Labels, clusterNum);
+
+	finish = clock();
+	duration = (double)(finish - start) / CLOCKS_PER_SEC;
+	cout << "duration: " << duration << endl;
+	////创建目的class的文件夹
+	MIL_STRING DstImgDir = L"G:/DefectDataCenter/Test/ImgCluster/Cpp_SPA90/";
+	m_MLClassCNN->CreateFolder(DstImgDir);
+
+	for (int i = 0; i < clusterNum+1; i++) {
+		m_MLClassCNN->CreateFolder(DstImgDir + to_wstring(i-1));
+	}
+	////遍历所有文件及结果，并将图片保存到相应的Index
+	for (int i = 0; i < Labels.size(); i++) {
+		vector<int> clst = Labels[i];
+		for (int j = 0; j < clst.size(); j++) {
+			MIL_STRING RawImagePath = efftImgPaths[clst[j]];
+			MIL_STRING ClassNames = to_wstring(i);
+			MIL_ID Image = MbufRestore(RawImagePath, m_MilSystem, M_NULL);
+			string pth;
+			m_MLClassCNN->m_AIParse->MIL_STRING2string(RawImagePath, pth);
+			string::size_type iPos = pth.find_last_of('/') + 1;
+			MIL_STRING ImageRawName = RawImagePath.substr(iPos, RawImagePath.length() - iPos);
+			MIL_STRING DstRootPath = DstImgDir + ClassNames + MIL_TEXT("//") + ImageRawName;
+			MbufExport(DstRootPath, M_BMP, Image);
+			MbufFree(Image);
+		}	
+	}
+}
+
+
+//void MILTest::OpencvTest(MIL_ID& ImageReshape)
+//{
+//	//opencv test
+//	string img_name = "G:/DefectDataCenter/ParseData/Detection/lslm/raw_data/TImg/lslm.bmp";
+//	cv::Mat image = imread(img_name, CV_LOAD_IMAGE_UNCHANGED);
+//	//image = imread(fn[i], IMREAD_GRAYSCALE);
+//	// 2. convert color space, opencv read the image in BGR
+//	Mat img_float;
+//	// convert to float format
+//	image.convertTo(img_float, CV_32F, 1.0 / 255);
+//	// 3. resize the image for resnet101 model
+//	Mat img_resize;
+//	resize(img_float, img_resize, Size(704, 512), INTER_CUBIC);
+//
+//	int width = img_resize.cols;//获取图像宽度
+//	int height = img_resize.rows;//获取图像高度
+//	int channel = img_resize.channels();//获取通道数
+//	float* pNorlzBuffer = new float[(int)(width * height * 3)];
+//	//数组方法遍历
+//	for (int h = 0; h < height; h++) //height
+//	{
+//		for (int w = 0; w < width; w++) //width
+//		{
+//			if (channel == 3)//彩色图像
+//			{
+//				//bgr 是一个vector，包含三个通道的值
+//				Vec3f bgr = img_resize.at<Vec3f>(h, w);
+//				/*				bgr[0] = 255 - bgr[0];
+//								bgr[1] = 255 - bgr[1];
+//								bgr[2] = 255 - bgr[2];
+//								img_resize.at<Vec3f>(h, w) = bgr;*/
+//								//cout << " b: " << bgr[0] << " g: " << bgr[1] << " r: " << bgr[2] << endl;
+//
+//				pNorlzBuffer[h + w + 0] = bgr[0];
+//				pNorlzBuffer[h + w + 1] = bgr[1];
+//				pNorlzBuffer[h + w + 2] = bgr[2];
+//
+//			}
+//
+//		}
+//	}
+//
+//	ImageReshape = MbufAllocColor(m_MilSystem, 3, width, height, M_FLOAT + 32, M_IMAGE + M_PROC, M_NULL);
+//	MbufPut(ImageReshape, pNorlzBuffer);
+//
+//	float* m_pResizeBufferOrgRGB = new float[(int)(width * height * 3)];
+//	MbufGetColor(ImageReshape, M_PLANAR, M_ALL_BANDS, m_pResizeBufferOrgRGB);
+//	int nPixelIndex = 0;
+//	long nResizeCount = width * height;
+//	for (int i = 0; i < nResizeCount; i++) {
+//		//M_PLANAR的图片存放格式为：RRRR...GGGG...BBBB
+//		//OpenCV的图片存放格式为：BGRBGR...BGR
+//		//AI模型使用OPENCV图像形式训练所得，故需要将MIL格式转换
+//		for (int j = 2; j >= 0; j--) {
+//			//pNorlzBuffer[nPixelIndex] = m_pResizeBufferOrgRGB[i + nResizeCount * j];    //R_OpenCv<--R_MIL
+//			//cout << "m_pResizeBufferOrgRGB[nPixelIndex]: " << m_pResizeBufferOrgRGB[nPixelIndex] << endl;
+//			//cout << "pNorlzBuffer[nPixelIndex]: " << pNorlzBuffer[nPixelIndex] << endl;
+//
+//			nPixelIndex++;
+//		}
+//	}
+//
+//}

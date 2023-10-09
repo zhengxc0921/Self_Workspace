@@ -33,6 +33,9 @@
     <ClInclude Include="MLDetCNN.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="nanoflann.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="MLBase.cpp">
@@ -54,6 +57,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="testDemo.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="kttreedbscan.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

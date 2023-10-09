@@ -6,15 +6,21 @@
 
 #if 1
 #include "MILTest.h"
+
 int main(int argc, char* argv[]) {
+
 	//MIL_STRING strProject = L"FZ";
 	MIL_STRING strProject = L"COT_Resize";
 	MIL_UNIQUE_APP_ID MilApplication = MappAlloc(M_NULL, M_DEFAULT, M_UNIQUE_ID);
 	MIL_UNIQUE_SYS_ID MilSystem = MsysAlloc(M_DEFAULT, M_SYSTEM_HOST, M_DEFAULT, M_DEFAULT, M_UNIQUE_ID);
 	MIL_UNIQUE_DISP_ID MilDisplay = MdispAlloc(MilSystem, M_DEFAULT, MIL_TEXT("M_DEFAULT"), M_DEFAULT, M_UNIQUE_ID);
 	MILTestPtr m_MILTestPtr = MILTestPtr(new MILTest(MilSystem, MilDisplay, strProject));
-	//m_MILTestPtr->MILTestDetPredictMutiThread();
+	
+	m_MILTestPtr->MILTestKTtreedbscan();
 
+	//vector<vector<double>> AllImgsData;
+	//m_MILTestPtr->ReadTxt2Vector(AllImgsData);
+	//m_MILTestPtr->MILTestDetPredictMutiThread();
 	//Classifier CNN test
 	//m_MILTestPtr->FillImgs();
 	//m_MILTestPtr->CropImgs();
@@ -30,13 +36,11 @@ int main(int argc, char* argv[]) {
 	//m_MILTestPtr->MILTestGenDetDataset();
 	//m_MILTestPtr->MILTestDetTrain();
 	//m_MILTestPtr->MILTestDetPredict();
-	m_MILTestPtr->MILTestValDetModel();
+	//m_MILTestPtr->MILTestValDetModel();
 	//ONNX test
 	//m_MILTestPtr->MILTestONNXPredict();
 	//多进程测试前的预备测试
 	//m_MILTestPtr->MILTestDetPredictMutiProcessSingle();
-
-
 
 #if 0
 	//多进程测试

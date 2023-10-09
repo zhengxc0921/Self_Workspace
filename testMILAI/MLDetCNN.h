@@ -93,7 +93,7 @@ public:
     //针对在线测试：预测一个文件夹中的bmp图片 (暂定)
     void Predict(MIL_ID Image, MIL_UNIQUE_CLASS_ID& TdDetCtxPath,DET_RESULT_STRUCT& Result);
     //void PredictBegin(MIL_UNIQUE_CLASS_ID& TrainedDetCtx, MIL_ID Image);
-    void ValModel_AP_50(string ValDataInfoPath, MIL_STRING TdDetCtxPath);
+    void ValModel_AP_50(string ValDataInfoPath, MIL_STRING TdDetCtxPath, string strPRResultPath);
 
     void PrintControls();
     void CDatasetViewer(MIL_ID Dataset);
@@ -110,7 +110,7 @@ private:
     int predictPrepare(MIL_UNIQUE_CLASS_ID& TrainedDetCtx);
     void predict(MIL_ID Image, DET_RESULT_STRUCT& Result);
     void saveResult2File(string strFilePath, vector<MIL_STRING>FilesInFolder, vector<DET_RESULT_STRUCT> vecDetResults);
-
+    void saveAP2File(string strFilePath, vector<float>Precisions, vector<float> Recalls);
     void calcAP4Vector(vector<vector<Box>>vecGTBoxes,
         vector<vector<int>>vecGTlabels,
         vector<vector<Box>>vecPdBoxes,

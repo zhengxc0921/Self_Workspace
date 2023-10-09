@@ -246,6 +246,23 @@ void CMLDetCNN::saveResult2File(string strFilePath, vector<MIL_STRING>FilesInFol
     ODNetResult.close();
 }
 
+
+void CMLDetCNN::saveAP2File(string strFilePath, vector<float>Precisions, vector<float> Recalls) {
+
+    //将结果保存到txt文件
+    ofstream RPResult;
+    int nLNum = Precisions.size();
+    RPResult.open(strFilePath, ios::out);
+    string ImgInfo = "Precisions,Recalls";
+    RPResult << ImgInfo << endl;
+    for (int i = 0; i < nLNum; i++) {
+        ImgInfo = to_string(Precisions[i])+","+ to_string(Recalls[i]);
+        RPResult << ImgInfo << endl;
+    }
+    RPResult.close();
+}
+
+
 void CMLDetCNN::calcAP4Vector(vector<vector<Box>> vecGTBoxes,
     vector<vector<int>> vecGTlabels,
     vector<vector<Box>> vecPdBoxes, 
@@ -679,7 +696,7 @@ int CMLDetCNN::PredictFolderImgs(string SrcImgDir,
         vecDetResults.emplace_back(tmpRst);
     }
     if (SaveRst) {
-        string strFilePath = "ODNetResult.txt";
+        string strFilePath = m_DetDataSetPara.WorkingDataDir +"ODNetResult.txt";
         saveResult2File(strFilePath, FilesInFolder, vecDetResults);
     }
     return 0;
@@ -737,7 +754,7 @@ void CMLDetCNN::Predict(MIL_ID Image, MIL_UNIQUE_CLASS_ID& TdDetCtxPath, DET_RES
     }
 }
 
-void CMLDetCNN::ValModel_AP_50(string ValDataInfoPath, MIL_STRING TdDetCtxPath)
+void CMLDetCNN::ValModel_AP_50(string ValDataInfoPath, MIL_STRING TdDetCtxPath, string strPRResultPath)
 {
     //预测准备
     if (m_ModelNotPrePared) {
@@ -776,6 +793,9 @@ void CMLDetCNN::ValModel_AP_50(string ValDataInfoPath, MIL_STRING TdDetCtxPath)
         vecPdlabels,
         Precisions,
         Recalls);
+
+
+    saveAP2File(strPRResultPath, Precisions,Recalls);
     //for (int j = 0; j < vec2PdBoxes.size(); j++) {
     //    //计算单张图的TP/FP
     //    vector<Box>gt_box_label = vec2GTBoxes[j];

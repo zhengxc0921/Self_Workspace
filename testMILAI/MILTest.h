@@ -6,6 +6,8 @@
 #include "MLClassCNN.h"
 #include "MLDetCNN.h"
 #include <thread>
+#include "kttreedbscan.cpp"
+
 
 class MILTest;
 typedef boost::shared_ptr<MILTest>MILTestPtr;
@@ -25,6 +27,8 @@ public:
 	//void predictBegin();
 
 	void InitClassWeights();
+
+	//void ReadTxt2Vector(vector<vector<double>>& AllImgsData);
 
 	void CropImgs();
 
@@ -73,6 +77,9 @@ public:
 
 	//onnxÀý×Ó
 	void MILTestONNXPredict();
+
+
+	void MILTestKTtreedbscan();
 
 
 

@@ -133,12 +133,15 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>$(mil_path64)\..\include;G:/WSD_CODE2/CppLib/boost/boost_1_73_0_vs2019_win10</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>$(mil_path64)\..\lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>milim.lib;milclass.lib;mil.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -148,10 +151,12 @@
     <ClInclude Include="MLBase.h" />
     <ClInclude Include="MLClassCNN.h" />
     <ClInclude Include="MLDetCNN.h" />
+    <ClInclude Include="nanoflann.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AIParse.cpp" />
     <ClCompile Include="Dashboard.cpp" />
+    <ClCompile Include="kttreedbscan.cpp" />
     <ClCompile Include="MILTest.cpp" />
     <ClCompile Include="MLBase.cpp" />
     <ClCompile Include="MLClassCNN.cpp" />
