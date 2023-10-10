@@ -3,8 +3,10 @@
 #include<map>
 //#include<boost/weak_ptr.hpp>
 //#include<thread>
+#include<string>
 #include "MLClassCNN.h"
 #include "MLDetCNN.h"
+#include "DBSCAN.h"
 #include <thread>
 #include "kttreedbscan.cpp"
 

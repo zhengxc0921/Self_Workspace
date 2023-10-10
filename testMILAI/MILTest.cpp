@@ -900,79 +900,37 @@ void MILTest::MILTestONNXPredict()
 
 void MILTest::MILTestKTtreedbscan()
 {
-	clock_t start, finish;
-	double  duration;
-	start = clock();
-
-	MulDimPointCloud<double> cloud;
-	//针对黑白图的DBSCAN
-	double AspectRatioTHD = 3;
-	MIL_INT InSizeX = 16;
-	MIL_INT InSizeY = 16;
-	string ImgDir = "G:/DefectDataCenter/Test/Src/90";
-	vector<MIL_STRING> ImgPaths;
-	m_MLClassCNN->m_AIParse->getFilesInFolder(ImgDir,  "bmp", ImgPaths);
-	//分割出长宽比过大的图为非法图片，不参与训练
-	vector<MIL_STRING> unefftImgPaths;
-	vector<MIL_STRING> efftImgPaths;
-	for (auto iter = ImgPaths.begin(); iter != ImgPaths.end(); iter++) {
-
-		MIL_ID Image = MbufRestore(*iter, m_MilSystem, M_NULL);
-		MIL_INT ImageSizeX = MbufInquire(Image, M_SIZE_X, M_NULL);
-		MIL_INT ImageSizeY = MbufInquire(Image, M_SIZE_Y, M_NULL);
-		MIL_INT ImageBand = MbufInquire(Image, M_SIZE_BAND, M_NULL);
-
-		bool illegalImg = (double)max(ImageSizeX, ImageSizeY) / (double)min(ImageSizeX, ImageSizeY) > AspectRatioTHD;
-		if (illegalImg || ImageBand>2) {
-			unefftImgPaths.emplace_back(*iter);
-			continue;
-		}
-		efftImgPaths.emplace_back(*iter);
-		MIL_ID ImageReduce = MbufAlloc2d(m_MilSystem, InSizeX, InSizeY, 8 + M_UNSIGNED, M_IMAGE + M_PROC, M_NULL);
-		MimResize(Image, ImageReduce, M_FILL_DESTINATION, M_FILL_DESTINATION, M_BILINEAR);
-
-		vector<MIL_UINT8>ImgPixels;
-		ImgPixels.resize(InSizeX * InSizeY * ImageBand);
-		MbufGet2d(ImageReduce, 0, 0, InSizeX, InSizeY, &ImgPixels[0]);
-		MulDimPointCloud<double>::DBPoint TmpPts;
-		for (int i = 0; i < ImgPixels.size(); i++) {
-			TmpPts.Array[i] = ImgPixels[i] / 1.0;
-		}
-		cloud.pts.emplace_back(TmpPts);
-	}
-
+	CDBSCANPtr m_CDBSCANPtr = CDBSCANPtr(new CDBSCAN(m_MilSystem));
 	double radius = 1.2;
-	int m_minPoints = 60;
-	int clusterNum;
+	int minPoints = 60;
+	string ImgDir = "G:/DefectDataCenter/Test/Src/90";
+	double AspectRatioTHD = 3;
+	double RemovalRatio = 0.5;
+	bool REMOVEIMG = false;
+	vector<MIL_STRING> efftImgPaths;
 	vector<vector<int>> Labels;
-	kdtree_dbscan<double>(cloud,radius, m_minPoints, Labels, clusterNum);
-
-	finish = clock();
-	duration = (double)(finish - start) / CLOCKS_PER_SEC;
-	cout << "duration: " << duration << endl;
-	////创建目的class的文件夹
-	MIL_STRING DstImgDir = L"G:/DefectDataCenter/Test/ImgCluster/Cpp_SPA90/";
-	m_MLClassCNN->CreateFolder(DstImgDir);
-
-	for (int i = 0; i < clusterNum+1; i++) {
-		m_MLClassCNN->CreateFolder(DstImgDir + to_wstring(i-1));
+	vector<MIL_STRING> unefftImgPaths;
+	m_CDBSCANPtr->ImgCluster(radius, minPoints, ImgDir, AspectRatioTHD, 
+		efftImgPaths, Labels, unefftImgPaths);
+	//对聚类好的Labels按比例抽取，保存或者删除
+	//Labels[0]为噪声，全保留
+	vector<vector<int>>unNecLabels;
+	unNecLabels.resize(Labels.size());
+	unNecLabels[0]=Labels[0];
+	for (int i = 1; i < Labels.size();i++) {
+		random_shuffle(Labels[i].begin(), Labels[i].end());
+		int nSelectNum =int( Labels[i].size() * RemovalRatio);
+		unNecLabels[i].assign(Labels[i].begin(), Labels[i].begin() + nSelectNum);
 	}
-	////遍历所有文件及结果，并将图片保存到相应的Index
-	for (int i = 0; i < Labels.size(); i++) {
-		vector<int> clst = Labels[i];
-		for (int j = 0; j < clst.size(); j++) {
-			MIL_STRING RawImagePath = efftImgPaths[clst[j]];
-			MIL_STRING ClassNames = to_wstring(i);
-			MIL_ID Image = MbufRestore(RawImagePath, m_MilSystem, M_NULL);
-			string pth;
-			m_MLClassCNN->m_AIParse->MIL_STRING2string(RawImagePath, pth);
-			string::size_type iPos = pth.find_last_of('/') + 1;
-			MIL_STRING ImageRawName = RawImagePath.substr(iPos, RawImagePath.length() - iPos);
-			MIL_STRING DstRootPath = DstImgDir + ClassNames + MIL_TEXT("//") + ImageRawName;
-			MbufExport(DstRootPath, M_BMP, Image);
-			MbufFree(Image);
+	if (REMOVEIMG) {
+		//case2：删除去除的图片
+		m_CDBSCANPtr->removalImg(efftImgPaths, unNecLabels, unefftImgPaths);
+		}
+	else {
+		//case1：保存,查看去除的图
+		MIL_STRING DstImgDir = L"G:/DefectDataCenter/Test/ImgCluster/Cpp_SPA90/";
+		m_CDBSCANPtr->saveClusterRst(DstImgDir, efftImgPaths, unNecLabels, unefftImgPaths);
 		}	
-	}
 }
 
 

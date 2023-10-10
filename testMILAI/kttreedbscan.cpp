@@ -1,29 +1,30 @@
 #pragma once
-#include <cstdlib>
-#include <ctime>
-#include <map>
-#include <fstream>
-#include <sstream>
-#include <iostream>
-//#include "utils.h"
+//#include <cstdlib>
+//#include <ctime>
+//#include <map>
+//#include <fstream>
+//#include <sstream>
+//#include <iostream>
+
+#include"AIParse.h"
 #include "nanoflann.hpp"
-using namespace std;
-
-
 #define UNCLASSIFIED -2
 #define CORE_POINT 1
 #define BORDER_POINT 2
 #define NOISE -1
 #define SUCCESS 0
 #define FAILURE -3
+
+
+
 template <typename T>
 struct MulDimPointCloud
 {
     struct DBPoint
     {
         T Array[256];
-        bool IsMerge = false; // 是否作为搜索中心，开展搜索
-        bool IsMark = false;  // 是否被以其他像素为中心的搜索，搜索到
+        //bool IsMerge = false; // 是否作为搜索中心，开展搜索
+        //bool IsMark = false;  // 是否被以其他像素为中心的搜索，搜索到
         int clusterID = UNCLASSIFIED;
     };
 
@@ -53,29 +54,29 @@ struct MulDimPointCloud
     }
 };
 
-template <typename num_t>
-void readCloudFromTxt(MulDimPointCloud<num_t>& cloud)
-{
-    cloud.pts.resize(11087);
-
-    string linestr;
-    ifstream inf;
-    inf.open("ImgsData.txt");
-    size_t row = 0;
-    while (getline(inf, linestr))  // getline(inf,s)是逐行读取inf中的文件信息
-    {
-        size_t col = 0;
-        stringstream ss(linestr);  //存成二维表结构
-        string str;  //每行中的单个字符
-        while (getline(ss, str, ','))
-        {
-            cloud.pts[row].Array[col] = (num_t)atof(str.c_str());
-            col++;
-        }
-        row++;
-    }
-    inf.close();
-}
+//template <typename num_t>
+//void readCloudFromTxt(MulDimPointCloud<num_t>& cloud)
+//{
+//    cloud.pts.resize(11087);
+//
+//    string linestr;
+//    ifstream inf;
+//    inf.open("ImgsData.txt");
+//    size_t row = 0;
+//    while (getline(inf, linestr))  // getline(inf,s)是逐行读取inf中的文件信息
+//    {
+//        size_t col = 0;
+//        stringstream ss(linestr);  //存成二维表结构
+//        string str;  //每行中的单个字符
+//        while (getline(ss, str, ','))
+//        {
+//            cloud.pts[row].Array[col] = (num_t)atof(str.c_str());
+//            col++;
+//        }
+//        row++;
+//    }
+//    inf.close();
+//}
 
 // construct a kd-tree index:
 template <typename num_t>
@@ -185,6 +186,10 @@ void kdtree_dbscan(MulDimPointCloud<num_t>& cloud,
     }
 
 }
+
+
+
+
 
 
 

@@ -29,6 +29,19 @@ wchar_t* CAIParse::string2MIL_STRING(string strX)
 	return milX;
 }
 
+void CAIParse::CreateFolder(const MIL_STRING& FolderPath)
+{
+
+		MIL_INT FolderExists = M_NO;
+		MappFileOperation(M_DEFAULT, FolderPath, M_NULL, M_NULL, M_FILE_EXISTS, M_DEFAULT, &FolderExists);
+		if (FolderExists == M_NO)
+		{
+			MappFileOperation(M_DEFAULT, FolderPath, M_NULL, M_NULL, M_FILE_MAKE_DIR, M_DEFAULT, M_NULL);
+		}
+
+
+}
+
 void CAIParse::Split(const string& str, vector<string>& tokens, const string& delimiters)
 {
 	// Skip delimiters at beginning.

@@ -37,6 +37,7 @@ public:
 	void MIL_STRING2string(MIL_STRING milstrX, string& strX);
 	wchar_t* string2MIL_STRING(string strX);
 
+	void CreateFolder(const MIL_STRING& FolderPath);
 	void Split(const string& str, vector<string>& tokens, const string& delimiters);
 	void getFoldersInFolder(string Path, vector<string>& Folders);
 	void getFilesInFolder(string Path, string FileType, vector<MIL_STRING>& Files);
