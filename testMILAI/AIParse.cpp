@@ -123,6 +123,58 @@ void CAIParse::getFilesInFolder(string Path, string FileType, vector<MIL_STRING>
 	}
 }
 
+void CAIParse::getLabelFilesInFolder(string Path,string Label, 
+	string FileType, map<string, vector<MIL_STRING>>& mapLabelFiles)
+{
+	long long  hFile = 0;
+	struct _finddata_t fileinfo;
+	string p;
+	if ((hFile = _findfirst(p.assign(Path).append("\\*").c_str(), &fileinfo)) != -1)
+	{
+		vector<MIL_STRING> Files;
+		do
+		{
+			//如果是目录,递归查找
+			//如果不是,把文件绝对路径存入vector中
+			if ((fileinfo.attrib & _A_SUBDIR))
+			{
+				if (strcmp(fileinfo.name, ".") != 0 && strcmp(fileinfo.name, "..") != 0){
+					string label = fileinfo.name;
+					getLabelFilesInFolder(p.assign(Path).append("\\").append(fileinfo.name), label, FileType, mapLabelFiles);
+				}
+					
+			}
+			else
+			{
+				////获取文件的FileType
+				string ss = fileinfo.name;
+				std::size_t  ipos = ss.find_last_of(".") + 1;
+				string nFileType = ss.substr(ipos, ss.size());
+				if (nFileType == FileType) {
+					string  FullPatchName;
+					if (Path.find_last_of("/") == Path.length() - 1 || Path.find_last_of("\\") == Path.length() - 1) {
+						FullPatchName = Path + fileinfo.name;
+					}
+					else {
+						FullPatchName = Path + "/" + fileinfo.name;
+					}
+					char* CStr = const_cast<char*>(FullPatchName.c_str());
+					int CStrLength = MultiByteToWideChar(CP_ACP, 0, CStr, -1, NULL, 0);
+					wchar_t* Filename = new wchar_t[CStrLength];
+					MultiByteToWideChar(CP_ACP, 0, CStr, -1, Filename, CStrLength);
+					Files.push_back(Filename);
+				}
+			}
+			
+		} while (_findnext(hFile, &fileinfo) == 0);
+		if (Label != "") {
+			mapLabelFiles.insert(pair<string, vector<MIL_STRING>>(Label, Files));
+		}
+		
+		_findclose(hFile);
+	}
+}
+
 void CAIParse::getFilesInFolder(string Path, string FileType, vector<string>& Files)
 {
 	long long  hFile = 0;

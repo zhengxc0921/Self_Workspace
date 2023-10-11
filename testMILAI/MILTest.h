@@ -42,6 +42,8 @@ public:
 
 	void MILTestPredict();
 
+	void MILTestPredictAP();
+
 	void MILTestPredictWithBlob();
 
 	void MILTestPredictEngine();
@@ -100,7 +102,9 @@ public:
 
 	//测试参数
 	
-	MIL_STRING m_ClassifierSrcDataDir = L"G:/DefectDataCenter/ParseData/Classifier/";
+	MIL_STRING m_ClassifierSrcDataDir = L"G:/DefectDataCenter/原始_现场分类数据/LJX/SpTrainData/";
+	/*MIL_STRING m_ClassifierSrcDataDir = L"G:/DefectDataCenter/原始_现场分类数据/LJX/TrainData/";*/
+	/*MIL_STRING m_ClassifierSrcDataDir = L"G:/DefectDataCenter/ParseData/Classifier/";*/
 	MIL_STRING m_DetectionSrcDataDir = L"G:/DefectDataCenter/ParseData/Detection/";
 
 	MIL_STRING m_ClassifierWorkSpace = L"G:/DefectDataCenter/WorkSpace/Classifier/";

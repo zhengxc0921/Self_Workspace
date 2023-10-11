@@ -237,21 +237,21 @@ template<typename num_t>
 
  void CDBSCAN::removalImg(vector<MIL_STRING>& efftImgPaths, vector<vector<int>>& Labels, vector<MIL_STRING>& unefftImgPaths)
  {
-     ////遍历所有聚类冗余结果，删除
-     //for (int i = 0; i < Labels.size(); i++) {
-     //    vector<int> clst = Labels[i];
-     //    for (int j = 0; j < clst.size(); j++) {
-     //        MIL_STRING RawImagePath = efftImgPaths[clst[j]];
-     //        string strImgPath;
-     //        m_AIParse->MIL_STRING2string( RawImagePath, strImgPath);
-     //        remove(strImgPath.c_str());
-     //    }
-     //}
-     ////遍历所有无效图片路径，删除
-     //for (int i = 0; i < unefftImgPaths.size(); i++) {
-     //    MIL_STRING RawImagePath = unefftImgPaths[i];
-     //    string strImgPath;
-     //    m_AIParse->MIL_STRING2string(RawImagePath, strImgPath);
-     //    remove(strImgPath.c_str());
-     //}
+     //遍历所有聚类冗余结果，删除
+     for (int i = 0; i < Labels.size(); i++) {
+         vector<int> clst = Labels[i];
+         for (int j = 0; j < clst.size(); j++) {
+             MIL_STRING RawImagePath = efftImgPaths[clst[j]];
+             string strImgPath;
+             m_AIParse->MIL_STRING2string( RawImagePath, strImgPath);
+             remove(strImgPath.c_str());
+         }
+     }
+     //遍历所有无效图片路径，删除
+     for (int i = 0; i < unefftImgPaths.size(); i++) {
+         MIL_STRING RawImagePath = unefftImgPaths[i];
+         string strImgPath;
+         m_AIParse->MIL_STRING2string(RawImagePath, strImgPath);
+         remove(strImgPath.c_str());
+     }
  }

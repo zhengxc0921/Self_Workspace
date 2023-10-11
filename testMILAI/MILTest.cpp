@@ -248,7 +248,8 @@ void MILTest::MILTestGenDataset()
 	MIL_STRING OriginalDataPath = m_ClassifierSrcDataDir + m_strProject+ L"//";
 	MIL_STRING WorkingDataPath = m_ClassifierWorkSpace + m_strProject+ L"//";			
 
-	vector<MIL_STRING>ClassName = { MIL_TEXT("91") ,MIL_TEXT("10") };
+	vector<MIL_STRING>ClassName = { MIL_TEXT("2"),MIL_TEXT("11"),MIL_TEXT("12") ,
+		MIL_TEXT("30"),MIL_TEXT("45"),MIL_TEXT("90")  };
 	vector<MIL_STRING > ClassIcon;
 	for (int i = 0; i < ClassName.size(); i++) {
 		 ClassIcon .emplace_back(m_ClassifierSrcDataDir + m_strProject + L"//"+ ClassName[i]+L".mim");
@@ -290,10 +291,10 @@ void MILTest::MILTestGenDataset()
 void MILTest::MILTestTrain()
 {
 
-	int MaxNumberOfEpoch = 5;			//模型训练次数
+	int MaxNumberOfEpoch = 25;			//模型训练次数
 	int MiniBatchSize = 64;				//模型训练单次迭代的张数
 	//////*******************************必须参数*******************************//
-	MIL_STRING PreparedPath = m_ClassifierWorkSpace +m_strProject+ MIL_TEXT("/PreparedDataset.mclassd");				
+	MIL_STRING PreparedPath = m_ClassifierWorkSpace +m_strProject+ MIL_TEXT("/WorkingDataset.mclassd");				
 	MIL_UNIQUE_CLASS_ID PreparedDataset = MclassRestore(PreparedPath, m_MilSystem, M_DEFAULT, M_UNIQUE_ID);
 	MIL_UNIQUE_CLASS_ID TrainCtx = MclassAlloc(m_MilSystem, M_TRAIN_CNN, M_DEFAULT, M_UNIQUE_ID);  
 	ClassifierParasStruct ClassifierParas;
@@ -317,8 +318,11 @@ void MILTest::MILTestTrain()
 void MILTest::MILTestPredict() {
 
 	MIL_STRING PreClassifierName = m_ClassifierWorkSpace + m_strProject + MIL_TEXT("/PreparedData/") + m_strProject + L".mclass";
-	string	SrcImgDir = "G:/DefectDataCenter/ParseData/Classifier/SXX_GrayWave/Original_Gray3/91/";
-	m_DstImgDir = MIL_TEXT("G:/DefectDataCenter/ParseData/Classifier/SXX_GrayWave/Original_Gray3/MIL/");
+	
+	string strProj;
+	m_MLClassCNN->m_AIParse->MIL_STRING2string(m_strProject, strProj);
+	string	SrcImgDir = "G:/DefectDataCenter/原始_现场分类数据/LJX/TestData/"+ strProj;
+	m_DstImgDir = MIL_TEXT("G:/DefectDataCenter/原始_现场分类数据/LJX/TestResult/")+ m_strProject+L"//";
 	LARGE_INTEGER t1, t2, tc;
 	QueryPerformanceFrequency(&tc);
 	QueryPerformanceCounter(&t1);
@@ -338,6 +342,48 @@ void MILTest::MILTestPredict() {
 	double calc_time = (double)(t2.QuadPart - t1.QuadPart) / (double)tc.QuadPart;
 	if (m_SavePredictedImg) {
 		savePredictedImg();
+	}
+}
+
+void MILTest::MILTestPredictAP()
+{
+	MIL_STRING PreClassifierName = m_ClassifierWorkSpace + m_strProject + MIL_TEXT("/PreparedData/") + m_strProject + L".mclass";
+	string strProj;
+	m_MLClassCNN->m_AIParse->MIL_STRING2string(m_strProject, strProj);
+	string	SrcImgDir = "G:/DefectDataCenter/原始_现场分类数据/LJX/TestData/" + strProj;
+
+	map<string, vector<MIL_STRING>> mapLabelFiles;
+	m_MLClassCNN->m_AIParse->getLabelFilesInFolder(SrcImgDir, "",
+		"bmp", mapLabelFiles);
+
+	m_DstImgDir = MIL_TEXT("G:/DefectDataCenter/原始_现场分类数据/LJX/TestResult/") + m_strProject + L"//";
+	LARGE_INTEGER t1, t2, tc;
+	QueryPerformanceFrequency(&tc);
+	QueryPerformanceCounter(&t1);
+	MIL_UNIQUE_CLASS_ID TestCtx = MclassRestore(PreClassifierName, m_MilSystem, M_DEFAULT, M_UNIQUE_ID);
+	getModelInfo(TestCtx);
+	//设置ENGINE
+	MIL_STRING Description;
+	MclassInquire(TestCtx, M_PREDICT_ENGINE_INDEX(0), M_PREDICT_ENGINE_DESCRIPTION, Description);
+	MosPrintf(MIL_TEXT("\nM_PREDICT_ENGINE_DESCRIPTION: %s \n"), Description.c_str());
+	map<string,float>mapPrecdictAP;
+	for (auto iter = mapLabelFiles.begin(); iter != mapLabelFiles.end(); iter++) {
+		string GtLabel = (*iter).first;
+		MIL_STRING MGtLabel = m_MLClassCNN->m_AIParse->string2MIL_STRING(GtLabel);
+		int GtLabelNum = (*iter).second.size();
+
+		vector<MIL_DOUBLE> ClassWeights(m_ClassesNum, 1.0);
+		m_MLClassCNN->FolderImgsPredict((*iter).second, ClassWeights, TestCtx, m_vecResults);
+		int k = 0;
+		for (int i = 0; i < GtLabelNum; i++) {
+			if (MGtLabel ==m_vecResults[i].PredictClassName) {
+				k++;
+			};
+		}
+		float precision = float(k) / float(GtLabelNum);
+		mapPrecdictAP.insert(pair<string, float>(GtLabel, precision));
+		if (m_SavePredictedImg) {
+			savePredictedImg();}
 	}
 }
 

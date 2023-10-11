@@ -41,6 +41,12 @@ public:
 	void Split(const string& str, vector<string>& tokens, const string& delimiters);
 	void getFoldersInFolder(string Path, vector<string>& Folders);
 	void getFilesInFolder(string Path, string FileType, vector<MIL_STRING>& Files);
+
+	void getLabelFilesInFolder(string Path,
+		string Label, 
+		string FileType, 
+		map<string, vector<MIL_STRING>>& mapLabelFiles);
+
 	void getFilesInFolder(string Path, string FileType, vector<string>& Files);
 
 	void readBlob2Vector(string file, vector<int>& blob_px, vector<int>& blob_py);

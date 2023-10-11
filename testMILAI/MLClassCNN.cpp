@@ -558,13 +558,29 @@ void CMLClassCNN::Predict(MIL_ID Image,
     MclassGetResult(ClassRes, M_GENERAL, M_BEST_CLASS_SCORE + M_TYPE_MIL_DOUBLE, &Result.PredictScore);
     MclassGetResult(ClassRes, M_GENERAL, M_BEST_CLASS_INDEX + M_TYPE_MIL_INT, &Result.PredictClass);
     vector<MIL_DOUBLE>WeightScores;
+    MIL_DOUBLE Score;
+    MIL_DOUBLE WeightScore;
+    WeightScores.resize(m_ClassWeights.size());
+Result.AllScores.resize(m_ClassWeights.size());
     for (int i = 0; i < m_ClassWeights.size(); i++) {
-        MIL_DOUBLE Score;
+        
         MclassGetResult(ClassRes, M_CLASS_INDEX(i), M_CLASS_SCORES + M_TYPE_MIL_DOUBLE, &Score);
-        MIL_DOUBLE WeightScore = Score * m_ClassWeights[i];
-        WeightScores.emplace_back(WeightScore);
-        Result.AllScores.emplace_back(Score);
+        WeightScore = Score * m_ClassWeights[i];
+        WeightScores[i] = WeightScore;
+        Result.AllScores[i]=Score;
     }
+    //int ii = 0;
+    //WeightScores.resize(m_ClassWeights.size());
+    //Result.AllScores.resize(m_ClassWeights.size());
+    //for (auto iter = m_ClassWeights.begin(); iter != m_ClassWeights.end(); iter++) {
+    //    MclassGetResult(ClassRes, M_CLASS_INDEX(ii), M_CLASS_SCORES + M_TYPE_MIL_DOUBLE, &Score);
+    //    WeightScore = Score * m_ClassWeights[ii];
+    //    WeightScores.emplace_back(WeightScore);
+    //    Result.AllScores.emplace_back(Score);
+    //    ii++;
+    //}
+
+
     vector<MIL_DOUBLE>::iterator biggest = max_element(begin(WeightScores), end(WeightScores));
     Result.PredictClass = distance(begin(WeightScores), biggest);
     MclassInquire(TrainedClassifierCtx, M_CLASS_INDEX(Result.PredictClass), M_CLASS_NAME, Result.PredictClassName);
