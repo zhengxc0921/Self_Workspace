@@ -147,6 +147,7 @@
   <ItemGroup>
     <ClInclude Include="AIParse.h" />
     <ClInclude Include="Dashboard.h" />
+    <ClInclude Include="DBSCAN.h" />
     <ClInclude Include="MILTest.h" />
     <ClInclude Include="MLBase.h" />
     <ClInclude Include="MLClassCNN.h" />
@@ -156,7 +157,7 @@
   <ItemGroup>
     <ClCompile Include="AIParse.cpp" />
     <ClCompile Include="Dashboard.cpp" />
-    <ClCompile Include="kttreedbscan.cpp" />
+    <ClCompile Include="DBSCAN.cpp" />
     <ClCompile Include="MILTest.cpp" />
     <ClCompile Include="MLBase.cpp" />
     <ClCompile Include="MLClassCNN.cpp" />

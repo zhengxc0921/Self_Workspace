@@ -62,7 +62,7 @@ public:
     //virtual MIL_INT CnnTrainEngineDLLInstalled(MIL_ID MilSystem);
     void GenDataSet(string DetDataSetConfigPath,string proj_n);
     void GenDataSet(DET_DATASET_PARAS_STRUCT DetDataSetPara);
-
+    void CheckDataSet(string DetDataSetConfigPath, string proj_n);
     void ConstructDataContext(
         DataContextParasStruct DataCtxParas,
         MIL_UNIQUE_CLASS_ID& DataContext);
@@ -93,7 +93,7 @@ public:
     //针对在线测试：预测一个文件夹中的bmp图片 (暂定)
     void Predict(MIL_ID Image, MIL_UNIQUE_CLASS_ID& TdDetCtxPath,DET_RESULT_STRUCT& Result);
     //void PredictBegin(MIL_UNIQUE_CLASS_ID& TrainedDetCtx, MIL_ID Image);
-    void ValModel_AP_50(string ValDataInfoPath, MIL_STRING TdDetCtxPath, string strPRResultPath);
+    void ValModel_AP_50(string ValDataInfoPath, MIL_STRING TdDetCtxPath, string strPRResultPath, string strODNetResultPath);
 
     void PrintControls();
     void CDatasetViewer(MIL_ID Dataset);

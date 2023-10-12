@@ -534,10 +534,11 @@ void MILTest::MILTestPredictEngine()
 
 void MILTest::MILTestGenDetDataset()
 {
-	string proj_n = "DSW";
+	//string proj_n = "COT_Resize"; //COT_Resize  DSW
 	//string proj_n = "HW";
-	//string proj_n = "COT_Raw";
+	string proj_n = "COT_Raw"; //COT_Resize
 	string DetDataSetConfigPath = "G:/DefectDataCenter/ParseData/Detection/"+proj_n+"/raw_data/Config/"+proj_n+"_Para.ini";
+	
 	m_MLDetCNN->GenDataSet(DetDataSetConfigPath, proj_n);
 	//DET_DATASET_PARAS_STRUCT DetDataSetPara;
 	//DetDataSetPara.ClassesPath = "G:/DefectDataCenter/ParseData/Detection/COT_Resize/raw_data/Config/Classes.txt";
@@ -565,15 +566,15 @@ void MILTest::MILTestDetTrain()
 	DtParas.LearningRateDecay = 0.1;
 	DtParas.SplitPercent = 90.0;
 	DtParas.WorkSpaceDir = L"G:/DefectDataCenter/ParseData/Detection";
-	DtParas.DataSetName = L"DSW";
+	DtParas.DataSetName = L"COT_Raw";
 	m_MLDetCNN->TrainModel( DtParas);
 	return;
 }
 
 void MILTest::MILTestDetPredict()
 {
-	string proj = "DSW";
-	MIL_STRING Mproj = L"DSW";
+	string proj = "DSW_random";
+	MIL_STRING Mproj = L"DSW_random";
 	string	SrcImgDir = "G:/DefectDataCenter/ParseData/Detection/"+ proj+ "/raw_data/TImg";
 	m_MLDetCNN->m_DetDataSetPara.WorkingDataDir = "G:/DefectDataCenter/ParseData/Detection/" + proj + "/MIL_Data/";
 	MIL_STRING TdDetCtxPath = L"G:/DefectDataCenter/ParseData/Detection/"+ Mproj +L"/MIL_Data/"+ Mproj +L".mclass";
@@ -584,12 +585,13 @@ void MILTest::MILTestDetPredict()
 
 void MILTest::MILTestValDetModel()
 {
-	string proj = "DSW"; //COT_Raw
-	string ValDataInfoPath = "G:/DefectDataCenter/ParseData/Detection/"+ proj+"/raw_data/Config/Val.txt";
-	MIL_STRING Mproj = L"DSW";
+	string proj = "COT_Raw"; //COT_Raw  //DSW  //DSW_random  // HW //COT_Resize
+	string ValDataInfoPath = "G:/DefectDataCenter/ParseData/Detection/"+ proj+"/raw_data/Config/ImgBoxes_val.txt";
+	MIL_STRING Mproj = L"COT_Raw";
 	MIL_STRING TdDetCtxPath = L"G:/DefectDataCenter/ParseData/Detection/" + Mproj + L"/MIL_Data/" + Mproj + L".mclass";
 	string strPRResultPath = "G:/DefectDataCenter/ParseData/Detection/" + proj + "/MIL_Data/PresionRecall.txt";
-	m_MLDetCNN->ValModel_AP_50( ValDataInfoPath, TdDetCtxPath, strPRResultPath);
+	string strODNetResultPath = "G:/DefectDataCenter/ParseData/Detection/" + proj + "/MIL_Data/ODNetResult.txt";
+	m_MLDetCNN->ValModel_AP_50( ValDataInfoPath, TdDetCtxPath, strPRResultPath, strODNetResultPath);
 }
 
 //void MILTest::MILTestDetPredict()

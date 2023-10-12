@@ -55,8 +55,6 @@ LPTSTR CMLDetCNN::string2LPCTSTR(string inString)
 
 void CMLDetCNN::readDetDataSetConfig(string DetDataSetConfigPath, string proj_n)
 {
-    
-
     //lpPath : char* 转换成 LPCTSTR
     //const char* path = DetDataSetConfigPath.c_str();
     //int path_num = MultiByteToWideChar(0, 0, path, -1, NULL, 0);
@@ -103,7 +101,6 @@ void CMLDetCNN::readDetDataSetConfig(string DetDataSetConfigPath, string proj_n)
     m_DetDataSetPara.ImageSizeY = GetPrivateProfileInt(lpProj_n, L"ImageSizeY", 0, lpPath);
     m_DetDataSetPara.TestDataRatio = GetPrivateProfileInt(lpProj_n, L"TestDataRatio", 0, lpPath);
     m_DetDataSetPara.AugFreq = GetPrivateProfileInt(lpProj_n, L"AugFreq", 0, lpPath);
-
     delete[] lpPath;
 }
 
@@ -173,6 +170,12 @@ int CMLDetCNN::predictPrepare(MIL_UNIQUE_CLASS_ID& TrainedDetCtx) {
 void CMLDetCNN::predict(MIL_ID Image, DET_RESULT_STRUCT& Result)
 {
     MIL_ID ImageReduce;
+    MIL_INT RawImage_X = MbufInquire(Image, M_SIZE_X, M_NULL);
+    MIL_INT RawImage_Y = MbufInquire(Image, M_SIZE_Y, M_NULL);
+    //比例转换
+    double X_Scale = (double)RawImage_X / (double)m_InputSizeX;
+    double Y_Scale = (double)RawImage_Y / (double)m_InputSizeY;
+ 
     if (m_InputSizeBand == 3) {
         ImageReduce = MbufAllocColor(m_MilSystem, 3, m_InputSizeX, m_InputSizeY, 8 + M_UNSIGNED, M_IMAGE + M_PROC, M_NULL);
     }
@@ -204,15 +207,21 @@ void CMLDetCNN::predict(MIL_ID Image, DET_RESULT_STRUCT& Result)
         MclassGetResult(ClassRes, M_INSTANCE_INDEX(i), M_HEIGHT + M_TYPE_MIL_DOUBLE, &Result.Boxes[i].H);
         MclassGetResult(ClassRes, M_INSTANCE_INDEX(i), M_WIDTH + M_TYPE_MIL_DOUBLE, &Result.Boxes[i].W);
 
-        Result.Boxes[i].x1 = int(Result.Boxes[i].CX - Result.Boxes[i].W / 2);
-        Result.Boxes[i].x2 = int(Result.Boxes[i].CX + Result.Boxes[i].W / 2);
-        Result.Boxes[i].y1 = int(Result.Boxes[i].CY - Result.Boxes[i].H / 2);
-        Result.Boxes[i].y2 = int(Result.Boxes[i].CY + Result.Boxes[i].H / 2);
+
+        Result.Boxes[i].x1 = int((Result.Boxes[i].CX - Result.Boxes[i].W / 2)* X_Scale);
+        Result.Boxes[i].x2 = int((Result.Boxes[i].CX + Result.Boxes[i].W / 2) * X_Scale);
+        Result.Boxes[i].y1 = int((Result.Boxes[i].CY - Result.Boxes[i].H / 2)* Y_Scale);
+        Result.Boxes[i].y2 = int((Result.Boxes[i].CY + Result.Boxes[i].H / 2)* Y_Scale);
+
+        Result.Boxes[i].CX = Result.Boxes[i].CX * X_Scale;
+        Result.Boxes[i].CY = Result.Boxes[i].CY * Y_Scale;
+        Result.Boxes[i].H = Result.Boxes[i].H * Y_Scale;
+        Result.Boxes[i].W = Result.Boxes[i].W * X_Scale;
+
 
         MIL_INT tmpClassIndex;
         MclassGetResult(ClassRes, M_INSTANCE_INDEX(i), M_BEST_CLASS_INDEX + M_TYPE_MIL_INT, &tmpClassIndex);
         Result.ClassIndex[i] = int(tmpClassIndex);
-
         MclassGetResult(ClassRes, M_INSTANCE_INDEX(i), M_BEST_CLASS_SCORE + M_TYPE_MIL_DOUBLE, &Result.Score[i]);
         MclassInquire(m_TrainedDetCtx, M_CLASS_INDEX(Result.ClassIndex[i]), M_CLASS_NAME, Result.ClassName[i]);
     }
@@ -271,21 +280,23 @@ void CMLDetCNN::calcAP4Vector(vector<vector<Box>> vecGTBoxes,
 vector<float>&Recalls)
 {
   
-    //step1:构建mapGTClassNums/mapTPClassNums/mapFPClassNums
+    //step1:根据模型的ClassNum构建GT
+    // 构建mapGTClassNums/mapTPClassNums/mapFPClassNums
     //预测结果中TP/FP中的Class若不在GT中则不被考虑进去
     map<int, int>mapGTClassNums;
     map<int, int>mapTPClassNums;
     map<int, int>mapFPClassNums;
+    for (int i = 0; i < m_ClassesNum; i++) {
+        mapGTClassNums.insert(pair<int, int>(i, 0));
+        mapTPClassNums.insert(pair<int, int>(i, 0));
+        mapFPClassNums.insert(pair<int, int>(i, 0));
+    }
+
     for (int i = 0; i < vecGTlabels.size(); i++) {
         for (int j = 0; j < vecGTlabels[i].size(); j++) {
             int tmplabel = vecGTlabels[i][j];
-            if (mapGTClassNums.find(tmplabel) == mapGTClassNums.end())
+            if (mapGTClassNums.find(tmplabel) != mapGTClassNums.end())
             {
-                mapGTClassNums.insert(pair<int, int>(tmplabel, 1));
-                mapTPClassNums.insert(pair<int, int>(tmplabel, 0));
-                mapFPClassNums.insert(pair<int, int>(tmplabel, 0));
-            }
-            else {
                 mapGTClassNums[tmplabel] += 1;
             }
         }
@@ -342,7 +353,7 @@ vector<float>&Recalls)
     for (int i = 0; i < GT.size(); i++) {
 
         float precision = (float)TP[i] / max((float)(TP[i] + FP[i]),1.0);
-        float recall = (float)TP[i] / (float)GT[i];
+        float recall = (float)TP[i] / max((float)GT[i],1.0);
         Precisions.emplace_back(precision);
         Recalls.emplace_back(recall);
     }
@@ -410,7 +421,6 @@ void CMLDetCNN::GenDataSet(DET_DATASET_PARAS_STRUCT DetDataSetPara)
     m_DetDataSetPara.TestDataRatio = DetDataSetPara.TestDataRatio;
     m_DetDataSetPara.AugFreq = DetDataSetPara.AugFreq;
 
-
     //写入WorkingDataset
     MIL_UNIQUE_CLASS_ID  WorkingDataset = MclassAlloc(m_MilSystem, M_DATASET_IMAGES, M_DEFAULT, M_UNIQUE_ID);
     addInfo2Dataset(WorkingDataset);
@@ -428,6 +438,46 @@ void CMLDetCNN::GenDataSet(DET_DATASET_PARAS_STRUCT DetDataSetPara)
     PrepareDataset(DataContext, WorkingDataset, PreparedDataset, m_AIParse->string2MIL_STRING(m_DetDataSetPara.WorkingDataDir), m_DetDataSetPara.TestDataRatio);
 
 }
+
+//void CMLDetCNN::CheckDataSet(string DetDataSetConfigPath, string proj_n)
+//{
+//    //读取 DetDataSetConfig
+//    readDetDataSetConfig(DetDataSetConfigPath, proj_n);
+//
+//    //MIL_STRING MStrCheckDataDir = m_AIParse->string2MIL_STRING(m_DetDataSetPara.WorkingDataDir + "//CheckData//"); //MIL_TEXT
+//    MIL_STRING MStrCheckDataDir =  L"G:/DefectDataCenter/ParseData/Detection/COT_Raw/MIL_Data/CheckData/"; //MIL_TEXT
+//    CreateFolder(MStrCheckDataDir);
+//    //step1:txt-->IconDataInfo
+//    vector<MIL_STRING>vecClasses;
+//    m_AIParse->readClasses2Vector(m_DetDataSetPara.ClassesPath, vecClasses);
+//    //step2:txt-->ImgDataInfo
+//    vector<MIL_STRING> vecImgPaths;
+//    vector<vector<Box>> vec2Boxes;
+//    vector<vector<int>> veclabels;
+//    m_AIParse->readDataSet2Vector(m_DetDataSetPara.TrainDataInfoPath, vecImgPaths, vec2Boxes, veclabels);
+//    int nImgNum = vecImgPaths.size();
+//    vecImgPaths.resize(nImgNum);
+//    vec2Boxes.resize(nImgNum);
+//    veclabels.resize(nImgNum);
+//    for (int i = 0; i < nImgNum; i++) {
+//       /* MclassControl(Dataset, M_DEFAULT, M_ENTRY_ADD, M_DEFAULT);
+//        MclassControlEntry(Dataset, i, M_DEFAULT_KEY, M_DEFAULT, M_ENTRY_IMAGE_PATH, M_DEFAULT, vecImgPaths[i], M_DEFAULT);*/
+//        
+//        MIL_ID RawImage = MbufRestore(vecImgPaths[i], m_MilSystem, M_NULL);
+//        vector<Box> tmpBoxes = vec2Boxes[i];
+//        vector<int> tmplabels = veclabels[i];
+//        int nTempLen = tmpBoxes.size();
+//        for (int j = 0; j < nTempLen; j++) {
+//            MIL_UNIQUE_GRA_ID  MilGraphicList = MgraAllocList(m_MilSystem, M_DEFAULT, M_UNIQUE_ID);
+//            MgraRect(RawImage, MilGraphicList, tmpBoxes[j].x1, tmpBoxes[j].y1, tmpBoxes[j].x2, tmpBoxes[j].y2);
+//            //MgraRect(M_DEFAULT, MilGraphicList, tmpBoxes[j].x1, tmpBoxes[j].y1, tmpBoxes[j].x2, tmpBoxes[j].y2);
+//            //MclassEntryAddRegion(Dataset, i, M_DEFAULT_KEY, M_DESCRIPTOR_TYPE_BOX, MilGraphicList, M_NULL, tmplabels[j], M_DEFAULT);       
+//        }
+//        MIL_STRING DstRootPath = MStrCheckDataDir+L"1.bmp";
+//        MbufExport(DstRootPath, M_BMP, RawImage);
+//        MbufFree(RawImage);
+//    }
+//}
 
 void CMLDetCNN::ConstructDataContext(DataContextParasStruct DataCtxParas, MIL_UNIQUE_CLASS_ID& PrepareDataCtx)
 {    
@@ -754,8 +804,9 @@ void CMLDetCNN::Predict(MIL_ID Image, MIL_UNIQUE_CLASS_ID& TdDetCtxPath, DET_RES
     }
 }
 
-void CMLDetCNN::ValModel_AP_50(string ValDataInfoPath, MIL_STRING TdDetCtxPath, string strPRResultPath)
+void CMLDetCNN::ValModel_AP_50(string ValDataInfoPath, MIL_STRING TdDetCtxPath, string strPRResultPath, string strODNetResultPath)
 {
+    bool SaveRst = true;
     //预测准备
     if (m_ModelNotPrePared) {
         predictPrepare(TdDetCtxPath);
@@ -767,6 +818,7 @@ void CMLDetCNN::ValModel_AP_50(string ValDataInfoPath, MIL_STRING TdDetCtxPath, 
     vector<vector<int>> vecGTlabels;
     m_AIParse->readDataSet2Vector(ValDataInfoPath, vecImgPaths, vecGTBoxes, vecGTlabels);
 
+    vector<DET_RESULT_STRUCT> vecDetResults;
     //step3：对图像进行预测
     vector<vector<Box>> vecPdBoxes;
     vector<vector<int>> vecPdlabels;
@@ -780,8 +832,13 @@ void CMLDetCNN::ValModel_AP_50(string ValDataInfoPath, MIL_STRING TdDetCtxPath, 
         MbufFree(RawImage);
         vecPdBoxes.emplace_back(tmpRst.Boxes);
         vecPdlabels.emplace_back(tmpRst.ClassIndex);
+        vecDetResults.emplace_back(tmpRst);
     }
     
+    if (SaveRst) {
+     
+        saveResult2File(strODNetResultPath, vecImgPaths, vecDetResults);
+    }
     //设置IOU_thes为定值0.5，计算AP50 
     //按照MIL中score_thres=0.5 ，不刻画P-R曲线：
     //计算AP

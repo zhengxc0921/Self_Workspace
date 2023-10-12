@@ -2,13 +2,10 @@
 #include <mil.h>
 #include <boost/smart_ptr.hpp>
 #include <windows.h>
-#include <string.h>
-#include <vector>
+//#include <string.h>
+//#include <vector>
 #include <map>
-
-#include <stringapiset.h>
 #include <io.h>
-
 #include <fstream>
 #include <iostream>
 

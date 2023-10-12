@@ -36,6 +36,9 @@
     <ClInclude Include="nanoflann.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="DBSCAN.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="MLBase.cpp">
@@ -59,7 +62,7 @@
     <ClCompile Include="testDemo.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="kttreedbscan.cpp">
+    <ClCompile Include="DBSCAN.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

@@ -220,7 +220,6 @@ template<typename num_t>
              MbufFree(Image);
          }
      }
-
      //遍历所有无效图片路径，存放入文件夹"-2"
      for (int i = 0; i < unefftImgPaths.size(); i++) {     
              MIL_STRING RawImagePath = efftImgPaths[i];
