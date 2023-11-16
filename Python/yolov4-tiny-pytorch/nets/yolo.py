@@ -33,8 +33,7 @@ class Upsample(nn.Module):
 
         self.upsample = nn.Sequential(
             BasicConv(in_channels, out_channels, 1),
-            nn.Upsample(scale_factor=2, mode='nearest')
-        )
+            nn.Upsample(scale_factor=2, mode='nearest'))
 
     def forward(self, x,):
         x = self.upsample(x)

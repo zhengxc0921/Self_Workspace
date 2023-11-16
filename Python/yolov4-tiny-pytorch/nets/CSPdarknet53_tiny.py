@@ -54,12 +54,9 @@ class Resblock_body(nn.Module):
     def __init__(self, in_channels, out_channels):
         super(Resblock_body, self).__init__()
         self.out_channels = out_channels
-
         self.conv1 = BasicConv(in_channels, out_channels, 3)
-
         self.conv2 = BasicConv(out_channels//2, out_channels//2, 3)
         self.conv3 = BasicConv(out_channels//2, out_channels//2, 3)
-
         self.conv4 = BasicConv(out_channels, out_channels, 1)
         self.maxpool = nn.MaxPool2d([2,2],[2,2])
 
@@ -122,7 +119,6 @@ class CSPDarkNet(nn.Module):
         # 416,416,3 -> 208,208,32 -> 104,104,64
         x = self.conv1(x)
         x = self.conv2(x)
-
         # 104,104,64 -> 52,52,128
         x, _    = self.resblock_body1(x)
         # 52,52,128 -> 26,26,256
@@ -130,7 +126,6 @@ class CSPDarkNet(nn.Module):
         # 26,26,256 -> x为13,13,512
         #           -> feat1为26,26,256
         x, feat1    = self.resblock_body3(x)
-
         # 13,13,512 -> 13,13,512
         x = self.conv3(x)
         feat2 = x

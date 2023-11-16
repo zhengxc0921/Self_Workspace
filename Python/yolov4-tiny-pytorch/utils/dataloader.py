@@ -1,105 +1,104 @@
-import cv2
+import cv2, os
 import numpy as np
 from torch.utils.data.dataset import Dataset
+
 
 class YoloDataset(Dataset):
     def __init__(self, annotation_lines, input_shape, num_classes, train):
         super(YoloDataset, self).__init__()
-        self.annotation_lines   = annotation_lines
-        self.input_shape        = input_shape
-        self.num_classes        = num_classes
-        self.length             = len(self.annotation_lines)
+        self.annotation_lines = annotation_lines
+        self.input_shape = input_shape
+        self.num_classes = num_classes
+        self.length = len(self.annotation_lines)
+        self.train = train
 
-        self.train              = train
+        self.check_train_box = False #True
 
     def __len__(self):
         return self.length
 
     def __getitem__(self, index):
-        index       = index % self.length
-        #---------------------------------------------------#
+        index = index % self.length
+        # ---------------------------------------------------#
         #   训练时进行数据的随机增强
         #   验证时不进行数据的随机增强
-        #---------------------------------------------------#
-        image, box      = self.get_random_data(self.annotation_lines[index], self.input_shape, random = self.train)
+        # ---------------------------------------------------#
+        image, box, img_path = self.get_random_data(self.annotation_lines[index], self.input_shape, random=self.train)
         image = np.transpose(image / 255.0, (2, 0, 1))
-        box         = np.array(box, dtype=np.float32)
+        box = np.array(box, dtype=np.float32)
         if len(box) != 0:
             box[:, [0, 2]] = box[:, [0, 2]] / self.input_shape[1]
             box[:, [1, 3]] = box[:, [1, 3]] / self.input_shape[0]
             box[:, 2:4] = box[:, 2:4] - box[:, 0:2]
             box[:, 0:2] = box[:, 0:2] + box[:, 2:4] / 2
-        return image, box
+        return image, box, img_path
 
     def rand(self, a=0, b=1):
-        return np.random.rand()*(b-a) + a
+        return np.random.rand() * (b - a) + a
 
     ###C++使用的是opencv，为保持一致，此处改为使用opencv
     def get_random_data(self, annotation_line, input_shape, jitter=.3, hue=.1, sat=1.5, val=1.5, random=True):
-        line    = annotation_line.split()
-        #------------------------------#
+        line = annotation_line.split()
+        # ------------------------------#
         #   读取图像并转换成RGB图像
-        #------------------------------#
-        #case2:
-        image = cv2.imdecode(np.fromfile(line[0],dtype=np.uint8),1)
+        # ------------------------------#
+        # case2:
+        image = cv2.imdecode(np.fromfile(line[0], dtype=np.uint8), 1)
 
-        # cv2.imshow("img", image)
-        # cv2.moveWindow("img", 100, 200)
-        # cv2.waitKey(0)
-        # cv2.destroyAllWindows()
-
-        if image.ndim!=3:
-            image = cv2.cvtColor(image,cv2.COLOR_GRAY2BGR)
-        #------------------------------#
+        if image.ndim != 3:
+            image = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
+        # ------------------------------#
         #   获得图像的高宽与目标高宽
-        #------------------------------#
-        ih, iw,ic = image.shape    #图片原始尺寸
-        h, w    = input_shape   #需要resize的尺寸
-        #------------------------------#
+        # ------------------------------#
+        ih, iw, ic = image.shape  # 图片原始尺寸
+        h, w = input_shape  # 需要resize的尺寸
+        # ------------------------------#
         #   获得预测框
-        #------------------------------#
-        box     = np.array([np.array(list(map(float,box.split(',')))) for box in line[1:]])
-        #------------------------------------------#
+        # ------------------------------#
+        box = np.array([np.array(list(map(float, box.split(',')))) for box in line[1:]])
+        # ------------------------------------------#
         #   对图像进行缩放并且进行长和宽的扭曲
-        #------------------------------------------#
-        #case1:PIL 的resize
+        # ------------------------------------------#
+        # case1:PIL 的resize
         # image = image.resize((nw,nh), Image.BICUBIC)
-        #case2：cv2
-        image = cv2.resize(image,(w,h),cv2.INTER_CUBIC)
-        #------------------------------------------#
+        # case2：cv2
+        image = cv2.resize(image, (w, h), cv2.INTER_CUBIC)
+        # ------------------------------------------#
         #   翻转图像
-        #------------------------------------------#
-        flip = self.rand()<.5
+        # ------------------------------------------#
+        flip = self.rand() < .5
         if flip: image = np.fliplr(image)
         # cv2.imshow("img", image)
         # cv2.waitKey(0)
         # cv2.destroyAllWindows()
-        #---------------------------------#
+        # ---------------------------------#
         #   对真实框进行调整
-        #---------------------------------#
-        if len(box)>0:
+        # ---------------------------------#
+        if len(box) > 0:
             np.random.shuffle(box)
-            box[:, [0,2]] = box[:, [0,2]]*w/iw
-            box[:, [1,3]] = box[:, [1,3]]*h/ih
-            if flip: box[:, [0,2]] = w - box[:, [2,0]]
-            box[:, 0:2][box[:, 0:2]<0] = 0
-            box[:, 2][box[:, 2]>w] = w
-            box[:, 3][box[:, 3]>h] = h
+            box[:, [0, 2]] = box[:, [0, 2]] * w / iw
+            box[:, [1, 3]] = box[:, [1, 3]] * h / ih
+            if flip: box[:, [0, 2]] = w - box[:, [2, 0]]
+            box[:, 0:2][box[:, 0:2] < 0] = 0
+            box[:, 2][box[:, 2] > w] = w
+            box[:, 3][box[:, 3] > h] = h
             box_w = box[:, 2] - box[:, 0]
             box_h = box[:, 3] - box[:, 1]
-            box = box[np.logical_and(box_w>1, box_h>1)]
+            box = box[np.logical_and(box_w > 1, box_h > 1)]
         ##box画在图上
-        # x1 = int(box[0][0])
-        # y1 = int(box[0][1])
-        # x2 = int(box[0][2])
-        # y2 = int(box[0][3])
-        # #使img内部内存连续
-        # image = np.ascontiguousarray(image)
-        # cv2.rectangle(image, (x1, y1), (x2, y2), (100, 210, 20), 1)
-        # cv2.imshow("image", image)
-        # cv2.waitKey(0)
-        # cv2.destroyAllWindows()
-        return image, box
+        if self.check_train_box:
+            dst_dir = r'data/check_trian_img'
+            os.makedirs(dst_dir, exist_ok=True)
+            img_n = os.path.basename(line[0])
+            for bx_f in box:
+                # #使img内部内存连续
+                bx = [int(x) for x in bx_f]
+                image = np.ascontiguousarray(image)
+                cv2.rectangle(image, (bx[0], bx[1]), (bx[2], bx[3]), (100, 210, 20), 2)
+            dst_img_p = os.path.join(dst_dir, img_n)
+            cv2.imwrite(dst_img_p, image)
+
+        return image, box, line[0]
 
     # def get_random_data(self, annotation_line, input_shape, jitter=.3, hue=.1, sat=1.5, val=1.5, random=True):
     #     line = annotation_line.split()
@@ -210,7 +209,7 @@ class YoloDataset(Dataset):
     #         box = box[np.logical_and(box_w > 1, box_h > 1)]
     #
     #     return image_data, box
-    
+
     # def merge_bboxes(self, bboxes, cutx, cuty):
     #     merge_bbox = []
     #     for i in range(len(bboxes)):
@@ -349,12 +348,28 @@ class YoloDataset(Dataset):
     #
     #     return new_image, new_boxes
 
+
+# # zxc：调试中间参数：2020-11-17
+# from auxi.img_plot import yolo_numpy_plot, batch_plot,check_train_box
+# import numpy as np
+# class_names = ['Crack','Chipping','Particle','Discolor','Strip','Strain','others2']
+# check_train_box(targets, img_paths, class_names)
+
+# for i in range(len(targets)):
+#     box = targets[i][np.newaxis, :, :4]
+#     _cls =  targets[i][0,4]
+#     print("_cls: ",_cls)
+#     yolo_numpy_plot(images, i, boxes=box)
+# zxc：调试中间参数：2020-11-17
+# # continue
 # DataLoader中collate_fn使用
 def yolo_dataset_collate(batch):
     images = []
     bboxes = []
-    for img, box in batch:
+    img_paths = []
+    for img, box, img_path in batch:
         images.append(img)
         bboxes.append(box)
+        img_paths.append(img_path)
     images = np.array(images)
-    return images, bboxes
+    return images, bboxes, img_paths

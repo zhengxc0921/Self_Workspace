@@ -1,8 +1,5 @@
 import torch
-from PIL import Image
 from yolo import YOLOScript
-
-from nets.yolo import YoloBodyS
 import numpy as np
 import cv2,os
 
@@ -11,8 +8,8 @@ class ToScript:
 
     def __init__(self,cfg):
         self.model_YOLO =YOLOScript(cfg)
-        self.model_dst = cfg.pt_model_dst
-        self.onnx_model_dst = cfg.onnx_model_dst
+        self.model_dst = cfg.pth_dst
+        self.onnx_model_dst = cfg.onnx_dst
         self.cfg = cfg
         self.img_dir = r'G:\DefectDataCenter\ParseData\Detection\{}\raw_data\TImg'.format(project)
 
@@ -56,8 +53,6 @@ class ToScript:
 
     def pre_process_img(self,num=1):
         self.img_names = os.listdir(self.img_dir)
-        # tmp_name = "block_F_defect_J_cellcol_1.bmp"
-        # self.img_names[num] = tmp_name
         self.img_path = os.path.join(self.img_dir,self.img_names[num])
         # ---------------------------------------------------------#
         #   在这里将图像转换成RGB图像，防止灰度图在预测时报错。
@@ -78,12 +73,11 @@ class ToScript:
 
     def to_onnx(self):
         import onnx ,onnxruntime
-        model_dst = "yolo4_tiny_onnx.onnx"
         images_cv ,image_shape= self.pre_process_img(1) ##177,4
         #---------------------------------------------------------#
         #   添加上batch_size维度
         #---------------------------------------------------------#
-
+        # images_cv = images_cv.to(self.cfg.calc_device)
         test_in = self.model_YOLO(images_cv)
         print("test_in: ", test_in)
         input_layer_names = ["images"]
@@ -112,11 +106,13 @@ class ToScript:
             print("this image have no defects!")
         return
 
+
+
 if __name__ == '__main__':
     # calc_device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     # pj_id = 1
     from utils.config import Config
-    project = "lslm"  #LMK
+    project = "COT_Raw"  #LMK
     cfg = Config(project)
     test1 = ToScript(cfg)
     test1.to_onnx()

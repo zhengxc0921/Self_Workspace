@@ -22,26 +22,34 @@ def yolo4_train():
     # ------------------------------------------------------#
     #   创建yolo模型
     # ------------------------------------------------------#
-    project = "COT_Raw"  ## LMK, HW,VOC,DSW_random
+    project = "COT_Raw"  ## LMK, HW,VOC,DSW_random ,COT_Raw ;COT_Raw ; DSW
     cfg = Config(project)
-    yolo_loss = YOLOLoss(cfg.anchors, cfg.num_classes, cfg.input_shape, cfg.calc_device, cfg.anchors_mask).to(
-        cfg.calc_device)
+    cls_n = len(cfg.class_names)
+    size_input = [cfg.ImageSizeY, cfg.ImageSizeX]
+
+    train_ls = cfg.train_lines
+    val_ls = cfg.val_lines
+    batch_sz = cfg.batch_size
+    worker_n = cfg.num_workers
+    lr1 = cfg.lr[0]
+    lr2 = cfg.lr[1]
+
+
+    yolo_loss = cfg.yolo_loss
     loss_history = LossHistory("logs/")
 
     ##创建数据集，General
-    train_dataset = YoloDataset(cfg.train_lines, cfg.input_shape, cfg.num_classes, train=False)
-    val_dataset = YoloDataset(cfg.val_lines, cfg.input_shape, cfg.num_classes, train=False)
-    gen = DataLoader(train_dataset, shuffle=True, batch_size=cfg.batch_size, num_workers=cfg.num_workers,
-                     pin_memory=True,
-                     drop_last=True, collate_fn=yolo_dataset_collate)
-    gen_val = DataLoader(val_dataset, shuffle=True, batch_size=cfg.batch_size, num_workers=cfg.num_workers,
-                         pin_memory=True,
-                         drop_last=True, collate_fn=yolo_dataset_collate)
+    train_set = YoloDataset(train_ls,size_input,cls_n, train=False)
+    val_set = YoloDataset(val_ls, size_input, cls_n, train=False)
+    gen = DataLoader(train_set, shuffle=True, batch_size=batch_sz, num_workers=worker_n,
+                     pin_memory=True,drop_last=True, collate_fn=yolo_dataset_collate)
+    gen_val = DataLoader(val_set, shuffle=True, batch_size=batch_sz, num_workers=worker_n,
+                         pin_memory=True,drop_last=True, collate_fn=yolo_dataset_collate)
     # ------------------------------------#
     #   冻结一定部分训练
     # ------------------------------------#
     # 创建优化器
-    optimizer = optim.Adam(cfg.model_train.parameters(), cfg.lr[0], weight_decay=5e-4)
+    optimizer = optim.Adam(cfg.model_train.parameters(), lr1, weight_decay=5e-4)
     lr_scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=1, gamma=0.94)
 
     if cfg.epoch_step == 0 or cfg.epoch_step_val == 0:
@@ -55,7 +63,7 @@ def yolo4_train():
     # ------------------------------------#
     #   解冻训练
     # ------------------------------------#
-    optimizer = optim.Adam(cfg.model_train.parameters(), cfg.lr[1], weight_decay=5e-4)
+    optimizer = optim.Adam(cfg.model_train.parameters(), lr2, weight_decay=5e-4)
     lr_scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=1, gamma=0.94)
     for param in cfg.model.backbone.parameters():
         param.requires_grad = True
@@ -63,10 +71,7 @@ def yolo4_train():
         fit_one_epoch(cfg, yolo_loss, loss_history, optimizer, epoch, cfg.all_epoch, gen, gen_val)
         lr_scheduler.step()
 
-def yolo4_traint():
-    print("find train file")
 if __name__ == "__main__":
-    # pass
     yolo4_train()
 
 
