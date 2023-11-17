@@ -585,6 +585,9 @@ void MILTest::MILTestDetPredict()
 
 void MILTest::MILTestValDetModel()
 {
+
+	
+
 	string proj = "COT_Raw"; //COT_Raw  //DSW  //DSW_random  // HW //COT_Resize
 	string ValDataInfoPath = "G:/DefectDataCenter/ParseData/Detection/"+ proj+"/raw_data/Config/ImgBoxes_val.txt";
 	MIL_STRING Mproj = L"COT_Raw";
@@ -907,22 +910,30 @@ void MILTest::MILTestDetPredictMutiThreadCore()
 
 void MILTest::MILTestONNXPredict()
 {
-	MIL_STRING TdONNXCtxName = MIL_TEXT("I:/MIL_AI/testMILAI/yolov4_weights_LMK.onnx");
+	MIL_STRING TdONNXCtxName = MIL_TEXT("G:/DefectDataCenter/ParseData/Detection/COT_Raw/Pytorch_Data/yolo7tiny_COT_Raw.onnx");
 
 	MIL_UNIQUE_CLASS_ID TestONNXCtx = MclassAlloc(m_MilSystem,M_CLASSIFIER_ONNX, M_DEFAULT, M_UNIQUE_ID);
 	MclassImport(TdONNXCtxName,M_ONNX_FILE, TestONNXCtx, M_DEFAULT, M_DEFAULT, M_DEFAULT);
+
+	MIL_INT engine_index = 2;
+	MIL_STRING Description;
+	MclassControl(TestONNXCtx, M_DEFAULT, M_PREDICT_ENGINE, engine_index);
+	MclassInquire(TestONNXCtx, M_PREDICT_ENGINE_INDEX(engine_index), M_PREDICT_ENGINE_DESCRIPTION, Description);
+	MosPrintf(MIL_TEXT("\nM_PREDICT_ENGINE_DESCRIPTION: %s \n"), Description.c_str());
+
 	MclassInquire(TestONNXCtx, M_DEFAULT_SOURCE_LAYER, M_SIZE_X + M_TYPE_MIL_INT, &m_InputSizeX);
 	MclassInquire(TestONNXCtx, M_DEFAULT_SOURCE_LAYER, M_SIZE_Y + M_TYPE_MIL_INT, &m_InputSizeY);
-	MclassInquire(TestONNXCtx, M_CONTEXT, M_NUMBER_OF_CLASSES + M_TYPE_MIL_INT, &m_ClassesNum);
+	//MclassInquire(TestONNXCtx, M_CONTEXT, M_NUMBER_OF_CLASSES + M_TYPE_MIL_INT, &m_ClassesNum);
 	
-	MIL_STRING ImagepATH = MIL_TEXT("I:/MIL_AI/testMILAI/LMK1.bmp");
+	MIL_STRING ImagepATH = MIL_TEXT("G:/DefectDataCenter/ParseData/Detection/COT_Raw/raw_data/TImg/0_7_10.bmp");
 	MIL_ID Image = MbufRestore(ImagepATH, m_MilSystem, M_NULL);
 	MIL_INT m_ImageSizeX = MbufInquire(Image, M_SIZE_X, M_NULL);
 	MIL_INT m_ImageSizeY = MbufInquire(Image, M_SIZE_Y, M_NULL);
 
 	MIL_ID ImageReduce = MbufAllocColor(m_MilSystem, 3, m_InputSizeX, m_InputSizeY, M_FLOAT + 32, M_IMAGE + M_PROC, M_NULL);
 	MimResize(Image, ImageReduce, M_FILL_DESTINATION, M_FILL_DESTINATION, M_DEFAULT);
-
+	//MimArith(ImageReduce, 255.0, ImageReduce, M_DIV);
+	MimArith(ImageReduce, 255.0, ImageReduce, M_DIV_CONST);
 	MIL_UNIQUE_CLASS_ID ClassRes = MclassAllocResult(m_MilSystem, M_PREDICT_ONNX_RESULT, M_DEFAULT, M_UNIQUE_ID);
 
 	MclassControl(TestONNXCtx, M_DEFAULT, M_TARGET_IMAGE_SIZE_X, m_InputSizeX);
@@ -930,8 +941,14 @@ void MILTest::MILTestONNXPredict()
 	MclassControl(TestONNXCtx, M_DEFAULT, M_TARGET_IMAGE_SIZE_BAND, 3);
 
 	MclassPreprocess(TestONNXCtx, M_DEFAULT);
-	MclassPredict(TestONNXCtx, ImageReduce, ClassRes, M_DEFAULT);
+	clock_t  t1 = clock();
+	int CircleNum = 500;
+	for (int i = 0; i < CircleNum; i++) {
+		MclassPredict(TestONNXCtx, ImageReduce, ClassRes, M_DEFAULT);
+	}
+	clock_t  t2 = clock();
 
+	cout << "FPS: " << CircleNum*1.0 /(double(t2 - t1) / CLOCKS_PER_SEC) << endl;
 	MIL_INT NO = 0;
 	MclassGetResult(ClassRes, M_GENERAL, M_NUMBER_OF_OUTPUTS+ M_TYPE_MIL_INT, &NO);
 
@@ -943,7 +960,17 @@ void MILTest::MILTestONNXPredict()
 		MclassGetResult(ClassRes, M_OUTPUT_INDEX(i), M_OUTPUT_SHAPE, OutSp);
 		MclassGetResult(ClassRes, M_OUTPUT_INDEX(i), M_OUTPUT_DATA, Out);
 	}
-
+	//½âÎöResult
+	vector<vector<float>>Result;
+	for (int i = 0; i < OutSp[0]; i++) {
+		vector<float>tmp_target;
+		int S = i * OutSp[1];
+		int E = (i+1) * OutSp[1];
+		tmp_target.assign(Out.begin() + S, Out.begin() + E);
+		Result.push_back(tmp_target);
+	}
+	MbufFree(Image);
+	MbufFree(ImageReduce);
 }
 
 void MILTest::MILTestKTtreedbscan()

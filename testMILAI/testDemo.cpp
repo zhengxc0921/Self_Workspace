@@ -7,10 +7,48 @@
 #if 1
 #include "MILTest.h"
 
+#include <iostream>
+#include <list>
+#include <chrono>
+void test() {
+
+		std::list<int> myList;
+
+		// 使用 push_back() 向 list 中插入一百万个元素
+		auto start_push_back = std::chrono::high_resolution_clock::now();
+		for (int i = 0; i < 1000000; ++i) {
+			myList.push_back(i);
+		}
+		auto end_push_back = std::chrono::high_resolution_clock::now();
+		auto duration_push_back = std::chrono::duration_cast<std::chrono::milliseconds>(end_push_back - start_push_back);
+		std::cout << "push_back() duration: " << duration_push_back.count() << " ms" << std::endl;
+
+		// 使用 emplace_back() 向 list 中插入一百万个元素
+		std::list<int> myList2;
+		auto start_emplace_back = std::chrono::high_resolution_clock::now();
+		for (int i = 0; i < 1000000; ++i) {
+			myList2.emplace_back(i);
+		}
+		auto end_emplace_back = std::chrono::high_resolution_clock::now();
+		auto duration_emplace_back = std::chrono::duration_cast<std::chrono::milliseconds>(end_emplace_back - start_emplace_back);
+		std::cout << "emplace_back() duration: " << duration_emplace_back.count() << " ms" << std::endl;
+
+
+
+}
+
 int main(int argc, char* argv[]) {
+	
+	//int temp = 100000000;
+	//const char* temp_char = std::to_string(temp).c_str();
+	//int a = int(*temp_char);
+	//test();
+	
+
+
 
 	//MIL_STRING strProject = L"Sp_SPA_ASI_Reclass_DataSet";
-	MIL_STRING strProject = L"COT_Resize";
+	MIL_STRING strProject = L"COT_Raw";
 	MIL_UNIQUE_APP_ID MilApplication = MappAlloc(M_NULL, M_DEFAULT, M_UNIQUE_ID);
 	MIL_UNIQUE_SYS_ID MilSystem = MsysAlloc(M_DEFAULT, M_SYSTEM_HOST, M_DEFAULT, M_DEFAULT, M_UNIQUE_ID);
 	MIL_UNIQUE_DISP_ID MilDisplay = MdispAlloc(MilSystem, M_DEFAULT, MIL_TEXT("M_DEFAULT"), M_DEFAULT, M_UNIQUE_ID);
@@ -36,9 +74,9 @@ int main(int argc, char* argv[]) {
 	//m_MILTestPtr->MILTestGenDetDataset();
 	//m_MILTestPtr->MILTestDetTrain();
 	//m_MILTestPtr->MILTestDetPredict();
-	m_MILTestPtr->MILTestValDetModel();
+	//m_MILTestPtr->MILTestValDetModel();
 	//ONNX test
-	//m_MILTestPtr->MILTestONNXPredict();
+	m_MILTestPtr->MILTestONNXPredict();
 	//多进程测试前的预备测试
 	//m_MILTestPtr->MILTestDetPredictMutiProcessSingle();
 

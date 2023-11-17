@@ -537,7 +537,7 @@ void CMLClassCNN::Predict(MIL_ID Image,
     MIL_ID ImageReduce = MbufAlloc2d(m_MilSystem, m_InputSizeX, m_InputSizeY, 8 + M_UNSIGNED, M_IMAGE + M_PROC, M_NULL);
     MimResize(Image, ImageReduce, M_FILL_DESTINATION, M_FILL_DESTINATION, M_BILINEAR);
 
-
+   
 
     MIL_INT Status = M_FALSE;
     MclassInquire(TrainedClassifierCtx, M_DEFAULT, M_PREPROCESSED + M_TYPE_MIL_INT, &Status);

@@ -90,6 +90,7 @@ class  CDBSCAN {
     void saveClusterRst(MIL_STRING DstImgDir, vector<MIL_STRING>& efftImgPaths,
         vector<vector<int>>& Labels,
         vector<MIL_STRING>& unefftImgPaths);
+
     void removalImg(vector<MIL_STRING>& efftImgPaths,
         vector<vector<int>>& Labels,
         vector<MIL_STRING>& unefftImgPaths);

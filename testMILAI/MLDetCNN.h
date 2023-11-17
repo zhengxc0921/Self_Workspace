@@ -145,6 +145,5 @@ public:
     
     //控制中间测试时间的输出次数
     int m_ON = 0;
-    
     int m_IOU_threshold = 0.5;
 };

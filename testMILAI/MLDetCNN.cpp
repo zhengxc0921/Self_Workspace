@@ -721,7 +721,6 @@ int CMLDetCNN::TrainModel(DET_TRAIN_STRUCT DtParas) {
          //WriteLog(LOG_INFO, "%s is not exit.",PreparedPath.c_str());
          return -1;
      }
-
     ConstructTrainCtx(DtParas, TrainCtx);
     MIL_UNIQUE_CLASS_ID PreparedDataset = MclassRestore(PreparedPath, m_MilSystem, M_DEFAULT, M_UNIQUE_ID);
     TrainClassifier(PreparedDataset, TrainCtx, TrainedDetCtx, DetDumpFile);
@@ -773,7 +772,6 @@ void CMLDetCNN::Predict(MIL_ID Image, MIL_UNIQUE_CLASS_ID& TdDetCtxPath, DET_RES
         MclassPreprocess(TdDetCtxPath, M_DEFAULT);
     }
     MIL_UNIQUE_CLASS_ID ClassRes = MclassAllocResult(m_MilSystem, M_PREDICT_DET_RESULT, M_DEFAULT, M_UNIQUE_ID);
-    
     LARGE_INTEGER t1, t2, tc;
     QueryPerformanceFrequency(&tc);
     QueryPerformanceCounter(&t1);
@@ -796,9 +794,7 @@ void CMLDetCNN::Predict(MIL_ID Image, MIL_UNIQUE_CLASS_ID& TdDetCtxPath, DET_RES
 
         MIL_INT tmpClassIndex;
         MclassGetResult(ClassRes, M_INSTANCE_INDEX(i), M_BEST_CLASS_INDEX + M_TYPE_MIL_INT, &tmpClassIndex);
-        Result.ClassIndex[i] = int(tmpClassIndex);
-
-        
+        Result.ClassIndex[i] = int(tmpClassIndex); 
         MclassGetResult(ClassRes, M_INSTANCE_INDEX(i), M_BEST_CLASS_SCORE + M_TYPE_MIL_DOUBLE, &Result.Score[i]);
         MclassInquire(TdDetCtxPath, M_CLASS_INDEX(Result.ClassIndex[i]), M_CLASS_NAME, Result.ClassName[i]);
     }
@@ -822,6 +818,8 @@ void CMLDetCNN::ValModel_AP_50(string ValDataInfoPath, MIL_STRING TdDetCtxPath, 
     //step3£º¶ÔÍ¼Ïñ½øÐÐÔ¤²â
     vector<vector<Box>> vecPdBoxes;
     vector<vector<int>> vecPdlabels;
+    clock_t st_time, end_time;
+    st_time = clock();
     for (int i = 0; i < vecImgPaths.size(); i++) {
         DET_RESULT_STRUCT tmpRst;
         //vector<MIL_INT> ClassIndex;             //predict class
@@ -834,6 +832,10 @@ void CMLDetCNN::ValModel_AP_50(string ValDataInfoPath, MIL_STRING TdDetCtxPath, 
         vecPdlabels.emplace_back(tmpRst.ClassIndex);
         vecDetResults.emplace_back(tmpRst);
     }
+    end_time = clock();
+    double time_using = static_cast<double>(end_time - st_time) / CLOCKS_PER_SEC;
+    double fps = double(vecImgPaths.size()) / time_using;
+    cout << "TIME(SEC) " << time_using << "\n";
     
     if (SaveRst) {
      
