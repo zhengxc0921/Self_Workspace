@@ -99,17 +99,13 @@ class ExtractResizeCOTXML2Raw:
     def get_adaptedCropedImg_wid(self,x1,x2,adapted_Img_len,dft_shift_x,img_w):
         ##若x2-x1>adapted_Img_len(train_img_size)，缺陷过大，进行切割
         #返回adapted_Img 中defect的location
-
         dft_center = (x1+x2)//2
         adapted_Img_x1 = max(dft_shift_x,dft_center-adapted_Img_len//2)
         adapted_Img_x1 = min(adapted_Img_x1,img_w-adapted_Img_len-dft_shift_x)
-
         adapted_Img_x2 = adapted_Img_x1 +adapted_Img_len
-
         # defect 在adapted_Img中的location
         new_dft_x1 = max(x1-adapted_Img_x1,0)
         new_dft_x2 = min(x2-adapted_Img_x1,adapted_Img_len)
-
         return adapted_Img_x1,adapted_Img_x2,new_dft_x1,new_dft_x2
 
     def box_in_img(self,tmp_box,tmp_CropedImg):
@@ -125,7 +121,6 @@ class ExtractResizeCOTXML2Raw:
         #   3、按缺陷裁剪出包含缺陷的CropedImg，存储adapted_box
         #   4、将该缺陷序号加入已遍历序号集，遍历缺陷是否是否存在被该CropedImg包含的defect，若有，加入序号集，存储adapedted_box
         #   5、直到所有缺陷遍历完
-
         ##3.1、设置包含缺陷的CropedImg
         img_p = img_box_list[0]
         img =  cv2.imdecode(np.fromfile(img_p, dtype=np.uint8),-1)
@@ -257,10 +252,9 @@ class ExtractResizeCOTXML2Raw:
         return
 
     def crop_COT(self):
-        #生成原始的'val.txt','train.txt' ，针对小图，可以直接使用的xml文件，
-        #若xml文件来自于尺寸合适的Img，则'val.txt','train.txt'可直接使用
+        #step1:生成原始的'val.txt','train.txt' 【针对小图可以直接使用】，可以直接使用的xml文件，#若xml文件来自于尺寸合适的Img，则'val.txt','train.txt'可直接使用
         self.get_box_resize()
-        #由于labelImg 生成的xml文件使用的是大图，因此要根据缺陷位置进行裁剪
+        #step2:由于labelImg 生成的xml文件使用的是大图，因此要根据缺陷位置进行裁剪
         for box_file in self.box_files:
             path = os.path.join(self.saveConfigDir,box_file)
             with open(path, 'r') as f:
@@ -271,7 +265,6 @@ class ExtractResizeCOTXML2Raw:
                     img_box_list= img_box.split(' ')
                     #  自适应裁剪得到 尺寸 [848, 896]  #[h,w]的训练图片，以及defect
                     self.seg_box_img_way_2(img_box_list,t_box)
-
         #拼接ImgBoxes_train、ImgBoxes_val
         src_file_path1 = os.path.join(self.saveConfigDir, "ImgBoxes_train.txt")
         src_file_path2 = os.path.join(self.saveConfigDir, "ImgBoxes_val.txt")
@@ -285,14 +278,13 @@ if __name__ == '__main__':
     # test = XMLExtract(project)
     # test.get_box()
 
+    # project = 'COT_Resize'
+    # Croped_img_Size = [224, 1120]  # [h,w]   [424, 2688]  [848, 896]
+    # Vaild_Box = [120,120,4360,4920]#x1,y1,x2,y2
 
-    project = 'COT_Resize'
-    Croped_img_Size = [224, 1120]  # [h,w]   [424, 2688]  [848, 896]
-    Vaild_Box = [120,120,4360,4920]#x1,y1,x2,y2
-
-    # project = 'COT_Raw'
-    # Croped_img_Size = [424, 2688]  # [h,w]   [424, 2688]  [848, 896]
-    # Vaild_Box = [300,300,10900,12300]#x1,y1,x2,y2
+    project = 'COT_Raw'
+    Croped_img_Size = [424, 2688]  # [h,w]   [424, 2688]  [848, 896]
+    Vaild_Box = [300,300,10900,12300]#x1,y1,x2,y2
     test = ExtractResizeCOTXML2Raw(project,Croped_img_Size,Vaild_Box)
     test.crop_COT()
 

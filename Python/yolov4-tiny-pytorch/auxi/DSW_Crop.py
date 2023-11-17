@@ -4,7 +4,6 @@ import os,random,shutil
 
 
 # import torchvision.transforms as transforms
-
 # 功能：从Array(0.48)上切割出适用于目标检测的小区，以及defect的box
 
 class DefectPrepare:
@@ -13,20 +12,10 @@ class DefectPrepare:
         self.DETECTION = DETECTION
         # 模板图路径
         self.proj = proj
-        # self.project = project
         self.src_img_path = r'G:\DefectDataCenter\原始_现场分类数据\DSW\Array(0.48).bmp'
         self.img_raw = cv2.imdecode(np.fromfile(self.src_img_path, dtype=np.uint8), -1)
         detection_root = r'G:\DefectDataCenter\ParseData\Detection'
         self.train_percent = 0.8
-        # self.dst_prefix = r'G:\DefectDataCenter\ParseData\Detection\{}\raw_data'.format(proj)
-        # self.dst_img_dir = self.dst_prefix + r'\img'
-        # self.dst_defect_dir = self.dst_prefix + r'\ClassesIcon'
-        # # self.template_dir = self.dst_prefix + r'\template'
-        # # self.template_path = self.dst_prefix + r'\template\template.bmp'
-        # # self.config_dir = self.dst_prefix + r'\config'
-        # self.config_label_path = self.dst_prefix + r'\ImgBoxes_train.txt'
-        # self.config_classes_path = self.dst_prefix + r'\Classes.txt'
-
         self.cell_size = [48, 89]
         self.cell_sapce = [0, 9]
         self.cell_period_y = self.cell_size[1] + self.cell_sapce[1]
@@ -47,18 +36,9 @@ class DefectPrepare:
         self.defect_type_dict = dict()
         self.defect_mask = {'A': 3, 'K': 2, 'L': 3}
         self.defect_label = 0
-
         self.defect_step = [6 * self.cell_size[0], 0]
         self.defect_distribution_init()
-        # self.crop_template()
         self.folder_initial(detection_root, proj)
-
-    # def config_classes_init(self):
-    #     with open(self.config_classes_path, 'w') as f:
-    #         for class_type in self.defect_type_list:
-    #             f.write(class_type)
-    #             f.write('\n')
-    #     f.close()
 
     def folder_initial(self,detection_root, proj):
         #dst dir
@@ -103,7 +83,6 @@ class DefectPrepare:
             f.write("TestDataRatio=10\n")
         return
 
-
     def defect_distribution_init(self):
         if self.DETECTION:
             ##基于目标检测的缺陷分布
@@ -113,33 +92,8 @@ class DefectPrepare:
             self.defect_szie = [30, 25]
         else:
             ##基于分类的缺陷分布
-            # self.defect_center = {k:self.cell_size//2 for k in self.defect_type_list}
             self.defect_center = {k: [self.cell_size[0] // 2, self.cell_size[1] // 2] for k in self.defect_type_list}
-            # self.defect_center = {'A': [17, 9], 'B': [41, 45], 'C': [18, 81],
-            #                       'D': [29, 18], 'E': [40, 63], 'F': [33, 36], 'G': [37, 64],
-            #                       'H': [33, 24], 'I': [15, 15], 'J': [16, 14], 'K': [16, 56], 'L': [19, 70]}
             self.defect_szie = self.cell_size
-
-    # def folder_init(self):
-    #     # if not os.path.exists(self.template_dir):
-    #     #     os.makedirs(self.template_dir)
-    #
-    #     # if not os.path.exists(self.config_dir):
-    #     #     os.makedirs(self.config_dir)
-    #
-    #     if not os.path.exists(self.dst_img_dir):
-    #         os.makedirs(self.dst_img_dir)
-    #     if not os.path.exists(self.dst_defect_dir):
-    #         os.makedirs(self.dst_defect_dir)
-    #
-    #     dst_defect_paths = [os.path.join(self.dst_defect_dir, defect_type) for defect_type in self.defect_type_list]
-    #     for dst_defect_path in dst_defect_paths:
-    #         if not os.path.exists(dst_defect_path):
-    #             os.makedirs(dst_defect_path)
-    #     for name in self.defect_type_list:
-    #         self.defect_type_dict[name] = len(self.defect_type_dict)
-    #
-    #     self.config_classes_init()
 
     def splitFile(self):
         #将Train_Val.txt拆分为Train.txt 和 Val.txt
@@ -166,13 +120,11 @@ class DefectPrepare:
                 shutil.copy(src_img_p,dst_p)
 
     def crop_img(self, block_index, f):
-
         img_raw = cv2.imdecode(np.fromfile(self.src_img_path, dtype=np.uint8), -1)
         for row_index, step_y in enumerate(self.crop_img_step_y):
             self.crop_img_start_y += step_y  # Y每次截取后坐标更新
             self.defect_type = self.defect_type_list[row_index]
             self.defect_label = row_index
-
             # 加入缺陷分布的map
             if self.defect_type in self.defect_mask:
                 col_num = self.defect_mask[self.defect_type]
@@ -190,7 +142,6 @@ class DefectPrepare:
                 crop_img_name = f'block_{self.block_name}_defect_{self.defect_type}_col_{self.col_index}.bmp'
                 dst_img_path = os.path.join(self.saveImgDir, crop_img_name)
                 cv2.imwrite(dst_img_path, self.img_cut)
-
                 # 写入获取img的头部绝对路径
                 # crop_img_head_abspath = os.path.abspath(os.path.join(os.path.dirname('settings.py'), os.path.pardir))
                 # crop_img_body_abspath = dst_img_path[3:]
@@ -201,17 +152,7 @@ class DefectPrepare:
                 f.write(defect_box_list)
                 f.write("\n")
 
-    # def crop_template(self):
-    #     h_plus = 20
-    #     w_plus = 20
-    #     col_step = 2
-    #     img_raw = cv2.imdecode(np.fromfile(self.src_img_path, dtype=np.uint8), -1)
-    #     template = img_raw[1956 - h_plus:294 + 1956 + h_plus,
-    #                21822 - w_plus - 720 * col_step:720 + 21822 + w_plus - 720 * col_step].astype('int')
-    #     cv2.imwrite(self.template_path, template)
-
     def save_defect(self):
-
         defect_box_list = ' '
         for cell_index_x in range(3):
             cell_step_x = cell_index_x * self.defect_step[0]
@@ -237,20 +178,10 @@ class DefectPrepare:
                     dst_defect_path_tmp = os.path.join(self.saveDefectDir, self.defect_type)
                     dst_defect_path = os.path.join(dst_defect_path_tmp, defect_name)
                     cv2.imwrite(dst_defect_path, defect_img)
-                    # dst_Icon_path = dst_defect_path_tmp+'.bmp'
-                    # cv2.imwrite(dst_Icon_path, defect_img)
                     # 保存缺陷/存入Icon
                     ClassIcon_p = os.path.join(self.saveClassIconDir, self.defect_type + ".bmp")
                     if not os.path.exists(ClassIcon_p):
                         cv2.imwrite(ClassIcon_p, defect_img)
-
-                    ##保存模板圖
-                    # img_copy = np.zeros_like(self.img_cut)
-                    # img_copy[defect_box[1]:defect_box[1] + self.defect_szie[1],
-                    # defect_box[0]:defect_box[0] + self.defect_szie[0]] = 1
-                    # dst_mask_path = os.path.join(self.dst_img_dir, defect_name)
-                    # cv2.imwrite(dst_mask_path, img_copy)
-
         return defect_box_list[1:]
 
     def generalTrainInfo(self):
@@ -260,7 +191,6 @@ class DefectPrepare:
             for block_index, block_name in enumerate(self.block_names):
                 self.block_name = block_name
                 self.crop_img_start_y += self.block_step_y[block_index]
-                # self.crop_img_start_y +=  block_index*(self.block_step_y[1])
                 self.crop_img(block_index, f)
             f.close()
 

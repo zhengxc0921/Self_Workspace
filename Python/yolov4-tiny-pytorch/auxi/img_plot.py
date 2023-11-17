@@ -10,8 +10,6 @@ os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 import numpy as np
 import matplotlib.pyplot as plt
 
-
-
 def numpy_plot(numpy_array,img_id,boxes=None):
     """
     Plot img from numpy_array while the code is debugging
@@ -60,7 +58,6 @@ def yolo_numpy_plot(numpy_array,img_id,boxes=None):
     import matplotlib as mpl
     import matplotlib.pyplot as plt
     mpl.use('TkAgg')
-
     plt.figure()
     plt.imshow(np.transpose(img,(1,2,0)))
     if boxes is not None:
@@ -76,7 +73,6 @@ def yolo_numpy_plot(numpy_array,img_id,boxes=None):
                                               height=box_h,
                                               width=box_w,
                                               fill=False, linewidth=2, edgecolor="red"))
-
     os.makedirs('./img',exist_ok=True)
     filePath = './img/test_'+str(img_id)+'.png'
     plt.savefig(filePath)
@@ -114,20 +110,11 @@ def tensor_plot(tensor_array,img_id=0,img_title='img',boxes=None,savepath=None):
                                               fill=False, linewidth=2, edgecolor="red"))
     plt.show()
 
-# from auxilliary.img_plot import tensor_plot
-# for i in range(20):
-#     tensor_plot(h.cpu(),i,img_title='img_'+str(i),
-#     savepath=r'E:\项目代码\缺陷检测\fpn_faster-rcnn-pytorch-master_DSW\DSW_data\DSW_analytical\Out_Feature_减模板')
-
 def batch_plot(bat_imgs,bat_boxes,baox_i=0,savepath=None):
     #case1:
     # from auxilliary.img_plot import numpy_plot,batch_plot
-
     # savepath=r'E:\项目代码\缺陷检测\fpn_faster-rcnn-pytorch-master_DSW\auxilliary\debug'
     # batch_plot(x.cpu(),rois[np.newaxis,:,:],savepath=savepath)
-
-
-
     img_tf = np.transpose(bat_imgs[0], (1, 2, 0))
     img = np.array(img_tf)
     boxes = np.array(bat_boxes[baox_i]).reshape(1, -1, 4)
@@ -147,7 +134,6 @@ def batch_plot(bat_imgs,bat_boxes,baox_i=0,savepath=None):
         plt.savefig(savepath+'.png')
     plt.show()
 
-
 def muti_batch_plot(muti_batch_imgs, boxes,batch_id=0):
     img_tf = np.transpose(muti_batch_imgs[batch_id], (1, 2, 0))
     img = np.array(img_tf)
@@ -162,11 +148,7 @@ def muti_batch_plot(muti_batch_imgs, boxes,batch_id=0):
                                               fill=False, linewidth=2, edgecolor="red"))
     plt.show()
 
-
 ##check_train_box
-
-
-
 def check_train_box( targets,img_paths,class_names):
     import cv2 , colorsys,os
     dst_dir = r'./img'

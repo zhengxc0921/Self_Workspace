@@ -9,18 +9,20 @@ def get_input(config_path,proj):
     return input_shape
 
 # proj = 'HW'
-proj = 'DSW'
+# proj = 'DSW'
 # proj = 'DSW_random'
 # proj = 'COT_Resize'
-# proj = 'COT_Raw'
-
+proj = 'COT_Raw'
 
 src_dir = 'G:/DefectDataCenter/ParseData/Detection/{}/raw_data/Config/'.format(proj)
+# result_path = 'G:\DefectDataCenter\ParseData\Detection\{}\MIL_Data\ODNetResult.txt'.format(proj)
+result_dir = 'G:\DefectDataCenter\ParseData\Detection\{}\MIL_Data/'.format(proj)
+result_path = result_dir+'ODNetResult.txt'
 config_path = 'G:/DefectDataCenter/ParseData/Detection/{}/raw_data/Config/{}_Para.ini'.format(proj,proj)
 
 input_shape = get_input(config_path,proj)
 
-dst_dir = src_dir+ "ODNetResult_show/"
+dst_dir = result_dir+ "ODNetResult_show/"
 os.makedirs(dst_dir,exist_ok=True)
 
 cns_file_path = src_dir+'Classes.txt'
@@ -69,12 +71,11 @@ def visualize(image_path, class_names,top_conf, top_boxes):
         bbox = top_boxes[i]
         ##遍历单张图片中的所有box
         for j in range(len(cn)):
-
-
             rect_color = cn_c[str(cn[j])]
             img = visualize_bbox(img, bbox[j], score[j], str(cn[j]),rect_color)
         # cv2.imshow("img",img)
-        dst_path = dst_dir + image_path[i].split("/")[-1]
+        # dst_path = dst_dir + image_path[i].split("/")[-1]
+        dst_path = dst_dir + image_path[i].split("\\")[-1]
         if "mim" in dst_path:
             dst_path = dst_path.replace("mim","jpg")
         cv2.imwrite(dst_path, img)
@@ -94,8 +95,8 @@ def visualize(image_path, class_names,top_conf, top_boxes):
 
 def parse_ODNetResult():
 
-    src_path = src_dir + 'ODNetResult.txt'
-    with open(src_path,'r') as od_f:
+    # result_path = result_dir + 'ODNetResult.txt'
+    with open(result_path,'r') as od_f:
         fl =od_f.readlines()
         imgs_path = []
         vec_boxes = []

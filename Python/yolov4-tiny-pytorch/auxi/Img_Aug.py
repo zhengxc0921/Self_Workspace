@@ -36,7 +36,6 @@ class ImgAug:
                 dst_file = os.path.join(dst, file)
                 shutil.copy(src_file,dst_file)
 
-
     def parseTxt_JPG2BMP(self,src_txt,dst_path):
         with open(dst_path,'w') as dstf:
             with open(src_txt, 'r') as srcf:
@@ -54,9 +53,6 @@ class ImgAug:
                     cv2.imwrite(dst_img_path, img)
                     dstf.write(dst_line)
 
-
-
-
     def parse_JPG2BMP(self):
         ##将lslm数据集3通道的jpg解压成bmp
         src_dir = r'G:\DefectDataCenter\ParseData\Detection\lslm'
@@ -66,14 +62,10 @@ class ImgAug:
         #读取src_dir 中的文件
         src_train_txt =  os.path.join(src_dir,'raw_data','ImgBoxes_train.txt')
         src_val_txt = os.path.join(src_dir, 'raw_data', 'ImgBoxes_val.txt')
-
         dst_train_txt = os.path.join(dst_dir, 'raw_data', 'ImgBoxes_train.txt')
         dst_val_txt = os.path.join(dst_dir, 'raw_data', 'ImgBoxes_val.txt')
         self.parseTxt_JPG2BMP(src_train_txt,dst_train_txt)
         self.parseTxt_JPG2BMP(src_val_txt,dst_val_txt)
-
-
-    # def
 
 
 

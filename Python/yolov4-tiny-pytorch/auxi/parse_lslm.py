@@ -22,13 +22,10 @@ class Parse:
         self.class_map = {'bolt': '0', 'nut': '1'}
         self.IconDir  = self.dst_dir + '/ClassesIcon/'
         self.IconWriteList = []
-
         self.parse_lslm_txt()
-
 
     def parse_lslm_txt(self):
         os.makedirs(self.IconDir ,exist_ok=True)
-
         with open(self.dst_train_path,'w') as dst_file:
             with open(self.src_train_path,'r') as src_file:
                 frls = src_file.readlines()
@@ -64,7 +61,6 @@ class Parse:
                                 class_type = 'bolt'
                             else:
                                 class_type = 'nut'
-
                             ##将Icon写入ClassIcon
                             if class_type not in self.IconWriteList:
                                 Icon_path = self.IconDir + class_type+'.bmp'
@@ -79,19 +75,6 @@ class Parse:
             for k,v in self.class_map.items():
                 dst_file.write(k)
                 dst_file.write('\n')
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 if __name__ == '__main__':
     A = Parse()

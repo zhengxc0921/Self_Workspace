@@ -1,3 +1,5 @@
+import shutil
+
 import cv2
 import os,random
 import numpy as np
@@ -8,7 +10,6 @@ class HWCroper:
         self.ClassName = "A"
         self.Croped_img = [224,224]
         self.dft_size = [15,15]
-
         ##Info from LabelImged
         self.img_dir = r'G:\DefectDataCenter\原始_现场分类数据\HuaWei'
         detection_root = r'G:\DefectDataCenter\ParseData\Detection'
@@ -24,12 +25,14 @@ class HWCroper:
         self.saveConfigDir = r'{}\{}\raw_data\Config'.format(detection_root, proj)
         self.saveDefectDir =  r'{}\{}\raw_data\defect'.format(detection_root, proj)
         self.saveCOTCropImgDir =r'{}\{}\raw_data\Img'.format(detection_root, proj)
+        self.saveTImgDir = r'{}\{}\raw_data\TImg'.format(detection_root, proj)
         self.saveClassIconDir = r'{}\{}\raw_data\ClassesIcon'.format(detection_root, proj)
         self.ini_path = os.path.join(self.saveConfigDir, "{}_Para.ini").format(proj)
 
         os.makedirs(self.saveConfigDir, exist_ok=True)
         os.makedirs(self.saveDefectDir, exist_ok=True)
         os.makedirs(self.saveCOTCropImgDir, exist_ok=True)
+        os.makedirs(self.saveTImgDir, exist_ok=True)
         os.makedirs(self.saveClassIconDir, exist_ok=True)
         for v in self.clsMap:
             dft_folder = os.path.join( self.saveDefectDir,v)
@@ -69,6 +72,25 @@ class HWCroper:
         val_img = total_img[train_num:]
         return train_img,val_img
 
+    def generalTestImg(self):
+        ValInfo_path = "{}\Val.txt".format(self.saveConfigDir)
+        with open(ValInfo_path, 'r') as f:
+            lines = f.readlines()
+            for line in lines:
+                src_img_p = line.split(" ")[0]
+                img_n = os.path.basename(src_img_p)
+                dst_p  = os.path.join(self.saveTImgDir,img_n)
+                shutil.copy(src_img_p,dst_p)
+
+    # def gengralAnchor(self):
+    #
+    #     self.Croped_img = [224,224]
+    #     self.dft_size = [15,15]
+
+
+
+
+
     def HW_crop(self):
         train_imgs, val_imgs = self.get_train_val_img()
         for imgs,file_n in zip([train_imgs,val_imgs], self.box_files):
@@ -87,7 +109,7 @@ class HWCroper:
                     config_file.write(img_box_info)
 
                     # 保存缺陷/存入Icon
-                    ClassIcon_p = os.path.join(self.saveClassIconDir, self.clsMap['0'] + ".bmp")
+                    ClassIcon_p = os.path.join(self.saveClassIconDir, self.clsMap[0] + ".bmp")
                     if not os.path.exists(ClassIcon_p):
                         dft = img[dft_box[1]:dft_box[3], dft_box[0]:dft_box[2]]
                         defect_name = os.path.join(self.saveDefectDir, self.ClassName + '.bmp')
@@ -97,8 +119,7 @@ class HWCroper:
 
 
 
-
-
 if __name__ == '__main__':
     test = HWCroper()
-    test.HW_crop()
+    # test.HW_crop()
+    test.generalTestImg()

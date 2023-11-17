@@ -20,7 +20,6 @@ def get_predict_path_way2(project):
     #从ImgBoxes_val.txt提取出img_list
     # img_txt_info = r'G:\DefectDataCenter\ParseData\Detection\{}\raw_data\Config\Val.txt'.format(project)
     img_txt_info = r'G:\DefectDataCenter\ParseData\Detection\{}\raw_data\Config\ImgBoxes_val.txt'.format(project)
-
     img_paths = []
     with open(img_txt_info,'r') as f:
         fls = f.readlines()
@@ -33,7 +32,7 @@ def get_predict_path_way2(project):
 
 def Predict():
     os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
-    project = "COT_Raw"  ##LMK lslm COT_Raw  COT_Resize  HW  COT_Raw
+    project = "COT_Raw"  ##LMK lslm COT_Raw  COT_Resize  HW  COT_Raw COT_Raw
     cfg = Config(project)
     yolo = YOLO(cfg)
     # img_ps = get_predict_path_way1(project)
@@ -74,8 +73,6 @@ def ValModel_AP_50():
     cfg = Config(project)
     yolo = YOLO(cfg)
     img_ps =cfg.val_lines
-
-    # img_ps = cfg.train_lines
     t1 = time.time()
     dst_img_rst = os.path.join(cfg.dst_root,'img_rst')
     dst_pd_txt = os.path.join(cfg.dst_root,'ImgBoxes_val_pd_result.txt')

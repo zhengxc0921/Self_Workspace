@@ -10,7 +10,7 @@ import torch.backends.cudnn as cudnn
 class Config:
 
     def __init__(self,project):
-        self.yolo_type = 'yolo7'   #yolo7tiny  yolo4
+        self.yolo_type = 'yolo4'   #yolo7tiny  yolo4
         self.project = project
         self.root = 'G:/DefectDataCenter/ParseData/Detection/{}/'.format(project)
         self.ini_p = self.root + 'raw_data/Config/{}_{}_Para.ini'.format(project,self.yolo_type)
@@ -23,7 +23,6 @@ class Config:
         self.predict_dst = '{}/predicted'.format(self.dst_root)
         os.makedirs(self.dst_root,exist_ok=True)
         os.makedirs(self.predict_dst, exist_ok=True)
-
 
         self.fepoch = 50
         self.all_epoch = 100

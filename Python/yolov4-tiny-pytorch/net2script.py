@@ -54,6 +54,7 @@ class ToScript:
     def pre_process_img(self,num=1):
         self.img_names = os.listdir(self.img_dir)
         self.img_path = os.path.join(self.img_dir,self.img_names[num])
+        print("img_path:",self.img_path)
         # ---------------------------------------------------------#
         #   在这里将图像转换成RGB图像，防止灰度图在预测时报错。
         #   代码仅仅支持RGB图像的预测，所有其它类型的图像都会转化成RGB
@@ -73,7 +74,7 @@ class ToScript:
 
     def to_onnx(self):
         import onnx ,onnxruntime
-        images_cv ,image_shape= self.pre_process_img(1) ##177,4
+        images_cv ,image_shape= self.pre_process_img(0) ##177,4   ##1
         #---------------------------------------------------------#
         #   添加上batch_size维度
         #---------------------------------------------------------#
@@ -107,6 +108,51 @@ class ToScript:
         return
 
 
+    def use_onnx(self):
+        import onnx ,onnxruntime
+        n = len(os.listdir(self.img_dir))
+        for i in range(n):
+            images_cv ,image_shape= self.pre_process_img(i) ##177,4
+            #---------------------------------------------------------#
+            #   添加上batch_size维度
+            #---------------------------------------------------------#
+            try:
+                sess = onnxruntime.InferenceSession(self.onnx_model_dst)
+                test_out = sess.run(["outputs"], {"images": np.array(images_cv)})
+                print("test_out: ", test_out)
+            except:
+                print("this image have no defects!")
+
+            # sess = onnxruntime.InferenceSession(self.onnx_model_dst)
+            # test_out = sess.run(["outputs"], {"images": np.array(images_cv)})
+            # print("test_out: ", test_out)
+
+        # input_layer_names = ["images"]
+        # output_layer_names = ["outputs"]
+        # # # # # Checks
+        # model_onnx = onnx.load(self.onnx_model_dst)  # load onnx model
+        # onnx.checker.check_model(model_onnx)  # check onnx model
+        # onnx 模型猜测是
+        # 创建一个InferenceSession的实例，并将模型的地址传递给该实例
+        # try:
+        #     sess = onnxruntime.InferenceSession(self.onnx_model_dst)
+        #     test_out = sess.run(["outputs"], {"images": np.array(images_cv)})
+        #     print("test_out: ", test_out)
+        # except:
+        #     print("this image have no defects!")
+        return
+
+    # def use_onnx(self):
+    #     import onnx ,onnxruntime
+    #     img_n = len(os.listdir(self.img_dir))
+    #
+    #     for i in range(img_n):
+    #         images_cv ,image_shape= self.pre_process_img(i) ##177,4
+    #         sess = onnxruntime.InferenceSession(self.onnx_model_dst)
+    #         test_out = sess.run(["outputs"], {"images": np.array(images_cv)})
+    #         print("test_out: ", test_out)
+
+
 
 if __name__ == '__main__':
     # calc_device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -116,3 +162,4 @@ if __name__ == '__main__':
     cfg = Config(project)
     test1 = ToScript(cfg)
     test1.to_onnx()
+    # test1.use_onnx()

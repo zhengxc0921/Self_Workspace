@@ -2,12 +2,7 @@ import cv2
 import numpy as np
 import os,random,shutil
 
-
-# import torchvision.transforms as transforms
-
-
 # 功能：从Random(0.36)上切割出适用于目标检测的小区，以及defect的box
-
 class DefectPrepare:
     def __init__(self, DETECTION, proj):
         self.SAVEDEFECTIMG = True
@@ -24,9 +19,7 @@ class DefectPrepare:
         self.block_step_y = [0, 3325, 3326, 3326, 3326, 3325, 3325, 3326, 3326]
         self.block_step_x = [0, 0, -2, 1, -2, -2, -1, -3, -1]
         # 同一个block内，缺陷cell的分布
-        # self.cell_step_y =   [ 0,  245, 200-3,  448-7, 218-2, 290,270, 433,453, 220,260]
         self.cell_step_y = [0, 245, 200, 448 - 2, 218 - 2, 295, 270, 433, 453, 220, 261]
-        # ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I','J','K']
         self.cell_step_x = 906
         self.cell_size = [906, 300]  # 宽，高
         self.defect_step = [302, 0]
@@ -36,11 +29,6 @@ class DefectPrepare:
                               'H': [54, 100], 'I': [114, 109], 'J': [263, 108], 'K': [292, 118]}
         # H，I:该缺陷为粗细
         self.defect_szie = [20, 20]
-        # self.crop_img_step_y = np.array([0, 294, 392, 490, 588, 490, 392, 294, 392, 588, 490, 294])  # 添加A-->A，step_y=0
-        #                                    'A','B','C','D','E','F','G','H','I','J','K','L'
-        # self.crop_img_step_y_cail = np.array([0, -4, -5, -5, -8, -5, -5, -4, -4, -9, -6, -4])  # 添加A-->A，step_y=0
-        # self.crop_img_step_y += self.crop_img_step_y_cail
-        # self.crop_img_step_x = np.arange(4) * 18 * self.cell_size[0]
         self.defect_type_list = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K']
         self.defect_type_dict = dict()
         self.defect_mask = {'A': 3, 'B': 3, 'H': 4, 'I': 4, 'J': 5} #控制col前段
@@ -93,7 +81,7 @@ class DefectPrepare:
 
 
 
-    def crop_img(self, block_index, f):
+    def crop_img(self, f):
         self.crop_img_start_y = self.block_start_y
         for row_index, step_y in enumerate(self.cell_step_y):
             self.crop_img_start_y += step_y  # Y每次截取后坐标更新
@@ -107,7 +95,6 @@ class DefectPrepare:
             self.mask_col_index = np.array((9, 8, 7))
             for step_x, col_index in enumerate(np.arange(3)):
                 self.cell_col_index = step_x
-                # self.crop_img_start_x = self.crop_img_O_axis[0] + step_x* self.cell_step_x
                 self.crop_img_start_x = self.block_start_x + step_x * self.cell_step_x
                 # X每次从crop_img_O_X处开始截取
                 self.img_cut = self.img_raw[self.crop_img_start_y:self.crop_img_start_y + self.cell_size[1],
@@ -149,11 +136,9 @@ class DefectPrepare:
                     dst_defect_path_tmp = os.path.join(self.saveDefectDir, self.defect_type)
                     dst_defect_path = os.path.join(dst_defect_path_tmp, defect_name)
                     cv2.imwrite(dst_defect_path, defect_img)
-
                     # 保存缺陷/存入Icon
                     ClassIcon_p = os.path.join(self.saveClassIconDir, self.defect_type + ".bmp")
                     if not os.path.exists(ClassIcon_p):
-                        # defect_name =s.path.join(self.saveDefectDir, self.ClassName + '.bmp')
                         cv2.imwrite(ClassIcon_p, defect_img)
         return defect_box_list[1:]
 
@@ -191,7 +176,7 @@ class DefectPrepare:
                 self.block_start_x += self.block_step_x[block_index]
                 self.block_name = block_name
                 # print(self.block_start_y)
-                self.crop_img(block_index, f)
+                self.crop_img(f)
             f.close()
 
 

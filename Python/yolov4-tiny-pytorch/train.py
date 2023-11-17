@@ -1,18 +1,11 @@
 #-------------------------------------#
 #       对数据集进行训练
 #-------------------------------------#
-import numpy as np
-from PIL import Image
 import torch.optim as optim
 from torch.utils.data import DataLoader
-
-
-from nets.yolo import YoloBody
-from nets.yolo_training import YOLOLoss, weights_init
 from utils.callbacks import LossHistory
 from utils.dataloader import YoloDataset, yolo_dataset_collate
 from utils.utils_fit import fit_one_epoch
-
 
 from utils.config import Config
 # # 避免 OMP: Error #15: Initializing libiomp5md.dll, but found libiomp5md.dll already initialized.
