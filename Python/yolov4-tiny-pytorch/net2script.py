@@ -78,7 +78,7 @@ class ToScript:
         #---------------------------------------------------------#
         #   添加上batch_size维度
         #---------------------------------------------------------#
-        # images_cv = images_cv.to(self.cfg.calc_device)
+
         test_in = self.model_YOLO(images_cv)
         print("test_in: ", test_in)
         input_layer_names = ["images"]
@@ -109,7 +109,7 @@ class ToScript:
 
 
     def use_onnx(self):
-        import onnx ,onnxruntime
+        import  onnxruntime
         n = len(os.listdir(self.img_dir))
         for i in range(n):
             images_cv ,image_shape= self.pre_process_img(i) ##177,4
@@ -122,35 +122,7 @@ class ToScript:
                 print("test_out: ", test_out)
             except:
                 print("this image have no defects!")
-
-            # sess = onnxruntime.InferenceSession(self.onnx_model_dst)
-            # test_out = sess.run(["outputs"], {"images": np.array(images_cv)})
-            # print("test_out: ", test_out)
-
-        # input_layer_names = ["images"]
-        # output_layer_names = ["outputs"]
-        # # # # # Checks
-        # model_onnx = onnx.load(self.onnx_model_dst)  # load onnx model
-        # onnx.checker.check_model(model_onnx)  # check onnx model
-        # onnx 模型猜测是
-        # 创建一个InferenceSession的实例，并将模型的地址传递给该实例
-        # try:
-        #     sess = onnxruntime.InferenceSession(self.onnx_model_dst)
-        #     test_out = sess.run(["outputs"], {"images": np.array(images_cv)})
-        #     print("test_out: ", test_out)
-        # except:
-        #     print("this image have no defects!")
         return
-
-    # def use_onnx(self):
-    #     import onnx ,onnxruntime
-    #     img_n = len(os.listdir(self.img_dir))
-    #
-    #     for i in range(img_n):
-    #         images_cv ,image_shape= self.pre_process_img(i) ##177,4
-    #         sess = onnxruntime.InferenceSession(self.onnx_model_dst)
-    #         test_out = sess.run(["outputs"], {"images": np.array(images_cv)})
-    #         print("test_out: ", test_out)
 
 
 
@@ -158,8 +130,8 @@ if __name__ == '__main__':
     # calc_device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     # pj_id = 1
     from utils.config import Config
-    project = "COT_Raw"  #LMK
+    project = "DSW"  #LMK
     cfg = Config(project)
     test1 = ToScript(cfg)
     test1.to_onnx()
-    # test1.use_onnx()
+    test1.use_onnx()

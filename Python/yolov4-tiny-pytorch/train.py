@@ -30,7 +30,6 @@ def yolo4_train():
 
     yolo_loss = cfg.yolo_loss
     loss_history = LossHistory("logs/")
-
     ##创建数据集，General
     train_set = YoloDataset(train_ls,size_input,cls_n, train=False)
     val_set = YoloDataset(val_ls, size_input, cls_n, train=False)

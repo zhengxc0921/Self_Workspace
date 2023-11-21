@@ -273,6 +273,83 @@ class ExtractResizeCOTXML2Raw:
         #生成COT_Resize_Para.ini 文件
         # self.gen_MILDataSetParaI_ini()
 
+
+
+class CropTestImg4Img:
+    #对COT一个Die的图像进行裁剪，（w*h）4480*5080-->(w*h)2688*424
+    #裁剪Die的边框区域，按照环形的方式裁剪
+    #COT_raw_img :G:\DefectDataCenter\ParseData\Detection\COT_LabelImged\COT_RAW
+    #COT_unlabeled_name:\\192.168.1.234\Publish\AI_DataCenter\20221220_COT_Resize\薛晓伟
+
+
+    def __init__(self):
+        self.crop_size = [2688,424]  ##Croped_img_Size(w*h) = [2688,424]
+        self.unlabeledImg_dir =r'\\192.168.1.234\Publish\AI_DataCenter\20221220_COT_Resize\薛晓伟' #获取ublabeled Img name
+        self.COT_raw_Img_dir = r'G:\DefectDataCenter\ParseData\Detection\COT_LabelImged\COT_RAW'  #COT_Raw_Img_dir
+        self.TestImg_dir =r'G:\DefectDataCenter\ParseData\Detection\COT_Raw\raw_data\AllTestImg'
+        os.makedirs(self.TestImg_dir,exist_ok=True)
+
+        self.crop_st_pt = [25,25] #x,y
+        self.crop2gray = True
+
+
+
+    def generalCropedBox(self,W,H):
+        croped_box = []
+        #横向裁剪box
+        x_n = int(W/self.crop_size[0])
+        for i in range(x_n):
+            pt_x1 = self.crop_st_pt[0]+i*self.crop_size[0]
+            pt_y1 = self.crop_st_pt[1]
+            box_tmp1 = [pt_x1,pt_y1,self.crop_size[0],self.crop_size[1]] #x,y,w,h
+            pt_y2 = H-self.crop_size[1]-self.crop_st_pt[1]
+            box_tmp2 = [pt_x1,pt_y2,self.crop_size[0],self.crop_size[1]]
+            croped_box.append(box_tmp1)
+            croped_box.append(box_tmp2)
+        # 竖向裁剪box
+        y_n = int(H / self.crop_size[0])
+        for j in range(y_n):
+            pt_x1 = self.crop_st_pt[0]
+            pt_y1 = self.crop_st_pt[1]+j*self.crop_size[0]
+            box_tmp1 = [pt_x1, pt_y1, self.crop_size[1], self.crop_size[0]]  # x,y,w,h
+            pt_x2 = W-self.crop_size[1]-self.crop_st_pt[1]
+            box_tmp2 = [pt_x2,pt_y1,self.crop_size[1],self.crop_size[0]]
+            croped_box.append(box_tmp1)
+            croped_box.append(box_tmp2)
+        return croped_box
+
+    def CropImgs(self):
+        Img_ns = os.listdir(self.unlabeledImg_dir)
+        for Img_n in Img_ns:
+            Img_p = os.path.join(self.COT_raw_Img_dir,Img_n)
+            self.crop_unlabeledImg(Img_p,Img_n)
+        return
+
+
+    def crop_unlabeledImg(self,Img_p,Img_n):
+        img = cv2.imread(Img_p)
+        H,W,_ = img.shape
+        croped_boxs = self.generalCropedBox(W,H)
+        for i,box in enumerate(croped_boxs):
+            if self.crop2gray:
+                dst_gp = os.path.join(self.TestImg_dir, str(i) + "_gray" + Img_n)
+                croped_grayimg = img[box[1]:box[1] + box[3], box[0]:box[0] + box[2], 0]  # [y1:y1+h,x1:x1+w]
+                if box[2]< box[3]:
+                    #竖向要旋转
+                    croped_grayimg =  cv2.rotate(croped_grayimg, cv2.ROTATE_90_COUNTERCLOCKWISE)
+                cv2.imwrite(dst_gp, croped_grayimg)
+            else:
+                dst_p = os.path.join(self.TestImg_dir,str(i)+"_rgb"+Img_n)
+                croped_rgb_img = img[box[1]:box[1]+box[3],box[0]:box[0]+box[2],:] #[y1:y1+h,x1:x1+w]
+                if box[2]< box[3]:
+                    #竖向要旋转
+                    croped_rgb_img =  cv2.rotate(croped_rgb_img, cv2.ROTATE_90_COUNTERCLOCKWISE)
+                cv2.imwrite(dst_p,croped_rgb_img)
+
+        return
+
+
+
 if __name__ == '__main__':
     # project = 'VOC'
     # test = XMLExtract(project)
@@ -282,11 +359,17 @@ if __name__ == '__main__':
     # Croped_img_Size = [224, 1120]  # [h,w]   [424, 2688]  [848, 896]
     # Vaild_Box = [120,120,4360,4920]#x1,y1,x2,y2
 
-    project = 'COT_Raw'
-    Croped_img_Size = [424, 2688]  # [h,w]   [424, 2688]  [848, 896]
-    Vaild_Box = [300,300,10900,12300]#x1,y1,x2,y2
-    test = ExtractResizeCOTXML2Raw(project,Croped_img_Size,Vaild_Box)
-    test.crop_COT()
+    # project = 'COT_Raw'
+    # Croped_img_Size = [424, 2688]  # [h,w]   [424, 2688]  [848, 896]
+    # Vaild_Box = [300,300,10900,12300]#x1,y1,x2,y2
+    # test = ExtractResizeCOTXML2Raw(project,Croped_img_Size,Vaild_Box)
+    # test.crop_COT()
+
+
+    #裁剪TestImg
+    CropImg = CropTestImg4Img()
+    CropImg.CropImgs()
+
 
 
 

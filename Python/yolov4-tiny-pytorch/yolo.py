@@ -108,7 +108,7 @@ class YOLO(object):
             #   将图像输入网络当中进行预测！
             # ---------------------------------------------------------#
             t1 = time.time()
-            N = 1
+            N = 100
             for i in range(N):
                 outputs = self.net(images)
                 outputs = self.bbox_util.decode_box(outputs)
@@ -119,8 +119,8 @@ class YOLO(object):
                                                              image_shape, self.letterbox_image, conf_thres=self.confidence,
                                                              nms_thres=self.nms_iou)
             t2 = time.time()
-            fps = N/(t2-t1)
-            print("predict time fps: ",fps)
+            # fps = N/(t2-t1)
+            # print("predict time fps: ",fps)
 
             if results[0] is None:
                 return image_raw," "
@@ -161,7 +161,6 @@ class YOLOScript(nn.Module):
             #   将图像输入网络当中进行预测！
             # ---------------------------------------------------------#
             features = self.net(images)
-        #可以正常输出
             layer_num = len(features)
             out_pt = []
             for i in range(layer_num):

@@ -11,7 +11,7 @@ from utils.config import Config
 def get_predict_path_way1(project):
     #从图像文件夹中提取出Img_List
     img_type = 'bmp'
-    img_dir = r'I:\MIL_AI\Python\yolov4-tiny-pytorch\data\{}\Img'.format(project)
+    img_dir = r'G:\DefectDataCenter\ParseData\Detection\{}\raw_data\TImg'.format(project)
     img_ns = [x for x in os.listdir(img_dir) if x.endswith(img_type)]
     img_path = [os.path.join(img_dir, img_n) for img_n in img_ns]
     return img_path
@@ -26,18 +26,16 @@ def get_predict_path_way2(project):
         for fl in fls:
             img_p = fl.split(" ")[0]
             img_paths.append(img_p)
-
     return img_paths
 
 
 def Predict():
     os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
-    project = "COT_Raw"  ##LMK lslm COT_Raw  COT_Resize  HW  COT_Raw COT_Raw
+    project = "DSW"  ##LMK lslm DSW  COT_Resize  HW  COT_Raw DSW_random
     cfg = Config(project)
     yolo = YOLO(cfg)
-    # img_ps = get_predict_path_way1(project)
-    img_ps = get_predict_path_way2(project)
-
+    img_ps = get_predict_path_way1(project)
+    # img_ps = get_predict_path_way2(project)
     t1 = time.time()
     results = []
     for img_id, img_p in enumerate(img_ps):
@@ -52,7 +50,7 @@ def Predict():
     ##将results写入 result file 中
     dst_path =  r'G:\DefectDataCenter\ParseData\Detection\{}\raw_data\ImgBoxes_val_pd_result.txt'.format(project)
     with open(dst_path,'w') as f:
-        for i in range(50,len(results)):
+        for i in range(0,len(results)):
             img_i_rst = results[i]
             if img_i_rst !=" ":
                 box_info = ""
