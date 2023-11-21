@@ -573,8 +573,8 @@ void MILTest::MILTestDetTrain()
 
 void MILTest::MILTestDetPredict()
 {
-	string proj = "DSW_random";
-	MIL_STRING Mproj = L"DSW_random";
+	string proj = "COT_Raw";
+	MIL_STRING Mproj = L"COT_Raw";
 	string	SrcImgDir = "G:/DefectDataCenter/ParseData/Detection/"+ proj+ "/raw_data/TImg";
 	m_MLDetCNN->m_DetDataSetPara.WorkingDataDir = "G:/DefectDataCenter/ParseData/Detection/" + proj + "/MIL_Data/";
 	MIL_STRING TdDetCtxPath = L"G:/DefectDataCenter/ParseData/Detection/"+ Mproj +L"/MIL_Data/"+ Mproj +L".mclass";
@@ -910,11 +910,9 @@ void MILTest::MILTestDetPredictMutiThreadCore()
 
 void MILTest::MILTestONNXPredict()
 {
-	MIL_STRING TdONNXCtxName = MIL_TEXT("G:/DefectDataCenter/ParseData/Detection/COT_Raw/Pytorch_Data/yolo7tiny_COT_Raw.onnx");
-
+	MIL_STRING TdONNXCtxName = MIL_TEXT("G:/DefectDataCenter/ParseData/Detection/COT_Raw/Pytorch_Data/yolo4tiny_COT_Raw.onnx");
 	MIL_UNIQUE_CLASS_ID TestONNXCtx = MclassAlloc(m_MilSystem,M_CLASSIFIER_ONNX, M_DEFAULT, M_UNIQUE_ID);
 	MclassImport(TdONNXCtxName,M_ONNX_FILE, TestONNXCtx, M_DEFAULT, M_DEFAULT, M_DEFAULT);
-
 	MIL_INT engine_index = 2;
 	MIL_STRING Description;
 	MclassControl(TestONNXCtx, M_DEFAULT, M_PREDICT_ENGINE, engine_index);
@@ -924,34 +922,45 @@ void MILTest::MILTestONNXPredict()
 	MclassInquire(TestONNXCtx, M_DEFAULT_SOURCE_LAYER, M_SIZE_X + M_TYPE_MIL_INT, &m_InputSizeX);
 	MclassInquire(TestONNXCtx, M_DEFAULT_SOURCE_LAYER, M_SIZE_Y + M_TYPE_MIL_INT, &m_InputSizeY);
 	//MclassInquire(TestONNXCtx, M_CONTEXT, M_NUMBER_OF_CLASSES + M_TYPE_MIL_INT, &m_ClassesNum);
+	MclassControl(TestONNXCtx, M_DEFAULT, M_TARGET_IMAGE_SIZE_X, m_InputSizeX);
+	MclassControl(TestONNXCtx, M_DEFAULT, M_TARGET_IMAGE_SIZE_Y, m_InputSizeY);
+	MclassControl(TestONNXCtx, M_DEFAULT, M_TARGET_IMAGE_SIZE_BAND, 3);
+	MclassPreprocess(TestONNXCtx, M_DEFAULT);
 	
-	MIL_STRING ImagepATH = MIL_TEXT("G:/DefectDataCenter/ParseData/Detection/COT_Raw/raw_data/TImg/0_7_10.bmp");
+	string ImgDir = "G:/DefectDataCenter/ParseData/Detection/COT_Raw/raw_data/TImg";
+	string strODNetResultPath = "G:/DefectDataCenter/ParseData/Detection/COT_Raw/raw_data/TImg_ONNX_Result.txt";
+	vector<MIL_STRING> vecImgPaths;
+	
+	vector<MIL_STRING> Files;
+	m_MLDetCNN->m_AIParse->getFilesInFolder(ImgDir, "bmp", Files);
+
+	vector<DET_RESULT_STRUCT> vecDetResults;
+	for (int i = 0; i < Files.size(); i++) {
+	MIL_STRING ImagepATH = Files[i];
 	MIL_ID Image = MbufRestore(ImagepATH, m_MilSystem, M_NULL);
 	MIL_INT m_ImageSizeX = MbufInquire(Image, M_SIZE_X, M_NULL);
 	MIL_INT m_ImageSizeY = MbufInquire(Image, M_SIZE_Y, M_NULL);
 
 	MIL_ID ImageReduce = MbufAllocColor(m_MilSystem, 3, m_InputSizeX, m_InputSizeY, M_FLOAT + 32, M_IMAGE + M_PROC, M_NULL);
-	MimResize(Image, ImageReduce, M_FILL_DESTINATION, M_FILL_DESTINATION, M_DEFAULT);
-	//MimArith(ImageReduce, 255.0, ImageReduce, M_DIV);
+	MimResize(Image, ImageReduce, M_FILL_DESTINATION, M_FILL_DESTINATION, M_BICUBIC);
 	MimArith(ImageReduce, 255.0, ImageReduce, M_DIV_CONST);
 	MIL_UNIQUE_CLASS_ID ClassRes = MclassAllocResult(m_MilSystem, M_PREDICT_ONNX_RESULT, M_DEFAULT, M_UNIQUE_ID);
 
-	MclassControl(TestONNXCtx, M_DEFAULT, M_TARGET_IMAGE_SIZE_X, m_InputSizeX);
-	MclassControl(TestONNXCtx, M_DEFAULT, M_TARGET_IMAGE_SIZE_Y, m_InputSizeY);
-	MclassControl(TestONNXCtx, M_DEFAULT, M_TARGET_IMAGE_SIZE_BAND, 3);
-
-	MclassPreprocess(TestONNXCtx, M_DEFAULT);
+	MclassPredict(TestONNXCtx, ImageReduce, ClassRes, M_DEFAULT);
 	clock_t  t1 = clock();
-	int CircleNum = 500;
+	int CircleNum = 100;
 	for (int i = 0; i < CircleNum; i++) {
 		MclassPredict(TestONNXCtx, ImageReduce, ClassRes, M_DEFAULT);
 	}
 	clock_t  t2 = clock();
-
 	cout << "FPS: " << CircleNum*1.0 /(double(t2 - t1) / CLOCKS_PER_SEC) << endl;
 	MIL_INT NO = 0;
 	MclassGetResult(ClassRes, M_GENERAL, M_NUMBER_OF_OUTPUTS+ M_TYPE_MIL_INT, &NO);
 
+	if (NO == 0) {
+		continue;
+	}
+	vecImgPaths.emplace_back(ImagepATH);
 	vector<MIL_UINT8>ROut;
 	vector<MIL_DOUBLE>Out;
 	vector<MIL_INT>OutSp;
@@ -961,16 +970,33 @@ void MILTest::MILTestONNXPredict()
 		MclassGetResult(ClassRes, M_OUTPUT_INDEX(i), M_OUTPUT_DATA, Out);
 	}
 	//Ω‚ŒˆResult
-	vector<vector<float>>Result;
+	DET_RESULT_STRUCT tmpRst;
 	for (int i = 0; i < OutSp[0]; i++) {
+		Box tmp_box;
+		
+		//vector<float>tmp_target;
 		vector<float>tmp_target;
-		int S = i * OutSp[1];
-		int E = (i+1) * OutSp[1];
-		tmp_target.assign(Out.begin() + S, Out.begin() + E);
-		Result.push_back(tmp_target);
+		int box_S = i * OutSp[1];
+		//int box_E = box_S+4;
+		//tmp_box.assign(Out.begin() + box_S, Out.begin() + box_E);
+		tmp_box.CX = Out[box_S + 0];
+		tmp_box.CY = Out[box_S + 1];
+		tmp_box.W = Out[box_S + 2]- Out[box_S + 0];
+		tmp_box.H = Out[box_S + 3] - Out[box_S + 1];
+
+		float tmp_score = Out[box_S + 4] * Out[box_S + 5];
+		int ClassIndex = Out[box_S + 6];
+	
+		tmpRst.ClassName.emplace_back(to_wstring(ClassIndex));
+		tmpRst.Boxes.emplace_back(tmp_box);
+		tmpRst.Score.emplace_back(tmp_score);
+		tmpRst.ClassIndex.emplace_back(ClassIndex);
 	}
+	vecDetResults.push_back(tmpRst);
 	MbufFree(Image);
 	MbufFree(ImageReduce);
+	}
+	m_MLDetCNN->saveResult2File(strODNetResultPath, vecImgPaths, vecDetResults);
 }
 
 void MILTest::MILTestKTtreedbscan()

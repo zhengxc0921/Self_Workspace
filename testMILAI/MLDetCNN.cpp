@@ -192,7 +192,19 @@ void CMLDetCNN::predict(MIL_ID Image, DET_RESULT_STRUCT& Result)
         MclassPreprocess(m_TrainedDetCtx, M_DEFAULT);
     }
     MIL_UNIQUE_CLASS_ID ClassRes = MclassAllocResult(m_MilSystem, M_PREDICT_DET_RESULT, M_DEFAULT, M_UNIQUE_ID);
+
+
     MclassPredict(m_TrainedDetCtx, ImageReduce, ClassRes, M_DEFAULT);
+
+    clock_t  t1 = clock();
+    int CircleNum = 100;
+    for (int i = 0; i < CircleNum; i++) {
+        MclassPredict(m_TrainedDetCtx, ImageReduce, ClassRes, M_DEFAULT);
+    }
+    clock_t  t2 = clock();
+    cout << "FPS: " << CircleNum * 1.0 / (double(t2 - t1) / CLOCKS_PER_SEC) << endl;
+
+
 
     MbufFree(ImageReduce);
     MclassGetResult(ClassRes, M_GENERAL, M_NUMBER_OF_INSTANCES + M_TYPE_MIL_INT, &Result.InstanceNum);

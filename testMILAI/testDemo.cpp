@@ -73,10 +73,10 @@ int main(int argc, char* argv[]) {
 	
 	//m_MILTestPtr->MILTestGenDetDataset();
 	//m_MILTestPtr->MILTestDetTrain();
-	//m_MILTestPtr->MILTestDetPredict();
+	m_MILTestPtr->MILTestDetPredict();
 	//m_MILTestPtr->MILTestValDetModel();
 	//ONNX test
-	m_MILTestPtr->MILTestONNXPredict();
+	//m_MILTestPtr->MILTestONNXPredict();
 	//多进程测试前的预备测试
 	//m_MILTestPtr->MILTestDetPredictMutiProcessSingle();
 
