@@ -204,8 +204,6 @@ void CMLDetCNN::predict(MIL_ID Image, DET_RESULT_STRUCT& Result)
     clock_t  t2 = clock();
     cout << "FPS: " << CircleNum * 1.0 / (double(t2 - t1) / CLOCKS_PER_SEC) << endl;
 
-
-
     MbufFree(ImageReduce);
     MclassGetResult(ClassRes, M_GENERAL, M_NUMBER_OF_INSTANCES + M_TYPE_MIL_INT, &Result.InstanceNum);
     Result.Boxes.resize(Result.InstanceNum);
@@ -590,7 +588,7 @@ void CMLDetCNN::PrepareDataset(MIL_UNIQUE_CLASS_ID& DatasetContext,
 
 void CMLDetCNN::ConstructTrainCtx(DET_TRAIN_STRUCT ClassifierParas, MIL_UNIQUE_CLASS_ID& TrainCtx)
 {
-    MIL_DOUBLE MPF;
+ 
     if (M_NULL == TrainCtx)
     {
         TrainCtx = MclassAlloc(m_MilSystem, M_TRAIN_DET, M_DEFAULT, M_UNIQUE_ID);
@@ -598,14 +596,6 @@ void CMLDetCNN::ConstructTrainCtx(DET_TRAIN_STRUCT ClassifierParas, MIL_UNIQUE_C
 
     MclassControl(TrainCtx, M_CONTEXT, M_TRAIN_DESTINATION_FOLDER, ClassifierParas.TrainDstFolder);
 
-    if (ClassifierParas.TrainMode == 1)
-    {
-        MclassControl(TrainCtx, M_CONTEXT, M_RESET_TRAINING_VALUES, M_FINE_TUNING);
-    }
-    else if (ClassifierParas.TrainMode == 2)
-    {
-        MclassControl(TrainCtx, M_CONTEXT, M_RESET_TRAINING_VALUES, M_TRANSFER_LEARNING);
-    }
 
     if (ClassifierParas.SplitPercent > 0)
     {

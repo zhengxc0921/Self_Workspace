@@ -4,13 +4,17 @@
 //#include<boost/weak_ptr.hpp>
 //#include<thread>
 #include<string>
+#include<Python.h>
+#include<opencv2/opencv.hpp>
+#include <opencv2/dnn.hpp>
+
 #include "MLClassCNN.h"
 #include "MLDetCNN.h"
 #include "DBSCAN.h"
 #include <thread>
 #include "kttreedbscan.cpp"
 
-
+using namespace cv;
 class MILTest;
 typedef boost::shared_ptr<MILTest>MILTestPtr;
 class MILTest {
@@ -69,7 +73,6 @@ public:
 		string DstRst,
 		double& calc_time);
 
-
 	void MILTestPredictShareMem(string strShareMame, string index, size_t filesize);
 
 	//多线程测试使用
@@ -77,14 +80,13 @@ public:
 	void MILTestDetPredictMutiThreadCore();
 	void MILTestDetPredictMutiThread();
 
-
-
 	//onnx例子
 	void MILTestONNXPredict();
-
-
+	void OpencvONNXPredict();
 	void MILTestKTtreedbscan();
 
+	//
+	void Pytest();
 
 
 
@@ -101,7 +103,6 @@ public:
 	MIL_INT m_InputSizeY = 0;
 
 	//测试参数
-	
 	MIL_STRING m_ClassifierSrcDataDir = L"G:/DefectDataCenter/原始_现场分类数据/LJX/SpTrainData/";
 	/*MIL_STRING m_ClassifierSrcDataDir = L"G:/DefectDataCenter/原始_现场分类数据/LJX/TrainData/";*/
 	/*MIL_STRING m_ClassifierSrcDataDir = L"G:/DefectDataCenter/ParseData/Classifier/";*/
@@ -110,9 +111,7 @@ public:
 	MIL_STRING m_ClassifierWorkSpace = L"G:/DefectDataCenter/WorkSpace/Classifier/";
 	MIL_STRING m_DetectionWorkSpace = L"G:/DefectDataCenter/WorkSpace/Detection/";
 
-
 	MIL_STRING m_strProject;
-
 	vector<MIL_STRING> m_FilesInFolder;
 	vector < ClassificationResultStruct> m_vecResults;
 	bool m_SavePredictedImg = TRUE;
@@ -120,6 +119,4 @@ public:
 	MIL_UNIQUE_CLASS_ID m_TrainedCtx;
 	map<string,MIL_ID >m_PathRawImageMap;
 	vector<DET_RESULT_STRUCT> m_vecDetResults;
-
-
 };

@@ -113,8 +113,6 @@ void MILTest::CropImgs()
 
 	MIL_STRING MDstImgDir = m_MLClassCNN->m_AIParse->string2MIL_STRING(DstImgDir);
 	m_MLClassCNN->CreateFolder(MDstImgDir);
-
-
 	vector<string>folders;
 	m_MLClassCNN->m_AIParse->getFoldersInFolder(SrcImgDir, folders);
 	if (folders.size() > 0) {
@@ -136,9 +134,7 @@ void MILTest::CropImgs()
 
 				MIL_STRING MsrcImgPath = m_MLClassCNN->m_AIParse->string2MIL_STRING(srcImgPath);
 				MIL_STRING MdstImgPath = m_MLClassCNN->m_AIParse->string2MIL_STRING(dstImgPath);
-
 				MIL_ID ImgIn = MbufRestore(MsrcImgPath, m_MilSystem, M_NULL);
-
 				m_MLClassCNN->m_AIParse->ImgCenterCrop(ImgIn, CropWH, ImgOut);
 				MbufExport(MdstImgPath, M_BMP, ImgOut);
 				MbufFree(ImgOut);
@@ -151,19 +147,12 @@ void MILTest::CropImgs()
 		m_MLClassCNN->m_AIParse->getFilesInFolder(SrcImgDir, "bmp", FilesInFolder);
 		for (int j = 0; j < FilesInFolder.size(); j++) {
 			MIL_ID ImgOut;
-
 			vector<string>ListFilesInFolder;
 			m_MLClassCNN->m_AIParse->Split(FilesInFolder[j], ListFilesInFolder, "//");
-
-
 			string dstImgPath = DstImgDir + "//" + ListFilesInFolder.back();
-
-	
 			MIL_STRING MsrcImgPath = m_MLClassCNN->m_AIParse->string2MIL_STRING(FilesInFolder[j]);
 			MIL_STRING MdstImgPath = m_MLClassCNN->m_AIParse->string2MIL_STRING(dstImgPath);
-
 			MIL_ID ImgIn = MbufRestore(MsrcImgPath, m_MilSystem, M_NULL);
-
 			m_MLClassCNN->m_AIParse->ImgCenterCrop(ImgIn, CropWH, ImgOut);
 			MbufExport(MdstImgPath, M_BMP, ImgOut);
 			MbufFree(ImgOut);
@@ -173,7 +162,6 @@ void MILTest::CropImgs()
 
 void MILTest::FillImgs()
 {
-
 	MIL_ID RawImage = MbufRestore(L"G:/DefectDataCenter/TImg/C.jpg", m_MilSystem, M_NULL);
 	MIL_STRING DstRootPath = L"G:/DefectDataCenter/TImg/C_Crop.jpg";
 	const MIL_INT SizeX = MbufInquire(RawImage, M_SIZE_X, M_NULL);
@@ -235,7 +223,6 @@ void MILTest::FillImgs()
 		}
 	
 		MbufPutColor2d(MonoImage, M_PACKED + M_BGR24,M_ALL_BANDS, 0,0,SImgW,SImgH,ScaledImage.get());
-		//MbufExport(L"G:/DefectDataCenter/TImg/A1.bmp", M_BMP, MonoImage);
 		MbufCopyColor2d(RawImage, MonoImage, M_ALL_BANDS, 0, 0, M_ALL_BANDS, SizeY - SizeX, 0, SizeX, SizeY);
 		MbufExport(DstRootPath, M_BMP, MonoImage);
 	}
@@ -537,7 +524,7 @@ void MILTest::MILTestGenDetDataset()
 	//string proj_n = "COT_Resize"; //COT_Resize  DSW
 	//string proj_n = "HW";
 	string proj_n = "COT_Raw"; //COT_Resize
-	string DetDataSetConfigPath = "G:/DefectDataCenter/ParseData/Detection/"+proj_n+"/raw_data/Config/"+proj_n+"_Para.ini";
+	string DetDataSetConfigPath = "G:/DefectDataCenter/ParseData/Detection/"+proj_n+"/raw_data/Config/"+proj_n+"_yolo4_Para.ini";
 	
 	m_MLDetCNN->GenDataSet(DetDataSetConfigPath, proj_n);
 	//DET_DATASET_PARAS_STRUCT DetDataSetPara;
@@ -585,9 +572,6 @@ void MILTest::MILTestDetPredict()
 
 void MILTest::MILTestValDetModel()
 {
-
-	
-
 	string proj = "COT_Raw"; //COT_Raw  //DSW  //DSW_random  // HW //COT_Resize
 	string ValDataInfoPath = "G:/DefectDataCenter/ParseData/Detection/"+ proj+"/raw_data/Config/ImgBoxes_val.txt";
 	MIL_STRING Mproj = L"COT_Raw";
@@ -639,7 +623,6 @@ void MILTest::MILTestValDetModel()
 //	for (int i = 0; i < RawImageS.size();i++) {
 //		MbufFree(RawImageS[i]);
 //	}
-//
 //	//将结果保存到txt文件
 //	ofstream ODNetResult;
 //	ODNetResult.open(SrcDir+"ODNetResult.txt", ios::out);
@@ -661,7 +644,6 @@ void MILTest::MILTestValDetModel()
 //		}
 //		ODNetResult << ImgInfo<<endl;
 //	}
-//
 //	ODNetResult.close();
 //}
 
@@ -827,7 +809,6 @@ void MILTest::MILTestDetPredictCore(MIL_UNIQUE_CLASS_ID& TestCtx,
 }
 
 
-
 void MILTest::mutiThreadPrepare()
 {
 	//读取待图片路径测路径
@@ -930,7 +911,6 @@ void MILTest::MILTestONNXPredict()
 	string ImgDir = "G:/DefectDataCenter/ParseData/Detection/COT_Raw/raw_data/TImg";
 	string strODNetResultPath = "G:/DefectDataCenter/ParseData/Detection/COT_Raw/raw_data/TImg_ONNX_Result.txt";
 	vector<MIL_STRING> vecImgPaths;
-	
 	vector<MIL_STRING> Files;
 	m_MLDetCNN->m_AIParse->getFilesInFolder(ImgDir, "bmp", Files);
 
@@ -954,8 +934,14 @@ void MILTest::MILTestONNXPredict()
 	}
 	clock_t  t2 = clock();
 	cout << "FPS: " << CircleNum*1.0 /(double(t2 - t1) / CLOCKS_PER_SEC) << endl;
+	
+	MbufFree(ImageReduce);
+	MbufFree(Image);
+	
 	MIL_INT NO = 0;
 	MclassGetResult(ClassRes, M_GENERAL, M_NUMBER_OF_OUTPUTS+ M_TYPE_MIL_INT, &NO);
+
+
 
 	if (NO == 0) {
 		continue;
@@ -993,14 +979,62 @@ void MILTest::MILTestONNXPredict()
 		tmpRst.ClassIndex.emplace_back(ClassIndex);
 	}
 	vecDetResults.push_back(tmpRst);
-	MbufFree(Image);
-	MbufFree(ImageReduce);
+
 	}
 	m_MLDetCNN->saveResult2File(strODNetResultPath, vecImgPaths, vecDetResults);
 }
 
+//void MILTest::OpencvONNXPredict()
+//{
+//	//yolo7tiny_COT_Raw.onnx 被onnxruntime、MIL调用都正常。opencv报错
+//	string onnx_path = "G:/DefectDataCenter/ParseData/Detection/COT_Raw/Pytorch_Data/yolo7tiny_COT_Raw.onnx";
+//	dnn::Net net = dnn::readNetFromONNX(onnx_path);
+//	//opencv test
+//	string img_name = "G:/DefectDataCenter/ParseData/Detection/COT_Raw/raw_data/TImg/0_7_15.bmp";
+//	cv::Mat image = imread(img_name, -1);
+//	//image = imread(fn[i], IMREAD_GRAYSCALE);
+//	// 2. convert color space, opencv read the image in BGR
+//	Mat img_float;
+//	// convert to float format
+//	image.convertTo(img_float, CV_32F, 1.0 / 255);
+//	// 3. resize the image for resnet101 model
+//	Mat img_resize;
+//	resize(img_float, img_resize, Size(2688, 448), INTER_CUBIC);
+//	//cv::Mat blob = cv::dnn::blobFromImage(img_resize,  CV_32F);  // 由图片加载数据 还可以进行缩放、归一化等预处理操作
+//	net.setInput(img_resize);  // 设置模型输入
+//	Mat detections = net.forward();
+//	Mat detectionMat(detections.size[2], detections.size[3], CV_32F, detections.ptr<float>());
+//
+//	for (int i = 0; i < detectionMat.rows; i++)
+//	{
+//		//自定义阈值
+//		if (detectionMat.at<float>(i, 2) >= 0.14)
+//		{
+//			int xLeftBottom = static_cast<int>(detectionMat.at<float>(i, 3) * image.cols);
+//			int yLeftBottom = static_cast<int>(detectionMat.at<float>(i, 4) * image.rows);
+//			int xRightTop = static_cast<int>(detectionMat.at<float>(i, 5) * image.cols);
+//			int yRightTop = static_cast<int>(detectionMat.at<float>(i, 6) * image.rows);
+//
+//			Rect object((int)xLeftBottom, (int)yLeftBottom,
+//				(int)(xRightTop - xLeftBottom),
+//				(int)(yRightTop - yLeftBottom));
+//
+//			rectangle(image, object, Scalar(0, 255, 0));
+//		}
+//
+//
+//		//int width = img_resize.cols;//获取图像宽度
+//		//int height = img_resize.rows;//获取图像高度
+//		//int channel = img_resize.channels();//获取通道数
+//
+//
+//
+//	}
+//}
+
 void MILTest::MILTestKTtreedbscan()
 {
+	//function: 对背景图片进行聚类，并按比例精简
 	CDBSCANPtr m_CDBSCANPtr = CDBSCANPtr(new CDBSCAN(m_MilSystem));
 	double radius = 1.2;
 	int minPoints = 60;
@@ -1008,6 +1042,8 @@ void MILTest::MILTestKTtreedbscan()
 	double AspectRatioTHD = 3;
 	double RemovalRatio = 0.5;
 	bool REMOVEIMG = false;
+
+
 	vector<MIL_STRING> efftImgPaths;
 	vector<vector<int>> Labels;
 	vector<MIL_STRING> unefftImgPaths;
@@ -1034,9 +1070,9 @@ void MILTest::MILTestKTtreedbscan()
 		}	
 }
 
-
 //void MILTest::OpencvTest(MIL_ID& ImageReshape)
 //{
+// //opencv_img-->MIL_ID_img
 //	//opencv test
 //	string img_name = "G:/DefectDataCenter/ParseData/Detection/lslm/raw_data/TImg/lslm.bmp";
 //	cv::Mat image = imread(img_name, CV_LOAD_IMAGE_UNCHANGED);
@@ -1097,4 +1133,46 @@ void MILTest::MILTestKTtreedbscan()
 //		}
 //	}
 //
+//}
+
+
+//void MILTest::Pytest()
+//{
+//	//Py_SetPythonHome(L"D:/Anaconda3/envs/AI_gpu/include");
+//	Py_Initialize(); //初始化python解释器
+//	if (!Py_IsInitialized()) {
+//		std::system("pause");
+//		//return -99;
+//	} //查看python解释器是否成功初始化
+//
+//	PyRun_SimpleString("import sys");
+//	PyRun_SimpleString("sys.path.append('I:/MIL_AI/testMILAI')");
+//	PyRun_SimpleString("sys.path.append('I:/MIL_AI/testMILAI/site-packages')");
+//	PyObject* pModule = PyImport_Import(PyUnicode_FromString("Img_Cluster"));
+//	if (!pModule) {
+//		cout << "Can't find  Img_Cluster" << endl;
+//		std::system("pause");
+//	}
+//
+//	////调用pt1函数
+//	PyObject* pFunc = PyObject_GetAttrString(pModule, "pt1");//这里是要调用的函数名
+//	PyObject* pyParams = PyTuple_New(4); //定义两个变量
+//	string Csrc_dir = "G:/DefectDataCenter/Test/Src/90";
+//	string dst_dir = "G:/DefectDataCenter/Test/ImgCluster";
+//	float	Eeps = 1.2;
+//	//const char* pn = "SPA90";
+//	string pn = "SPA90";
+//	PyTuple_SetItem(pyParams, 0, Py_BuildValue("s", Csrc_dir.c_str()));// 变量格式转换成python格式
+//	PyTuple_SetItem(pyParams, 1, Py_BuildValue("s", dst_dir.c_str()));// 变量格式转换成python格式
+//	PyTuple_SetItem(pyParams, 2, Py_BuildValue("f", Eeps));// 变量格式转换成python格式
+//	PyTuple_SetItem(pyParams, 3, Py_BuildValue("s", pn.c_str()));// 变量格式转换成python格式
+//	PyObject_CallObject(pFunc, pyParams);//调用函数
+//
+//	//PyObject* pFunc = PyObject_GetAttrString(pModule, "pt2");//这里是要调用的函数名
+//	//PyEval_CallObject(pFunc, NULL);//调用函数
+//	//销毁python相关
+//	//Py_DECREF(pyParams);
+//	//Py_DECREF(pFunc);
+//	Py_DECREF(pModule);
+//	Py_Finalize();
 //}
