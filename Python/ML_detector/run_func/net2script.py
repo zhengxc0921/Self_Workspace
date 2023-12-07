@@ -2,6 +2,7 @@ import torch
 from run_func.yolo import YOLOScript
 import numpy as np
 import cv2,os
+# import onnx, onnxruntime
 
 
 class ToScript:
@@ -11,7 +12,8 @@ class ToScript:
         self.model_dst = cfg.pth_dst
         self.onnx_model_dst = cfg.onnx_dst
         self.cfg = cfg
-        self.img_dir = r'G:\DefectDataCenter\ParseData\Detection\{}\raw_data\TImg'.format(project)
+        self.project = cfg.project
+        self.img_dir = r'G:\DefectDataCenter\ParseData\Detection\{}\raw_data\TImg'.format(self.project)
 
     def toscript(self):
         self.img_names = os.listdir(self.img_dir)
@@ -29,7 +31,7 @@ class ToScript:
         if image.ndim != 3:
             image = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
         img_raw = np.array(image, dtype='float32')/255.0
-        img_cv_resize = cv2.resize(img_raw,(cfg.input_shape[1],cfg.input_shape[0]),cv2.INTER_CUBIC)
+        img_cv_resize = cv2.resize(img_raw,(self.cfg.input_shape[1],self.cfg.input_shape[0]),cv2.INTER_CUBIC)
         images_cv = torch.from_numpy(np.expand_dims(np.transpose(img_cv_resize,(2,0,1)),0))
         #---------------------------------------------------------#
         #   添加上batch_size维度
@@ -52,6 +54,9 @@ class ToScript:
         return
 
     def pre_process_img(self,num=1):
+
+        # print("pre_process_img:")
+
         self.img_names = os.listdir(self.img_dir)
         self.img_path = os.path.join(self.img_dir,self.img_names[num])
         print("img_path:",self.img_path)
@@ -68,44 +73,47 @@ class ToScript:
         if image.ndim != 3:
             image = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
         img_raw = np.array(image, dtype='float32') / 255.0
-        img_cv_resize = cv2.resize(img_raw, (cfg.input_shape[1], cfg.input_shape[0]), cv2.INTER_CUBIC)
+        img_cv_resize = cv2.resize(img_raw, (self.cfg.input_shape[1], self.cfg.input_shape[0]), cv2.INTER_CUBIC)
         images_cv = torch.from_numpy(np.expand_dims(np.transpose(img_cv_resize, (2, 0, 1)), 0))
         return images_cv,image.shape[:2]
 
     def to_onnx(self):
-        import onnx ,onnxruntime
+        print("to_onnx")
         images_cv ,image_shape= self.pre_process_img(0) ##177,4   ##1
+        print("image_shape")
+
         #---------------------------------------------------------#
         #   添加上batch_size维度
         #---------------------------------------------------------#
 
-        test_in = self.model_YOLO(images_cv)
-        print("test_in: ", test_in)
+        # test_in = self.model_YOLO(images_cv)
+        # print("test_in: ", test_in)
         input_layer_names = ["images"]
         output_layer_names = ["outputs"]
-
+        print("self.onnx_model_dst:{}".format(self.onnx_model_dst))
         torch.onnx.export(self.model_YOLO,
                           images_cv,
                           f=self.onnx_model_dst,
                               verbose=False,
-                          opset_version=11,
+                          opset_version=12,
                           training=torch.onnx.TrainingMode.EVAL,
                           do_constant_folding=True,
                           input_names=input_layer_names,
                           output_names=output_layer_names,
                           dynamic_axes=None)
-        # # # # # Checks
-        model_onnx = onnx.load(self.onnx_model_dst)  # load onnx model
-        onnx.checker.check_model(model_onnx)  # check onnx model
-        # onnx 模型猜测是
-        # 创建一个InferenceSession的实例，并将模型的地址传递给该实例
-        try:
-            sess = onnxruntime.InferenceSession(self.onnx_model_dst)
-            test_out = sess.run(["outputs"], {"images": np.array(images_cv)})
-            print("test_out: ", test_out)
-        except:
-            print("this image have no defects!")
-        return
+        print("torch.onnx.export")
+        # # # # # # Checks
+        # model_onnx = onnx.load(self.onnx_model_dst)  # load onnx model
+        # onnx.checker.check_model(model_onnx)  # check onnx model
+        # # onnx 模型猜测是
+        # # 创建一个InferenceSession的实例，并将模型的地址传递给该实例
+        # try:
+        #     sess = onnxruntime.InferenceSession(self.onnx_model_dst)
+        #     test_out = sess.run(["outputs"], {"images": np.array(images_cv)})
+        #     print("test_out: ", test_out)
+        # except:
+        #     print("this image have no defects!")
+        # return
 
 
     def use_onnx(self):
@@ -125,18 +133,18 @@ class ToScript:
         return
 
 
-    def onnx_vison(self):
-        import netron
-        netron.start(self.onnx_model_dst)
+    # def onnx_vison(self):
+    #     import netron
+    #     netron.start(self.onnx_model_dst)
 
 
 if __name__ == '__main__':
     # calc_device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     # pj_id = 1
-    from utils.config import Config
+    from Utils.config import Config
     project = "COT_Raw"  #LMK  ## LMK, HW,VOC,DSW_random ,COT_Raw ;COT_Raw ; DSW
     cfg = Config(project)
     test1 = ToScript(cfg)
-    test1.onnx_vison()
+    # test1.onnx_vison()
     test1.to_onnx()
     # test1.use_onnx()

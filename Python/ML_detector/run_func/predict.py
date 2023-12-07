@@ -5,7 +5,7 @@ import time
 import cv2
 import os
 from run_func.yolo import YOLO
-from utils.config import Config
+from Utils.config import Config
 
 
 def get_predict_path_way1(project):
@@ -34,7 +34,7 @@ def Predict():
     project = "COT_Raw"  ##LMK lslm DSW  COT_Resize  HW  COT_Raw DSW_random
     cfg = Config(project)
     yolo = YOLO(cfg)
-    img_ps = get_predict_path_way1(project)
+    img_ps = get_predict_path_way2(project)
     # img_ps = get_predict_path_way2(project)
     t1 = time.time()
     results = []

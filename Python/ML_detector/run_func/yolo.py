@@ -5,7 +5,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 
-from utils.utils_bbox import DecodeBox,DecodeBoxScript
+from Utils.utils_bbox import DecodeBox,DecodeBoxScript
 
 class YOLO(object):
 
@@ -155,7 +155,7 @@ class YOLOScript(nn.Module):
     #   检测图片
     # ---------------------------------------------------#
     def forward(self, images):
-        image_shape = images.size()[2:]
+        image_shape = images.size()[-2:]
         with torch.no_grad():
             # ---------------------------------------------------------#
             #   将图像输入网络当中进行预测！

@@ -3,14 +3,13 @@
 #-------------------------------------#
 import torch.optim as optim
 from torch.utils.data import DataLoader
-from utils.callbacks import LossHistory
-from utils.dataloader import YoloDataset ,yolo_dataset_collate
-from utils.utils_fit import fit_one_epoch
-from utils.config import Config
+from Utils.callbacks import LossHistory
+from Utils.dataloader import YoloDataset ,yolo_dataset_collate
+from Utils.utils_fit import fit_one_epoch
+from Utils.config import Config
 # # 避免 OMP: Error #15: Initializing libiomp5md.dll, but found libiomp5md.dll already initialized.
 import os
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
-
 def yolo4_train():
     # ------------------------------------------------------#
     #   创建yolo模型
