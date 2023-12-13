@@ -35,7 +35,7 @@ def Predict():
     cfg = Config(project)
     yolo = YOLO(cfg)
     img_ps = get_predict_path_way2(project)
-    # img_ps = get_predict_path_way2(project)
+    # img_ps = get_predict_path_way1(project)
     t1 = time.time()
     results = []
     for img_id, img_p in enumerate(img_ps):
@@ -54,8 +54,10 @@ def Predict():
             img_i_rst = results[i]
             if img_i_rst !=" ":
                 box_info = ""
-                for j in range(len(img_i_rst[0])):
-                    box_i = img_i_rst[0][j]
+                for j in range(len(img_i_rst)):
+                    box_i = img_i_rst[j]
+                # for j in range(len(img_i_rst[0])):
+                #     box_i = img_i_rst[0][j]
                     box_info += ",".join([str(int(x)) for x in box_i[:4]])+","+str(int(box_i[6]))+" "
                 n_box_info = box_info.rstrip()+"\n"
                 f.write(n_box_info)

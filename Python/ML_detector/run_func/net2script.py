@@ -1,5 +1,5 @@
 import torch
-from run_func.yolo import YOLOScript
+from run_func.yolo import YOLO #YOLOScript
 import numpy as np
 import cv2,os
 # import onnx, onnxruntime
@@ -8,7 +8,7 @@ import cv2,os
 class ToScript:
 
     def __init__(self,cfg):
-        self.model_YOLO =YOLOScript(cfg)
+        self.model_YOLO = YOLO(cfg)
         self.model_dst = cfg.pth_dst
         self.onnx_model_dst = cfg.onnx_dst
         self.cfg = cfg
@@ -54,9 +54,7 @@ class ToScript:
         return
 
     def pre_process_img(self,num=1):
-
         # print("pre_process_img:")
-
         self.img_names = os.listdir(self.img_dir)
         self.img_path = os.path.join(self.img_dir,self.img_names[num])
         print("img_path:",self.img_path)
@@ -78,16 +76,16 @@ class ToScript:
         return images_cv,image.shape[:2]
 
     def to_onnx(self):
+        import onnx, onnxruntime
         print("to_onnx")
         images_cv ,image_shape= self.pre_process_img(0) ##177,4   ##1
         print("image_shape")
-
         #---------------------------------------------------------#
         #   添加上batch_size维度
         #---------------------------------------------------------#
 
-        # test_in = self.model_YOLO(images_cv)
-        # print("test_in: ", test_in)
+        test_in = self.model_YOLO(images_cv)
+        print("test_in: ", test_in)
         input_layer_names = ["images"]
         output_layer_names = ["outputs"]
         print("self.onnx_model_dst:{}".format(self.onnx_model_dst))
@@ -103,17 +101,17 @@ class ToScript:
                           dynamic_axes=None)
         print("torch.onnx.export")
         # # # # # # Checks
-        # model_onnx = onnx.load(self.onnx_model_dst)  # load onnx model
-        # onnx.checker.check_model(model_onnx)  # check onnx model
-        # # onnx 模型猜测是
-        # # 创建一个InferenceSession的实例，并将模型的地址传递给该实例
-        # try:
-        #     sess = onnxruntime.InferenceSession(self.onnx_model_dst)
-        #     test_out = sess.run(["outputs"], {"images": np.array(images_cv)})
-        #     print("test_out: ", test_out)
-        # except:
-        #     print("this image have no defects!")
-        # return
+        model_onnx = onnx.load(self.onnx_model_dst)  # load onnx model
+        onnx.checker.check_model(model_onnx)  # check onnx model
+        # onnx 模型猜测是
+        # 创建一个InferenceSession的实例，并将模型的地址传递给该实例
+        try:
+            sess = onnxruntime.InferenceSession(self.onnx_model_dst)
+            test_out = sess.run(["outputs"], {"images": np.array(images_cv)})
+            print("test_out: ", test_out)
+        except:
+            print("this image have no defects!")
+        return
 
 
     def use_onnx(self):

@@ -326,24 +326,23 @@ class YOLOLoss(nn.Module):
         #-----------------------------------------------------#
         bs = len(targets)
 
+        FloatTensor = torch.cuda.FloatTensor if x.is_cuda else torch.FloatTensor
+        LongTensor  = torch.cuda.LongTensor if x.is_cuda else torch.LongTensor
         #-----------------------------------------------------#
         #   生成网格，先验框中心，网格左上角
         #-----------------------------------------------------#
         grid_x = torch.linspace(0, in_w - 1, in_w).repeat(in_h, 1).repeat(
-            int(bs * len(self.anchors_mask[l])), 1, 1).view(x.shape).to(x.device)
+            int(bs * len(self.anchors_mask[l])), 1, 1).view(x.shape).type(FloatTensor)
         grid_y = torch.linspace(0, in_h - 1, in_h).repeat(in_w, 1).t().repeat(
-            int(bs * len(self.anchors_mask[l])), 1, 1).view(y.shape).to(x.device)
-
-        # grid_x = torch.arange(in_w, dtype=torch.float32).repeat(in_h, 1).repeat(
-        #     bs * len(self.anchors_mask[l]), 1, 1).view(x.shape).to(x.device)
-        # grid_y = torch.arange(in_h, dtype=torch.float32).repeat(in_w, 1).t().repeat(
-        #     bs * len(self.anchors_mask[l]), 1, 1).view(y.shape).to(x.device)
+            int(bs * len(self.anchors_mask[l])), 1, 1).view(y.shape).type(FloatTensor)
 
         # 生成先验框的宽高
-        scaled_anchors_l = torch.tensor(scaled_anchors)[self.anchors_mask[l]].to(x.device)
+        scaled_anchors_l = np.array(scaled_anchors)[self.anchors_mask[l]]
 
-        anchor_w = scaled_anchors_l[:,0:1]
-        anchor_h = scaled_anchors_l[:, 1:2]
+        anchor_w = FloatTensor(scaled_anchors_l).index_select(1, LongTensor([0]))
+        anchor_h = FloatTensor(scaled_anchors_l).index_select(1, LongTensor([1]))
+
+        
         anchor_w = anchor_w.repeat(bs, 1).repeat(1, 1, in_h * in_w).view(w.shape)
         anchor_h = anchor_h.repeat(bs, 1).repeat(1, 1, in_h * in_w).view(h.shape)
         #-------------------------------------------------------#

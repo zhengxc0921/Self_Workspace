@@ -3,10 +3,6 @@ import torch
 import os,configparser
 import torch.backends.cudnn as cudnn
 
-# ---------------------------------------------------#
-#   获得先验框
-# ---------------------------------------------------#
-
 class Config:
 
     def __init__(self,project):
@@ -24,8 +20,8 @@ class Config:
         os.makedirs(self.dst_root,exist_ok=True)
         os.makedirs(self.predict_dst, exist_ok=True)
 
-        self.fepoch = 1
-        self.all_epoch = 2
+        self.fepoch = 100
+        self.all_epoch = 200
         self.lr = [1e-3,1e-4]
         self.batch_size = 8
         self.num_workers = 0
@@ -95,7 +91,6 @@ class Config:
             self.val_lines = f.readlines()
         with open(self.ClassesPath) as f:
             self.class_names =[x.strip() for x in f.readlines()]
-
         with open(self.anchors_path, encoding='utf-8') as f:
             anchors = f.readline()
         anchors = [float(x) for x in anchors.split(',')]

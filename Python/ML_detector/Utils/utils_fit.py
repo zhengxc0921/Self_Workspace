@@ -1,13 +1,16 @@
+import os
+
 import torch
 from tqdm import tqdm
 from Utils.utils import get_lr
+
+
 def fit_one_epoch(cfg, yolo_loss, loss_history, optimizer, epoch, Epoch, gen, gen_val):
     model_train = cfg.model_train
     model = cfg.model
     epoch_step = cfg.epoch_step
     epoch_step_val = cfg.epoch_step_val
     calc_device = cfg.calc_device
-
     print('epoch_step_val：{}'.format(epoch_step_val))
     loss = 0
     val_loss = 0
@@ -70,11 +73,9 @@ def fit_one_epoch(cfg, yolo_loss, loss_history, optimizer, epoch, Epoch, gen, ge
         pbar.update(1)
 
     print('Finish Validation')
-    loss_history.append_loss(loss / epoch_step, val_loss / epoch_step_val)
+    # loss_history.append_loss(loss / epoch_step, val_loss / epoch_step_val)
     print('Epoch:' + str(epoch + 1) + '/' + str(Epoch))
     print('Total Loss: %.3f || Val Loss: %.3f ' % (loss / epoch_step, val_loss / epoch_step_val))
-    if epoch % 10 == 0:
-        torch.save(model.state_dict(),
-                   'logs/ep%03d-loss%.3f-val_loss%.3f.pth' % (epoch + 1, loss / epoch_step, val_loss / epoch_step_val))
-    if Epoch == epoch + 1:
+    #每8个epoch更新一个epoch
+    if Epoch == epoch + 1 or epoch % 8 == 0:
         torch.save(model.state_dict(), cfg.pth_dst)

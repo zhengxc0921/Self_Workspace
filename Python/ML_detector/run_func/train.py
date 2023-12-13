@@ -18,7 +18,6 @@ def yolo4_train():
     cfg = Config(project)
     cls_n = len(cfg.class_names)
     size_input = [cfg.ImageSizeY, cfg.ImageSizeX]
-
     train_ls = cfg.train_lines
     val_ls = cfg.val_lines
     batch_sz = cfg.batch_size
@@ -28,8 +27,8 @@ def yolo4_train():
     yolo_loss = cfg.yolo_loss
     loss_history = LossHistory("../logs/")
     ##创建数据集，General
-    train_set = YoloDataset(train_ls,size_input,cls_n, train=False)
-    val_set = YoloDataset(val_ls, size_input, cls_n, train=False)
+    train_set = YoloDataset(train_ls,size_input)
+    val_set = YoloDataset(val_ls, size_input)
     gen = DataLoader(train_set, shuffle=True, batch_size=batch_sz, num_workers=worker_n,
                      pin_memory=True,drop_last=True, collate_fn=yolo_dataset_collate)
     gen_val = DataLoader(val_set, shuffle=True, batch_size=batch_sz, num_workers=worker_n,
@@ -43,7 +42,6 @@ def yolo4_train():
 
     for param in cfg.model.backbone.parameters():
         param.requires_grad = False
-
     for epoch in range(0, cfg.fepoch):
         fit_one_epoch(cfg, yolo_loss, loss_history, optimizer, epoch, cfg.fepoch, gen, gen_val)
         lr_scheduler.step()

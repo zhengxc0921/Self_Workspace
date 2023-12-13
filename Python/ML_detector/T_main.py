@@ -1,5 +1,5 @@
 from run_func.train import yolo4_train
-from run_func.predict import  Predict
+from run_func.predict import Predict
 from auxi.COT_extract import ExtractResizeCOTXML2Raw
 
 from Utils.config import Config
@@ -19,7 +19,6 @@ def Start_ParseXML_Resize():
     #而训练是在原图上截取Crop_h*Crop_w的图片上进行训练的。
     #boundary_width防止截取的图片不靠近边框 300的范围内
     #生成转换后的“ImgBoxes_train.txt”，“ImgBoxes_val.txt”
-
     print(" Start_ParseXML_Resize")
     project = 'COT_Raw'
     test = ExtractResizeCOTXML2Raw(project)
@@ -37,24 +36,19 @@ def Start_ParseXML_Direct():
     print("Finish ParseXML")
 
 def Check_TrainDataSet():
-    from torch.utils.data import DataLoader
     from Utils.config import Config
     from Utils.dataloader import  YoloDataset,yolo_dataset_collate
-    project = "COT_Raw"  ## LMK, HW,VOC,DSW_random ,COT_Raw ;COT_Raw ; DSW
+    project = "DSW_random"  ## LMK, HW,VOC,DSW_random ,COT_Raw ;COT_Raw ; DSW
     cfg = Config(project)
-    cls_n = len(cfg.class_names)
     size_input = [cfg.ImageSizeY, cfg.ImageSizeX]
     train_ls = cfg.train_lines
-    val_ls = cfg.val_lines
     ##创建数据集，General
-    train_set = YoloDataset(train_ls,size_input,cls_n, train=False)
-    gen = DataLoader(train_set, shuffle=True, batch_size=8, num_workers=0,
-                     pin_memory=True,drop_last=True, collate_fn=yolo_dataset_collate)
-    for iteration, batch in enumerate(gen):
-        print("iteration：{}".format(iteration))
+    vis_num = 10
+    train_set = YoloDataset(train_ls,size_input)
+    train_set.visualize_data(vis_num)
+
 
 def TOO_ONNX():
-
     project = "COT_Raw"  #LMK  ## LMK, HW,VOC,DSW_random ,COT_Raw ;COT_Raw ; DSW
     cfg = Config(project)
     test1 = ToScript(cfg)
@@ -64,11 +58,10 @@ def TOO_ONNX():
     print("test1.to_onnx()")
 
 if __name__ == '__main__':
-
     # Start_ParseXML_Direct()
     # Start_ParseXML_Resize()
     # Check_TrainDataSet()
     # Start_train()
-    # Start_predict()
-    TOO_ONNX()
+    Start_predict()
+    # TOO_ONNX()
     print("Start_predict：Hello World")
