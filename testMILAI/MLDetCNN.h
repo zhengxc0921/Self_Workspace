@@ -1,6 +1,7 @@
 #pragma once
 #include "MLBase.h"
 #include "Dashboard.h"
+#include "MachineLearningExp.h"
 using namespace std;
 
 typedef struct DET_DATASET_PARAS_STRUCT {
@@ -54,7 +55,7 @@ typedef struct DET_RESULT_STRUCT {
 
 class CMLDetCNN;
 typedef boost::shared_ptr<CMLDetCNN>CMLDetCNNPtr;
-class CMLDetCNN {
+class MACHINELEARNING_DECLSPEC CMLDetCNN {
 
 public:
     CMLDetCNN(MIL_ID MilSystem, MIL_ID MilDisplay);
@@ -94,7 +95,9 @@ public:
     void Predict(MIL_ID Image, MIL_UNIQUE_CLASS_ID& TdDetCtxPath,DET_RESULT_STRUCT& Result);
     //void PredictBegin(MIL_UNIQUE_CLASS_ID& TrainedDetCtx, MIL_ID Image);
     void ValModel_AP_50(string ValDataInfoPath, MIL_STRING TdDetCtxPath, string strPRResultPath, string strODNetResultPath);
-
+    
+    void Val_Txt_AP_50(string ValDataInfoPath, string PreDataInfoPath, string strPRResultPath);
+    
     void PrintControls();
     void CDatasetViewer(MIL_ID Dataset);
 

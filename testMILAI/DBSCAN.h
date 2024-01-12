@@ -4,7 +4,7 @@
 //#else
 //#define DBSCAN_DECLSPEC __declspec(dllimport)
 //#endif 
-
+#include "MachineLearningExp.h"
 //#include<Mil.h>
 #include"AIParse.h"
 #include "nanoflann.hpp"
@@ -19,7 +19,7 @@ using namespace std;
 class CDBSCAN;
 typedef boost::shared_ptr<CDBSCAN>CDBSCANPtr;
 
-class  CDBSCAN {
+class MACHINELEARNING_DECLSPEC CDBSCAN {
     public:
     CDBSCAN(MIL_ID MilSystem);
 
@@ -101,5 +101,3 @@ public:
     MIL_ID m_MilSystem;
     CAIParsePtr m_AIParse;
 };
-
-

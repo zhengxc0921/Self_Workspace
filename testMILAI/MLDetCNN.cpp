@@ -1,5 +1,5 @@
 #include "MLDetCNN.h"
-//#include <Shlwapi.h>
+
 #include <fstream>
 
 
@@ -197,7 +197,7 @@ void CMLDetCNN::predict(MIL_ID Image, DET_RESULT_STRUCT& Result)
     MclassPredict(m_TrainedDetCtx, ImageReduce, ClassRes, M_DEFAULT);
 
     clock_t  t1 = clock();
-    int CircleNum = 100;
+    int CircleNum = 1;
     for (int i = 0; i < CircleNum; i++) {
         MclassPredict(m_TrainedDetCtx, ImageReduce, ClassRes, M_DEFAULT);
     }
@@ -867,6 +867,34 @@ void CMLDetCNN::ValModel_AP_50(string ValDataInfoPath, MIL_STRING TdDetCtxPath, 
     //}
     
 }
+
+void CMLDetCNN::Val_Txt_AP_50(string ValDataInfoPath, string PreDataInfoPath,string strPRResultPath) {
+
+    //读取Classes.txt
+    m_ClassesNum = 7;
+
+    //step1:txt-->ValDataInfoPath
+    vector<MIL_STRING> vecGTImgPaths;
+    vector<vector<Box>> vecGTBoxes;
+    vector<vector<int>> vecGTlabels;
+    m_AIParse->readDataSet2Vector(ValDataInfoPath, vecGTImgPaths, vecGTBoxes, vecGTlabels);
+
+    //step2:txt-->PreDataInfoPath
+    vector<MIL_STRING> vecPdImgPaths;
+    vector<vector<Box>> vecPdBoxes;
+    vector<vector<int>> vecPdlabels;
+    m_AIParse->readDataSet2Vector(PreDataInfoPath, vecPdImgPaths, vecPdBoxes, vecPdlabels);
+
+    //设置IOU_thes为定值0.5，计算AP50 
+//按照MIL中score_thres=0.5 ，不刻画P-R曲线：
+//计算AP
+    vector<float> Precisions;
+    vector<float> Recalls;
+    calcAP4Vector(vecGTBoxes,vecGTlabels,vecPdBoxes,vecPdlabels, Precisions,Recalls);
+
+    saveAP2File(strPRResultPath, Precisions, Recalls);
+};
+
 
 void CMLDetCNN::PrintControls()
 {

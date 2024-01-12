@@ -21,8 +21,8 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{3ce10b58-7f0e-4be8-af19-37f086fea6d2}</ProjectGuid>
-    <RootNamespace>testMILAI</RootNamespace>
+    <ProjectGuid>{66a9b685-3c02-4945-a1ed-91646b389913}</ProjectGuid>
+    <RootNamespace>Demotest</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -40,7 +40,7 @@
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
-    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v142</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
@@ -78,7 +78,6 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(mil_path64)\..\include;G:/WSD_CODE2/CppLib/boost/boost_1_73_0_vs2019_win10;E:\SoftWareInstaller\opencv\build\include\opencv2;E:\SoftWareInstaller\opencv\build\include\opencv;E:\SoftWareInstaller\opencv\build\include;D:\Program Files\Python311\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
@@ -115,15 +114,15 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;_AMD64_;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>D:\Program Files\Python311\include;I:\MIL_AI\Python_ML</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>D:\Program Files\Python311\include;I:\MIL_AI\Python_ML;$(mil_path64)\..\include;G:/WSD_CODE2/CppLib/boost/boost_1_73_0_vs2019_win10;E:\SoftWareInstaller\opencv\build\include\opencv2;E:\SoftWareInstaller\opencv\build\include\opencv;E:\SoftWareInstaller\opencv\build\include;I:\MIL_AI\testMILAI</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(mil_path64)\..\lib;E:\SoftWareInstaller\opencv\build\x64\vc16\lib;I:\MIL_AI\testMILAI\x64\Debug;D:\Program Files\Python311\libs</AdditionalLibraryDirectories>
-      <AdditionalDependencies>milim.lib;milclass.lib;mil.lib;opencv_world480d.lib;Python_ML.lib;python311.lib</AdditionalDependencies>
+      <AdditionalDependencies>milim.lib;milclass.lib;mil.lib;opencv_world480d.lib;Python_ML.lib;python311.lib;testMILAI.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -134,32 +133,20 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(mil_path64)\..\include;G:/WSD_CODE2/CppLib/boost/boost_1_73_0_vs2019_win10;D:\Program Files\Python311\include;E:\SoftWareInstaller\opencv\build\include;E:\SoftWareInstaller\opencv\build\include\opencv;E:\SoftWareInstaller\opencv\build\include\opencv2;I:\MIL_AI\Python_ML</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(mil_path64)\..\lib;D:\Program Files\Python311\libs;I:\MIL_AI\testMILAI\x64\Release</AdditionalLibraryDirectories>
-      <AdditionalDependencies>milim.lib;milclass.lib;mil.lib;python311.lib;Python_ML.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="AIParse.h" />
-    <ClInclude Include="Dashboard.h" />
-    <ClInclude Include="DBSCAN.h" />
-    <ClInclude Include="MachineLearningExp.h" />
-    <ClInclude Include="MLBase.h" />
-    <ClInclude Include="MLDetCNN.h" />
-    <ClInclude Include="nanoflann.hpp" />
+    <ClCompile Include="Demo.cpp" />
+    <ClCompile Include="Test.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="AIParse.cpp" />
-    <ClCompile Include="Dashboard.cpp" />
-    <ClCompile Include="DBSCAN.cpp" />
-    <ClCompile Include="MLBase.cpp" />
-    <ClCompile Include="MLDetCNN.cpp" />
+    <ClInclude Include="Test.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

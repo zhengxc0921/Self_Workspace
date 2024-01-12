@@ -9,7 +9,7 @@
 //#include <map>
 //#include <math.h>
 #include <boost/smart_ptr.hpp>
-
+#include "MachineLearningExp.h"
 // Dashboard for CNN
 class CDashboard;
 typedef boost::shared_ptr<CDashboard> CDashboardPtr;
@@ -149,7 +149,7 @@ MIL_INT MFTYPE HookFuncMiniBatch(MIL_INT HookType, MIL_ID  EventId, void* UserDa
 // Dashboard for Detection
 class DetDashboard;
 typedef boost::shared_ptr<DetDashboard> DetDashboardPtr;
-class DetDashboard
+class MACHINELEARNING_DECLSPEC DetDashboard
 {
 public:
     DetDashboard(
@@ -237,7 +237,7 @@ private:
     const MIL_DOUBLE COLOR_PROGRESS_BAR{ M_COLOR_DARK_GREEN };
 };
 
-struct DetHookDataStruct
+struct MACHINELEARNING_DECLSPEC DetHookDataStruct
 {
     MIL_ID MilSystem;               //MIL system id
     MIL_ID MilDisplay;              //MIL display id
@@ -249,15 +249,10 @@ struct DetHookDataStruct
    int SaveModelPEpoch = 8;
 };
 
-MIL_INT MFTYPE DetHookFuncDatasetsPrepared(MIL_INT /*HookType*/, MIL_ID  EventId, void* UserData);
+MIL_INT MFTYPE  DetHookFuncDatasetsPrepared(MIL_INT /*HookType*/, MIL_ID  EventId, void* UserData);
 
-MIL_INT MFTYPE DetHookFuncEpoch(MIL_INT /*HookType*/, MIL_ID  EventId, void* UserData);
+MIL_INT MFTYPE  DetHookFuncEpoch(MIL_INT /*HookType*/, MIL_ID  EventId, void* UserData);
 
-MIL_INT MFTYPE DetHookFuncMiniBatch(MIL_INT HookType, MIL_ID  EventId, void* UserData);
+MIL_INT MFTYPE  DetHookFuncMiniBatch(MIL_INT HookType, MIL_ID  EventId, void* UserData);
 
-MIL_INT MFTYPE DetHookNumPreparedEntriesFunc(MIL_INT /*HookType*/, MIL_ID EventId, void* pUserData);
-
-
-
-
-
+MIL_INT MFTYPE  DetHookNumPreparedEntriesFunc(MIL_INT /*HookType*/, MIL_ID EventId, void* pUserData);

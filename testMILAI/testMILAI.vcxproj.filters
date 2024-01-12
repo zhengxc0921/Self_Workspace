@@ -24,12 +24,6 @@
     <ClInclude Include="Dashboard.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="MILTest.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="MLClassCNN.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="MLDetCNN.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -37,6 +31,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="DBSCAN.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="MachineLearningExp.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
@@ -50,16 +47,7 @@
     <ClCompile Include="Dashboard.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="MILTest.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="MLClassCNN.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="MLDetCNN.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="testDemo.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="DBSCAN.cpp">

@@ -1,13 +1,21 @@
 #pragma once
+
+#ifdef AIPARSE_EXPORTS
+#define AIPARSE_DECLSPEC __declspec(dllexport)
+#else
+#define AIPARSE_DECLSPEC __declspec(dllimport)
+#endif
+
+#include "MachineLearningExp.h"
+
 #include <mil.h>
 #include <boost/smart_ptr.hpp>
 #include <windows.h>
-//#include <string.h>
-//#include <vector>
 #include <map>
 #include <io.h>
 #include <fstream>
 #include <iostream>
+
 
 using namespace std;
 
@@ -25,7 +33,7 @@ struct Box {
 };
 
 
-class CAIParse {
+class MACHINELEARNING_DECLSPEC CAIParse {
 
 public:
 	CAIParse(MIL_ID MilSystem);

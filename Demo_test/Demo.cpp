@@ -2,8 +2,15 @@
 #include <iostream>
 
 #if 1
-#include "MILTest.h"
+#include "Test.h"
 #include "yolo.h"
+
+#include "MachineLearningExp.h"
+#include "AIParse.h"
+#include "Dashboard.h"
+#include "DBSCAN.h"
+
+
 #include <iostream>
 #include <list>
 #include <chrono>
@@ -76,13 +83,13 @@ void Python_Cpp1() {
 	//ParseXML_Resize();
 	//Check_DataSet();
 	//Yolo_Train();
-	//Yolo_Predict();
+	Yolo_Predict();
 	Pth2ONNX();
 	//cout << "Yolo_Predict End" << endl;
 	//Py_Finalize();
 }
 
-int Dmain(int argc, char* argv[]) {
+int main(int argc, char* argv[]) {
 
 	Python_Cpp1();
 	//Pytest();	
@@ -90,8 +97,8 @@ int Dmain(int argc, char* argv[]) {
 	MIL_UNIQUE_APP_ID MilApplication = MappAlloc(M_NULL, M_DEFAULT, M_UNIQUE_ID);
 	MIL_UNIQUE_SYS_ID MilSystem = MsysAlloc(M_DEFAULT, M_SYSTEM_HOST, M_DEFAULT, M_DEFAULT, M_UNIQUE_ID);
 	MIL_UNIQUE_DISP_ID MilDisplay = MdispAlloc(MilSystem, M_DEFAULT, MIL_TEXT("M_DEFAULT"), M_DEFAULT, M_UNIQUE_ID);
-	MILTestPtr m_MILTestPtr = MILTestPtr(new MILTest(MilSystem, MilDisplay, strProject));
-	
+	TestPtr m_MILTestPtr = TestPtr(new Test(MilSystem, MilDisplay, strProject));
+
 	//m_MILTestPtr->MILTestKTtreedbscan();
 	////Classifier CNN test
 	//m_MILTestPtr->MILTestGenDataset();
@@ -99,13 +106,13 @@ int Dmain(int argc, char* argv[]) {
 	//m_MILTestPtr->MILTestPredictAP();
 	//m_MILTestPtr->MILTestPredictWithBlob();
 	//m_MILTestPtr->MILTestPredictEngine();
-	
+
 	//Detection CNN test
 	//m_MILTestPtr->MILTestGenDetDataset();
 	//m_MILTestPtr->MILTestDetTrain();
 	//m_MILTestPtr->MILTestDetPredict();
 	//m_MILTestPtr->MILTestValDetModel();
-	m_MILTestPtr->MILTestValTxtAP50();
+	//m_MILTestPtr->MILTestValTxtAP50();
 
 	//ONNX test
 	 //m_MILTestPtr->OpencvONNXPredict();//ÔÝ±¨´í
@@ -126,7 +133,7 @@ int Dmain(int argc, char* argv[]) {
 	int ShareMameSize = 0;
 	std::istringstream ss(strfilesize);
 	ss >> ShareMameSize;
-	
+
 	m_MILTestPtr->MILTestDetPredictMutiProcess(strShareMame, ShareMameSize, Index, ImgType, strProject);
 
 #endif

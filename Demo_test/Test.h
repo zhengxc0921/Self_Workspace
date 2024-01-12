@@ -1,26 +1,27 @@
 #pragma once
 #include <direct.h>
 #include<map>
-//#include<boost/weak_ptr.hpp>
-//#include<thread>
 #include<string>
 #include<Python.h>
 #include<opencv2/opencv.hpp>
 #include <opencv2/dnn.hpp>
+#include <mil.h>
+#include <boost/smart_ptr.hpp>
 
-#include "MLClassCNN.h"
-#include "MLDetCNN.h"
-#include "DBSCAN.h"
+//#include "../testMILAI/MLClassCNN.h"
+#include "../testMILAI/MLDetCNN.h"
+#include "../testMILAI/DBSCAN.h"
 #include <thread>
-#include "kttreedbscan.cpp"
+//#include "kttreedbscan.cpp"
 
 using namespace cv;
-class MILTest;
-typedef boost::shared_ptr<MILTest>MILTestPtr;
-class MILTest {
+using namespace std;
+class Test;
+typedef boost::shared_ptr<Test>TestPtr;
+class Test {
 public:
-	MILTest(MIL_ID MilSystem, MIL_ID MilDisplay, MIL_STRING strProject);
-	~MILTest();
+	Test(MIL_ID MilSystem, MIL_ID MilDisplay, MIL_STRING strProject);
+	~Test();
 
 	void getIcon(vector<MIL_STRING> OriginalDataPath,
 		vector<vector<MIL_STRING>> ClassName,
@@ -40,11 +41,11 @@ public:
 
 	void FillImgs();
 
-	void MILTestGenDataset();
+	//void MILTestGenDataset();
 
-	void MILTestTrain();
+	//void MILTestTrain();
 
-	void MILTestPredict();
+	//void MILTestPredict();
 
 	void MILTestPredictAP();
 
@@ -84,17 +85,14 @@ public:
 	void MILTestONNXPredict();
 	void OpencvONNXPredict();
 	void MILTestKTtreedbscan();
-
-	//
 	void Pytest();
-
 
 
 public:
 	MIL_ID m_MilSystem;
 	MIL_ID m_MilDisplay;
 
-	CMLClassCNNPtr  m_MLClassCNN;
+	//CMLClassCNNPtr  m_MLClassCNN;
 	CMLDetCNNPtr	m_MLDetCNN;
 	vector<MIL_DOUBLE>m_ClassWeights;
 	vector<MIL_STRING> m_ClassNames;
@@ -114,9 +112,9 @@ public:
 	MIL_STRING m_strProject;
 	vector<MIL_STRING> m_FilesInFolder;
 	vector < ClassificationResultStruct> m_vecResults;
-	bool m_SavePredictedImg = TRUE;
+	bool m_SavePredictedImg = 1;
 	MIL_STRING m_DstImgDir;
 	MIL_UNIQUE_CLASS_ID m_TrainedCtx;
-	map<string,MIL_ID >m_PathRawImageMap;
+	map<string, MIL_ID >m_PathRawImageMap;
 	vector<DET_RESULT_STRUCT> m_vecDetResults;
 };
